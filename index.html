@@ -6,58 +6,237 @@
 <title>Hero's Journey</title>
 <meta name="description" content="Hero's Journey — Killian's Path to Legendary" />
 <meta name="application-name" content="Hero's Journey" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
 <style>
 :root{
   --bg:#120f1b; --panel:#211a2e; --ink:#f7efd6; --muted:#c8b98a;
   --gold:#e0b84a; --red:#c74848; --green:#54b66a; --line:#6b5730;
   --shadow:0 16px 38px rgba(0,0,0,.35);
+  --font-display:"Cinzel Decorative", Georgia, serif;
+  --font-body:"Nunito", "Segoe UI", sans-serif;
 }
 *{box-sizing:border-box}
 body{
-  margin:0; font-family: Georgia, "Times New Roman", serif; color:var(--ink);
+  margin:0; font-family:var(--font-body); font-weight:600; color:var(--ink);
   background:radial-gradient(circle at 10% 5%, rgba(224,184,74,.18), transparent 22%),
              radial-gradient(circle at 90% 20%, rgba(93,134,216,.16), transparent 24%),
              linear-gradient(160deg,#0d0b13,#221a2d 55%,#0d0b13);
-  min-height:100vh;
+  min-height:100vh; position:relative; overflow-x:hidden;
 }
-header{text-align:center;padding:28px 16px 18px;border-bottom:3px solid var(--gold);background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,.08))}
-h1{margin:0;font-size:clamp(34px,6vw,70px);letter-spacing:.06em;text-shadow:0 3px 0 #000}
-header p{margin:8px 0 0;font-size:clamp(16px,2.4vw,24px);color:var(--muted)}
-main{max-width:1180px;margin:18px auto 60px;padding:0 14px}
-.screen{display:none}.screen.active{display:block}
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image:
+    radial-gradient(2px 2px at 10% 20%, rgba(255,219,119,.55), transparent),
+    radial-gradient(1.5px 1.5px at 80% 12%, rgba(255,255,255,.35), transparent),
+    radial-gradient(2px 2px at 55% 8%, rgba(255,200,80,.4), transparent),
+    radial-gradient(1px 1px at 30% 65%, rgba(255,255,255,.25), transparent),
+    radial-gradient(1.5px 1.5px at 92% 78%, rgba(255,219,119,.3), transparent);
+  animation:stars-twinkle 6s ease-in-out infinite alternate;
+}
+@keyframes stars-twinkle{0%{opacity:.45}100%{opacity:.9}}
+header{
+  position:relative; z-index:1; text-align:center; padding:24px 16px 20px;
+  border-bottom:3px solid var(--gold);
+  background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(40,28,18,.25));
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
+header::before,header::after{content:"⚔";position:absolute;top:50%;transform:translateY(-50%);font-size:28px;color:var(--gold);opacity:.7}
+header::before{left:max(12px,3vw)} header::after{right:max(12px,3vw)}
+h1{
+  margin:0; font-family:var(--font-display); font-weight:900;
+  font-size:clamp(30px,5.5vw,62px); letter-spacing:.08em;
+  background:linear-gradient(180deg,#fff4c4 0%,#e0b84a 45%,#a67c1a 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 3px 0 #000) drop-shadow(0 0 18px rgba(224,184,74,.35));
+  animation:title-glow 3s ease-in-out infinite alternate;
+}
+@keyframes title-glow{from{filter:drop-shadow(0 3px 0 #000) drop-shadow(0 0 12px rgba(224,184,74,.25))}to{filter:drop-shadow(0 3px 0 #000) drop-shadow(0 0 22px rgba(224,184,74,.5))}}
+.header-tagline{margin:10px 0 0;font-size:clamp(17px,2.5vw,22px);color:#ffdb77;font-weight:800}
+.header-callout{
+  display:inline-block;margin:12px 0 0;padding:8px 18px;border-radius:999px;
+  background:linear-gradient(90deg,rgba(224,184,74,.15),rgba(199,72,72,.12));
+  border:1px solid rgba(224,184,74,.45);font-size:14px;font-weight:800;color:#ffe9a8;
+  animation:callout-pulse 2.5s ease-in-out infinite;
+}
+@keyframes callout-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+main{position:relative;z-index:1;max-width:1180px;margin:18px auto 60px;padding:0 14px}
+.screen{display:none}.screen.active{display:block;animation:screen-in .35s ease}
+@keyframes screen-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .nav{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:16px 0}
-.nav button{font-family:inherit;font-size:16px;padding:12px;border-radius:14px;border:2px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
-.nav button.active{background:linear-gradient(180deg,#5b4323,#2d223c);border-color:var(--gold)}
-.card{background:linear-gradient(180deg,rgba(45,34,60,.96),rgba(33,26,46,.96));border:2px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:18px;margin:14px 0;overflow:hidden}
-h2{margin:0 0 12px;font-size:30px;color:var(--gold);text-shadow:0 2px #000}
+.nav button{
+  font-family:var(--font-body); font-size:15px; font-weight:800; padding:14px 8px;
+  border-radius:16px; border:2px solid var(--line); background:var(--panel); color:var(--ink);
+  cursor:pointer; transition:transform .15s,box-shadow .2s,border-color .2s;
+}
+.nav button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.nav button.active{
+  background:linear-gradient(180deg,#7a5520,#3d2a14);border-color:#ffdb77;color:#fff8e0;
+  box-shadow:0 0 0 2px rgba(224,184,74,.25),0 10px 24px rgba(224,184,74,.2);
+  transform:translateY(-1px);
+}
+.nav button:active{transform:translateY(2px)}
+.card{
+  background:linear-gradient(180deg,rgba(45,34,60,.96),rgba(33,26,46,.96));
+  border:2px solid var(--line);border-radius:22px;box-shadow:var(--shadow);
+  padding:18px;margin:14px 0;overflow:hidden;position:relative;
+}
+.card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,rgba(224,184,74,.5),transparent);opacity:.8;
+}
+h2{margin:0 0 12px;font-family:var(--font-display);font-size:28px;color:var(--gold);text-shadow:0 2px #000}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-.boss{min-height:420px;display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center;background:radial-gradient(circle at 75% 45%, rgba(199,72,72,.25), transparent 28%),linear-gradient(135deg,#201125,#35171a)}
-.dragon-art{text-align:center;font-size:170px;filter:drop-shadow(0 10px 8px rgba(0,0,0,.55));line-height:1}
-.boss-title{font-size:44px;font-weight:900;color:#ffcf60;text-shadow:0 4px #000}
-.boss-stage{font-size:24px;color:#ffd993;margin:8px 0 18px}
-.hp-big{font-size:64px;font-weight:900;color:white;text-shadow:0 4px #000}
-.bar{height:26px;background:#140d16;border:2px solid #5c4128;border-radius:999px;overflow:hidden;box-shadow:inset 0 2px 8px rgba(0,0,0,.7)}
-.fill{height:100%;width:0%;background:linear-gradient(90deg,#ffcc55,#e85d4e);transition:.35s width}
-.hero-stat{background:rgba(255,255,255,.06);border:1px solid rgba(224,184,74,.45);border-radius:18px;padding:16px;text-align:center}
-.hero-stat .label{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.hero-stat .value{font-size:34px;font-weight:900;margin-top:6px}
-.quest-card{background:rgba(255,255,255,.06);border:2px solid rgba(224,184,74,.38);border-radius:20px;padding:16px}
-.quest-name{font-size:24px;font-weight:900;color:#ffdb77}
-.quest-reward{color:var(--muted);margin:4px 0 12px}
+.boss{
+  min-height:420px;display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center;
+  background:radial-gradient(circle at 75% 45%, rgba(199,72,72,.25), transparent 28%),linear-gradient(135deg,#201125,#35171a);
+  transition:background .6s ease,box-shadow .6s ease;
+}
+.boss[data-stage="wounded"]{background:radial-gradient(circle at 75% 45%, rgba(255,140,60,.3), transparent 30%),linear-gradient(135deg,#2a1520,#4a2018);box-shadow:inset 0 0 60px rgba(255,100,50,.12)}
+.boss[data-stage="cornered"]{background:radial-gradient(circle at 75% 45%, rgba(255,80,50,.35), transparent 32%),linear-gradient(135deg,#351018,#5a1818);box-shadow:inset 0 0 80px rgba(255,60,40,.15)}
+.boss[data-stage="last"]{background:radial-gradient(circle at 75% 45%, rgba(255,40,40,.45), transparent 35%),linear-gradient(135deg,#450f12,#6a1010);box-shadow:inset 0 0 100px rgba(255,30,30,.2);animation:boss-danger-pulse 2s ease-in-out infinite}
+.boss[data-stage="defeated"]{background:radial-gradient(circle at 50% 50%, rgba(224,184,74,.35), transparent 45%),linear-gradient(135deg,#2a2410,#1a2818);box-shadow:inset 0 0 80px rgba(224,184,74,.2)}
+@keyframes boss-danger-pulse{0%,100%{box-shadow:inset 0 0 80px rgba(255,30,30,.15)}50%{box-shadow:inset 0 0 120px rgba(255,50,30,.28)}}
+.dragon-art{
+  text-align:center;font-size:clamp(120px,22vw,190px);
+  filter:drop-shadow(0 10px 8px rgba(0,0,0,.55)) drop-shadow(0 0 30px rgba(255,80,40,.25));
+  line-height:1;position:relative;z-index:2;
+}
+.boss-title{font-family:var(--font-display);font-size:clamp(28px,4vw,42px);font-weight:900;color:#ffcf60;text-shadow:0 4px #000,0 0 20px rgba(255,180,60,.3)}
+.boss-stage{font-size:20px;font-weight:800;color:#ffd993;margin:8px 0 14px}
+.hp-big{
+  font-size:clamp(42px,8vw,64px);font-weight:900;color:white;
+  text-shadow:0 4px #000,0 0 24px rgba(255,100,80,.4);
+}
+.hp-label{font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.bar{
+  height:30px;background:#140d16;border:3px solid #7a5530;border-radius:999px;overflow:hidden;
+  box-shadow:inset 0 3px 10px rgba(0,0,0,.8),0 0 12px rgba(0,0,0,.4);position:relative;
+}
+.bar::after{
+  content:"";position:absolute;inset:0;border-radius:999px;
+  background:repeating-linear-gradient(90deg,transparent,transparent 8%,rgba(0,0,0,.15) 8%,rgba(0,0,0,.15) 9%);
+  pointer-events:none;z-index:2;
+}
+.fill{
+  height:100%;width:0%;position:relative;z-index:1;
+  background:linear-gradient(90deg,#ff9a3c,#ffcc55 40%,#e85d4e);
+  transition:.5s width cubic-bezier(.4,0,.2,1);
+  box-shadow:0 0 16px rgba(255,150,60,.5);
+}
+.fill::after{
+  content:"";position:absolute;top:0;bottom:0;right:0;width:40%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.35));
+  animation:hp-shine 2s ease-in-out infinite;
+}
+@keyframes hp-shine{0%,100%{opacity:.3}50%{opacity:.8}}
+.hero-stat{
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
+  border:2px solid rgba(224,184,74,.4);border-radius:18px;padding:16px;text-align:center;
+  transition:transform .2s,box-shadow .2s;
+}
+.hero-stat:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,.3)}
+.hero-stat .stat-icon{font-size:32px;line-height:1;margin-bottom:6px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+.hero-stat .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+.hero-stat .value{font-size:32px;font-weight:900;margin-top:4px;color:#fff8e8}
+.hero-stat.stat-level .value{color:#ffdb77}
+.quest-card{
+  background:rgba(255,255,255,.06);border:2px solid rgba(224,184,74,.38);border-radius:20px;padding:16px;
+  transition:transform .2s,box-shadow .2s,border-color .2s;
+}
+.quest-card:hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(0,0,0,.35)}
+.quest-card.quest-books{border-color:rgba(100,180,255,.5);background:linear-gradient(180deg,rgba(60,100,180,.12),rgba(255,255,255,.04))}
+.quest-card.quest-meals{border-color:rgba(255,160,80,.5);background:linear-gradient(180deg,rgba(180,90,40,.12),rgba(255,255,255,.04))}
+.quest-card.quest-language{border-color:rgba(180,140,255,.5);background:linear-gradient(180deg,rgba(120,80,200,.12),rgba(255,255,255,.04))}
+.quest-card.quest-coop{border-color:rgba(80,220,160,.5);background:linear-gradient(180deg,rgba(40,140,100,.12),rgba(255,255,255,.04))}
+.quest-name{font-size:22px;font-weight:900;color:#ffdb77}
+.quest-reward{color:var(--muted);margin:4px 0 12px;font-weight:700}
 .btns{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-.action{font-family:inherit;border:0;border-radius:14px;padding:11px 14px;font-size:16px;font-weight:900;color:#1b1408;background:linear-gradient(180deg,#ffd874,#b7831f);box-shadow:0 5px 0 #5a3a0f;cursor:pointer}
-.secondary{background:linear-gradient(180deg,#d5d0c2,#77706a);box-shadow:0 5px 0 #3e3a38;color:#111}
-.danger{background:linear-gradient(180deg,#e07777,#8f2525);box-shadow:0 5px 0 #461111;color:white}
-.good{background:linear-gradient(180deg,#80d38f,#327a3e);box-shadow:0 5px 0 #16401d;color:white}
-.level-road{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-.level{padding:14px;border:2px solid #5e4c2b;border-radius:18px;text-align:center;background:rgba(255,255,255,.05);min-height:105px}
-.level.done{border-color:var(--green);background:rgba(84,182,106,.16)}
-.level.current{border-color:var(--gold);background:rgba(224,184,74,.14)}
-.level .name{font-size:20px;font-weight:900}
+.action{
+  font-family:var(--font-body);border:0;border-radius:14px;padding:12px 16px;font-size:15px;font-weight:900;
+  color:#1b1408;background:linear-gradient(180deg,#ffd874,#b7831f);
+  box-shadow:0 5px 0 #5a3a0f,0 8px 20px rgba(0,0,0,.25);cursor:pointer;
+  transition:transform .1s,box-shadow .1s;
+}
+.action:hover{filter:brightness(1.06)}
+.action:active{transform:translateY(4px);box-shadow:0 1px 0 #5a3a0f}
+.secondary{background:linear-gradient(180deg,#d5d0c2,#77706a);box-shadow:0 5px 0 #3e3a38,0 8px 20px rgba(0,0,0,.2);color:#111}
+.danger{background:linear-gradient(180deg,#e07777,#8f2525);box-shadow:0 5px 0 #461111,0 8px 20px rgba(0,0,0,.2);color:white}
+.good{background:linear-gradient(180deg,#80d38f,#327a3e);box-shadow:0 5px 0 #16401d,0 8px 20px rgba(0,0,0,.2);color:white}
+.level-road{display:flex;gap:0;align-items:stretch;overflow-x:auto;padding:8px 0}
+.level{
+  flex:1;min-width:100px;padding:16px 10px;border:2px solid #5e4c2b;border-radius:18px;text-align:center;
+  background:rgba(255,255,255,.05);min-height:115px;position:relative;margin-right:12px;
+  transition:transform .2s,box-shadow .2s;
+}
+.level:last-child{margin-right:0}
+.level::after{
+  content:"→";position:absolute;right:-14px;top:50%;transform:translateY(-50%);
+  color:var(--gold);font-size:20px;font-weight:900;opacity:.6;
+}
+.level:last-child::after{display:none}
+.level.done{border-color:var(--green);background:linear-gradient(180deg,rgba(84,182,106,.22),rgba(84,182,106,.08));box-shadow:0 0 20px rgba(84,182,106,.15)}
+.level.current{
+  border-color:var(--gold);background:linear-gradient(180deg,rgba(224,184,74,.22),rgba(224,184,74,.06));
+  box-shadow:0 0 24px rgba(224,184,74,.25);transform:scale(1.04);z-index:1;
+  animation:level-current-glow 2s ease-in-out infinite alternate;
+}
+@keyframes level-current-glow{from{box-shadow:0 0 16px rgba(224,184,74,.2)}to{box-shadow:0 0 28px rgba(224,184,74,.4)}}
+.level .name{font-family:var(--font-display);font-size:17px;font-weight:900}
+.level .level-icon{font-size:28px;margin-bottom:4px}
 .achievements{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
-.badge{padding:12px;border-radius:16px;border:2px solid #5e4c2b;background:rgba(255,255,255,.05)}
-.badge.done{border-color:var(--green);background:rgba(84,182,106,.15)}
-.badge .icon{font-size:26px}
+.badge{
+  padding:14px;border-radius:16px;border:2px solid #5e4c2b;background:rgba(255,255,255,.05);
+  transition:transform .2s,border-color .3s,box-shadow .3s;
+}
+.badge:hover{transform:scale(1.03)}
+.badge.done{
+  background:linear-gradient(180deg,rgba(84,182,106,.2),rgba(84,182,106,.06));
+  box-shadow:0 0 16px rgba(84,182,106,.12);
+}
+.badge-bronze{border-color:#cd7f32}.badge-bronze.done{border-color:#e8a04a;box-shadow:0 0 14px rgba(205,127,50,.25)}
+.badge-silver{border-color:#a8b4c4}.badge-silver.done{border-color:#d8e4f0;box-shadow:0 0 14px rgba(192,192,192,.3)}
+.badge-gold{border-color:#c9a227}.badge-gold.done{border-color:#ffd874;box-shadow:0 0 16px rgba(255,216,116,.35)}
+.badge-platinum{border-color:#8ecae6}.badge-platinum.done{border-color:#caf0f8;box-shadow:0 0 18px rgba(142,202,230,.35)}
+.badge-legendary{border-color:#9b59b6;background:linear-gradient(180deg,rgba(155,89,182,.12),rgba(255,255,255,.04))}
+.badge-legendary.done{border-color:#d6b6ff;box-shadow:0 0 20px rgba(182,134,255,.4)}
+.badge .rarity-tag{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;opacity:.75;margin-bottom:4px}
+.badge-bronze .rarity-tag{color:#e8a04a}.badge-silver .rarity-tag{color:#d0dce8}.badge-gold .rarity-tag{color:#ffd874}
+.badge-platinum .rarity-tag{color:#caf0f8}.badge-legendary .rarity-tag{color:#d6b6ff}
+.badge .icon{font-size:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+.badge.done .icon{animation:badge-icon-bounce 2s ease-in-out infinite}
+.badge .unlock-tag{font-size:11px;color:#a8e6cf;margin-top:6px;font-weight:800}
+.ach-summary{margin:0 0 14px;padding:12px 14px;border-radius:14px;background:rgba(224,184,74,.12);border:1px solid rgba(224,184,74,.35);font-weight:700;line-height:1.45}
+.ach-summary b{color:#ffdb77}
+.hall-card h2{margin-bottom:8px}
+.hall-overall{margin:0 0 16px}
+.hall-overall-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:800;color:#ffdb77;font-size:15px}
+.hall-overall-bar{height:22px;background:#140d16;border:2px solid #7a5530;border-radius:999px;overflow:hidden}
+.hall-overall-bar .fill{height:100%;background:linear-gradient(90deg,#cd7f32,#ffd874 40%,#9b59b6);transition:width .7s cubic-bezier(.4,0,.2,1);box-shadow:0 0 14px rgba(224,184,74,.4)}
+.rarity-section{margin:18px 0 8px}
+.rarity-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.rarity-title{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
+.rarity-title.t-bronze{color:#e8a04a}.rarity-title.t-silver{color:#d0dce8}.rarity-title.t-gold{color:#ffd874}
+.rarity-title.t-platinum{color:#caf0f8}.rarity-title.t-legendary{color:#d6b6ff}
+.rarity-count{font-size:13px;color:var(--muted);font-weight:800}
+.rarity-bar{height:10px;background:#140d16;border:1px solid #5e4c2b;border-radius:999px;overflow:hidden;margin-bottom:10px}
+.rarity-bar .fill{height:100%;transition:width .6s cubic-bezier(.4,0,.2,1);border-radius:999px}
+.rarity-bar .fill.f-bronze{background:linear-gradient(90deg,#8b5a2b,#cd7f32)}
+.rarity-bar .fill.f-silver{background:linear-gradient(90deg,#7a8a9a,#c0c0c0)}
+.rarity-bar .fill.f-gold{background:linear-gradient(90deg,#a67c1a,#ffd874)}
+.rarity-bar .fill.f-platinum{background:linear-gradient(90deg,#4a8fad,#8ecae6)}
+.rarity-bar .fill.f-legendary{background:linear-gradient(90deg,#6b3fa0,#d6b6ff)}
+.collectible-showcase{margin:14px 0 6px;padding:12px 14px;border-radius:16px;background:rgba(0,0,0,.22);border:1px solid rgba(224,184,74,.3)}
+.collectible-showcase h3{margin:0 0 10px;font-size:15px;color:var(--gold);font-family:var(--font-display)}
+.collectible-row{display:flex;flex-wrap:wrap;gap:10px}
+.collectible-item{text-align:center;min-width:72px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:2px solid #5e4c2b;opacity:.4;filter:grayscale(.6);transition:.3s}
+.collectible-item.unlocked{opacity:1;filter:none;border-color:var(--gold);box-shadow:0 0 12px rgba(224,184,74,.25)}
+.collectible-item .c-icon{font-size:28px;line-height:1}
+.collectible-item .c-name{font-size:10px;font-weight:800;margin-top:4px;color:var(--muted);line-height:1.2}
+.hall-meta-title{margin:20px 0 10px;font-size:18px;color:var(--muted);font-weight:900}
+.milestone-hint{color:#a8e6cf;font-weight:800}
+@keyframes badge-icon-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 table{width:100%;border-collapse:collapse;background:rgba(255,255,255,.04);border-radius:16px;overflow:hidden}
 th,td{padding:10px;border-bottom:1px solid rgba(224,184,74,.25);text-align:left}
 th{color:var(--gold);background:rgba(0,0,0,.22)}
@@ -66,7 +245,14 @@ input{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);ba
 label{display:block;margin:10px 0 4px;color:#ffdb77}
 details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 .log{max-height:250px;overflow:auto}
-.toast{position:fixed;left:50%;top:22px;transform:translateX(-50%) translateY(-120px);background:linear-gradient(180deg,#ffdf7e,#b87d18);color:#140d08;border:3px solid #fff1a8;border-radius:20px;padding:18px 22px;box-shadow:0 18px 45px rgba(0,0,0,.5);font-weight:900;text-align:center;z-index:99;transition:.35s transform;min-width:min(92vw,420px)}
+.toast{
+  position:fixed;left:50%;top:22px;transform:translateX(-50%) translateY(-120px);
+  background:linear-gradient(180deg,#ffdf7e,#b87d18);color:#140d08;
+  border:3px solid #fff1a8;border-radius:20px;padding:18px 22px;
+  box-shadow:0 18px 45px rgba(0,0,0,.5),0 0 30px rgba(255,200,80,.3);
+  font-weight:900;text-align:center;z-index:99;transition:.35s transform;
+  min-width:min(92vw,420px);font-size:17px;
+}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
 /* Rulebook styling */
@@ -80,7 +266,16 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 .rule-table th,.rule-table td{text-align:center;}
 .rule-section-title{color:#ffdb77;font-size:22px;margin:18px 0 8px;}
 @media(max-width:800px){.rulebook-toc{columns:1}.rule-table{font-size:14px}.rule-table th,.rule-table td{padding:8px 5px}}
-@media(max-width:800px){.boss{grid-template-columns:1fr}.dragon-art{font-size:120px}.level-road{grid-template-columns:1fr}.nav{grid-template-columns:repeat(2,1fr)}.hp-big{font-size:46px}}
+@media(max-width:800px){
+  .boss{grid-template-columns:1fr}
+  .dragon-art{font-size:120px}
+  .level-road{flex-wrap:wrap}
+  .level{min-width:45%;margin-bottom:12px}
+  .level::after{display:none}
+  .nav{grid-template-columns:repeat(2,1fr)}
+  .hp-big{font-size:46px}
+  header::before,header::after{display:none}
+}
 
 .legend-strike{text-align:center;background:linear-gradient(180deg,rgba(45,34,60,.96),rgba(28,18,42,.96));}
 .legend-strike h2{font-size:34px;}
@@ -97,7 +292,15 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 .code-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;}
 @media(max-width:800px){.code-row{grid-template-columns:1fr}}
 
-.dragon-wrap{position:relative;text-align:center}
+.dragon-wrap{position:relative;text-align:center;padding:10px}
+.dragon-wrap::before{
+  content:"";position:absolute;left:50%;top:55%;transform:translate(-50%,-50%);
+  width:min(280px,80vw);height:min(280px,80vw);border-radius:50%;
+  background:radial-gradient(circle,rgba(255,100,40,.2) 0%,transparent 70%);
+  animation:dragon-aura 3s ease-in-out infinite alternate;pointer-events:none;z-index:0;
+}
+@keyframes dragon-aura{from{opacity:.5;transform:translate(-50%,-50%) scale(.95)}to{opacity:1;transform:translate(-50%,-50%) scale(1.05)}}
+.boss[data-stage="defeated"] .dragon-wrap::before{background:radial-gradient(circle,rgba(224,184,74,.35) 0%,transparent 70%)}
 .dragon-art.interactive{cursor:pointer;user-select:none;transition:transform .2s}
 .dragon-art.interactive:hover{transform:scale(1.06)}
 .dragon-art.idle{animation:dragon-idle 3s ease-in-out infinite}
@@ -111,8 +314,17 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 .damage-floats{position:relative;height:0;pointer-events:none}
 .damage-float{position:absolute;right:18%;top:-30px;font-size:34px;font-weight:900;color:#ff6b4a;text-shadow:0 2px 0 #000;animation:damage-float 1.4s ease forwards;pointer-events:none}
 @keyframes damage-float{0%{opacity:0;transform:translateY(12px) scale(.8)}15%{opacity:1;transform:translateY(0) scale(1.1)}100%{opacity:0;transform:translateY(-70px) scale(1)}}
-.bounty-bar{height:14px;background:#140d16;border:1px solid #5c4128;border-radius:999px;overflow:hidden;margin-top:10px}
-.bounty-fill{height:100%;background:linear-gradient(90deg,#ffd874,#54b66a);transition:width .6s ease;border-radius:999px}
+.bounty-bar{height:16px;background:#140d16;border:2px solid #5c4128;border-radius:999px;overflow:hidden;margin-top:10px;position:relative}
+.bounty-fill{
+  height:100%;background:linear-gradient(90deg,#ffd874,#54b66a);
+  transition:width .6s ease;border-radius:999px;position:relative;
+  box-shadow:0 0 10px rgba(84,182,106,.4);
+}
+.bounty-fill::after{
+  content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);
+  animation:bounty-shimmer 2s ease-in-out infinite;
+}
+@keyframes bounty-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 .bounty-card{transition:transform .2s,box-shadow .2s}
 .bounty-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.35)}
 .chronicle{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto}
@@ -148,12 +360,16 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="celebration" id="celebration" onclick="if(event.target===this)closeCelebration()">
 <div class="celebration-inner">
 <div class="celebration-icon" id="celebIcon">🏆</div>
-<div class="celebration-title" id="celebTitle">Achievement Unlocked</div>
+<div class="celebration-title" id="celebTitle">Heroic Deed Unlocked</div>
 <div class="celebration-sub" id="celebSub"></div>
 <button class="action" onclick="closeCelebration()">Continue the Journey</button>
 </div>
 </div>
-<header><h1>THE HERO'S JOURNEY</h1><p>Killian's Path to Legendary</p></header>
+<header>
+<h1>THE HERO'S JOURNEY</h1>
+<p class="header-tagline">Killian's Path to Legendary</p>
+<p class="header-callout">⚔️ Tap the Dragon • Report Quests • Become Legend ⚔️</p>
+</header>
 <main>
 <div class="nav">
 <button onclick="showScreen('home')" id="nav-home" class="active">🐉 Dragon</button>
@@ -167,6 +383,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div>
 <div class="boss-title" id="dragonName">Ancient Dragon</div>
 <div class="boss-stage" id="dragonStage">The journey begins.</div>
+<div class="hp-label">Dragon HP Remaining</div>
 <div class="hp-big"><span id="dragonRemaining">730</span> HP</div>
 <div class="small">Damage dealt: <span id="damageDealt">0</span> / 730</div>
 <div class="bar" style="margin:14px 0"><div class="fill" id="dragonBar"></div></div>
@@ -182,11 +399,11 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="dragon-art interactive idle" id="dragonArt" onclick="pokeDragon()" title="Tap the dragon">🐉</div>
 </div>
 </div>
-<div class="card"><h2>Hero Status</h2><div class="grid">
-<div class="hero-stat"><div class="label">Level</div><div class="value" id="heroLevel">Unranked</div></div>
-<div class="hero-stat"><div class="label">Hero Points</div><div class="value"><span id="hp">0</span>/50</div></div>
-<div class="hero-stat"><div class="label">Current HP Balance</div><div class="value" id="hpBal">0</div></div>
-<div class="hero-stat"><div class="label">Next Level</div><div class="value" id="nextLevel">10 HP</div></div>
+<div class="card"><h2>⚔️ Hero Status</h2><div class="grid">
+<div class="hero-stat stat-level"><div class="stat-icon">👑</div><div class="label">Level</div><div class="value" id="heroLevel">Unranked</div></div>
+<div class="hero-stat"><div class="stat-icon">⭐</div><div class="label">Hero Points</div><div class="value"><span id="hp">0</span></div><div class="small" id="hpBreakdown">0 quest + 0 deeds</div></div>
+<div class="hero-stat"><div class="stat-icon">💎</div><div class="label">HP Balance</div><div class="value" id="hpBal">0</div></div>
+<div class="hero-stat"><div class="stat-icon">🎯</div><div class="label">Next Level</div><div class="value" id="nextLevel">10 HP</div></div>
 </div></div>
 <div class="card"><h2>📜 Hero Chronicle</h2><ol class="chronicle" id="chronicle"></ol></div>
 <div class="card"><h2>Bounty Board</h2><div class="grid" id="bounty"></div></div>
@@ -199,7 +416,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </div>
 </section>
 <section id="quests" class="screen"><div class="card"><h2>Quest Board</h2><div class="grid" id="questCards"></div></div></section>
-<section id="hall" class="screen"><div class="card"><h2>Hero Level Road</h2><div class="level-road" id="levelRoad"></div></div><div class="card"><h2>Achievements</h2><div class="achievements" id="achievements"></div></div></section>
+<section id="hall" class="screen"><div class="card"><h2>Hero Level Road</h2><div class="level-road" id="levelRoad"></div></div><div class="card hall-card"><h2 id="hallTitle">Hero Hall</h2><div class="hall-overall"><div class="hall-overall-label"><span>Overall Progress</span><span id="hallPctLabel">0%</span></div><div class="hall-overall-bar"><div class="fill" id="hallOverallBar" style="width:0%"></div></div></div><p class="ach-summary" id="achSummary"></p><div class="collectible-showcase" id="collectibleShowcase"></div><div id="raritySections"></div><h3 class="hall-meta-title">Journey Honors</h3><div class="achievements" id="metaAchievements"></div></div></section>
 <section id="rulebook" class="screen">
 <div class="card" id="prologue">
 <h2>📖 The Hero's Journey</h2>
@@ -398,6 +615,20 @@ let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,mea
 if(!Array.isArray(state.pendingReports)) state.pendingReports=[];
 let renderSnapshot=null;
 const ACH_SEEN_KEY="hj_seen_achievements";
+const MILESTONE_SEEN_KEY="hj_seen_deed_milestones";
+const DEED_MILESTONES=[
+  {deeds:5,bonus:1,total:1,name:"First Deed Reward"},
+  {deeds:10,bonus:1,total:2,name:"Deed Pathfinder"},
+  {deeds:15,bonus:2,total:4,name:"Rising Champion"},
+  {deeds:20,bonus:2,total:6,name:"Hero Hall Expansion"},
+  {deeds:25,bonus:3,total:9,name:"Banner Bearer"},
+  {deeds:30,bonus:3,total:12,name:"Legendary Banner Unlocked"},
+  {deeds:40,bonus:4,total:16,name:"Ancient Dragon Trembles"},
+  {deeds:50,bonus:5,total:21,name:"Master of the Journey"}
+];
+const DEED_BONUS_MAX=21;
+const RARITY_ORDER=["bronze","silver","gold","platinum","legendary"];
+const RARITY_LABELS={bronze:"Common",silver:"Rare",gold:"Epic",platinum:"Platinum",legendary:"Legendary"};
 const questLabels={books:"Path of Knowledge",meals:"Path of Banqueting",language:"Path of Respect",coop:"Path of Brotherhood"};
 const dragonTaunts={
   full:["Two years? Please. I nap longer than that.","Your strikes barely scratch my scales.","Keep reading. I am not worried."],
@@ -504,7 +735,97 @@ function readingHP(){return countMs(state.books,settings.readingMs,15)}
 function mealHP(){return countMs(state.meals,settings.mealMs,15)}
 function langHP(){return Math.min(10,Math.floor(state.language/14))}
 function coopHP(){return countMs(state.coop,settings.coopMs,10)}
-function hp(){return readingHP()+mealHP()+langHP()+coopHP()}
+function questHP(){return readingHP()+mealHP()+langHP()+coopHP()}
+function journeyPctNum(){return Math.round(damage()/settings.duration*100)}
+function approvedReportCount(){return (state.pendingReports||[]).filter(r=>r.status==="approved").length}
+function countableAchievementDefs(){
+  return [
+    {id:"book1",done:state.books>=1,icon:"📖",title:"First Chapter",sub:"Complete 1 book",rarity:"bronze"},
+    {id:"book3",done:state.books>=3,icon:"📕",title:"Story Starter",sub:"Complete 3 books",rarity:"bronze"},
+    {id:"book5",done:state.books>=5,icon:"📚",title:"Bookworm",sub:"Complete 5 books",rarity:"bronze",unlock:{icon:"🏳️",name:"Library Banner"}},
+    {id:"book10",done:state.books>=10,icon:"🧠",title:"Keeper of Knowledge",sub:"Complete 10 books",rarity:"silver"},
+    {id:"book15",done:state.books>=15,icon:"📗",title:"Library Raider",sub:"Complete 15 books",rarity:"gold",unlock:{icon:"📜",name:"Ancient Tome"}},
+    {id:"book20",done:state.books>=20,icon:"🏛",title:"Master Scholar",sub:"Complete 20 books",rarity:"platinum"},
+    {id:"book25",done:state.books>=25,icon:"🦉",title:"Wise Owl",sub:"Complete 25 books",rarity:"platinum"},
+    {id:"book29",done:state.books>=29,icon:"👑",title:"Reading Legend",sub:"Complete 29 books",rarity:"legendary",unlock:{icon:"✒️",name:"Golden Quill"}},
+    {id:"meal1",done:state.meals>=1,icon:"🍽",title:"Pull Up a Chair",sub:"Earn 1 Meal Merit Point",rarity:"bronze"},
+    {id:"meal10",done:state.meals>=10,icon:"🥄",title:"Table Regular",sub:"Earn 10 Meal Merit Points",rarity:"bronze"},
+    {id:"meal25",done:state.meals>=25,icon:"🥘",title:"Family Tradition",sub:"Earn 25 Meal Merit Points",rarity:"silver"},
+    {id:"meal50",done:state.meals>=50,icon:"🍖",title:"Banquet Hero",sub:"Earn 50 Meal Merit Points",rarity:"gold"},
+    {id:"meal75",done:state.meals>=75,icon:"🍲",title:"Feast Fighter",sub:"Earn 75 Meal Merit Points",rarity:"platinum"},
+    {id:"meal100",done:state.meals>=100,icon:"🥇",title:"Dining Champion",sub:"Earn 100 Meal Merit Points",rarity:"legendary",unlock:{icon:"🍽",name:"Feast Banner"}},
+    {id:"meal150",done:state.meals>=150,icon:"🏆",title:"Meal Master",sub:"Earn 150 Meal Merit Points",rarity:"legendary"},
+    {id:"lang7",done:state.language>=7,icon:"🗣",title:"Mindful Words",sub:"Earn 7 Language Merit Days",rarity:"bronze"},
+    {id:"lang14",done:state.language>=14,icon:"💬",title:"Two-Week Streak",sub:"Earn 14 Language Merit Days",rarity:"silver",unlock:{icon:"🛡",name:"Honor Shield"}},
+    {id:"lang30",done:state.language>=30,icon:"📣",title:"Voice of Honor",sub:"Earn 30 Language Merit Days",rarity:"gold"},
+    {id:"lang56",done:state.language>=56,icon:"🎖",title:"Respect Veteran",sub:"Earn 56 Language Merit Days",rarity:"platinum"},
+    {id:"lang100",done:state.language>=100,icon:"🌟",title:"Legendary Courtesy",sub:"Earn 100 Language Merit Days",rarity:"legendary"},
+    {id:"lang140",done:state.language>=140,icon:"✨",title:"Language Legend",sub:"Earn 140 Language Merit Days",rarity:"legendary"},
+    {id:"coop1",done:state.coop>=1,icon:"🤝",title:"Helping Hand",sub:"Earn 1 Cooperation Credit",rarity:"bronze"},
+    {id:"coop5",done:state.coop>=5,icon:"🫱",title:"Team Player",sub:"Earn 5 Cooperation Credits",rarity:"silver"},
+    {id:"coop10",done:state.coop>=10,icon:"🛡",title:"Trusted Ally",sub:"Earn 10 Cooperation Credits",rarity:"silver"},
+    {id:"coop25",done:state.coop>=25,icon:"⚔",title:"Champion of Brotherhood",sub:"Earn 25 Cooperation Credits",rarity:"gold"},
+    {id:"coop35",done:state.coop>=35,icon:"🦁",title:"Brother's Shield",sub:"Earn 35 Cooperation Credits",rarity:"platinum"},
+    {id:"coop50",done:state.coop>=50,icon:"👊",title:"Brotherhood Legend",sub:"Earn 50 Cooperation Credits",rarity:"legendary",unlock:{icon:"🦁",name:"Brotherhood Crest"}},
+    {id:"dmg1",done:damage()>=1,icon:"⚔",title:"First Blood",sub:"Deal first damage to the Dragon",rarity:"bronze"},
+    {id:"dmg50",done:damage()>=50,icon:"🗡",title:"Scale Scratcher",sub:"Deal 50 Dragon damage",rarity:"silver"},
+    {id:"dmg100",done:damage()>=100,icon:"🐉",title:"Dragon Hunter",sub:"Deal 100 Dragon damage",rarity:"gold"},
+    {id:"dmg200",done:damage()>=200,icon:"💥",title:"Dragon Brawler",sub:"Deal 200 Dragon damage",rarity:"gold"},
+    {id:"dmg365",done:damage()>=365,icon:"🔥",title:"Halfway There",sub:"Deal 365 Dragon damage",rarity:"platinum"},
+    {id:"dmg500",done:damage()>=500,icon:"🌋",title:"Dragon Crusher",sub:"Deal 500 Dragon damage",rarity:"legendary"},
+    {id:"pct10",done:journeyPctNum()>=10,icon:"🎯",title:"First Steps",sub:"Complete 10% of the journey",rarity:"bronze"},
+    {id:"pct25",done:journeyPctNum()>=25,icon:"🚩",title:"Quarter Quest",sub:"Complete 25% of the journey",rarity:"silver"},
+    {id:"pct50",done:journeyPctNum()>=50,icon:"⛰",title:"Half the Mountain",sub:"Complete 50% of the journey",rarity:"gold",unlock:{icon:"🗺",name:"Journey Pennant"}},
+    {id:"pct75",done:journeyPctNum()>=75,icon:"🏔",title:"Almost Legendary",sub:"Complete 75% of the journey",rarity:"platinum"},
+    {id:"rem500",done:remaining()<=500,icon:"😤",title:"Dragon Worried",sub:"Reduce Dragon below 500 HP",rarity:"silver"},
+    {id:"rem250",done:remaining()<=250,icon:"😰",title:"Dragon Shaken",sub:"Reduce Dragon below 250 HP",rarity:"gold"},
+    {id:"rem100",done:remaining()<=100,icon:"💀",title:"Ancient Foe",sub:"Reduce Dragon below 100 HP",rarity:"gold"},
+    {id:"rem50",done:remaining()<=50,icon:"☠",title:"Final Roar",sub:"Reduce Dragon below 50 HP",rarity:"platinum"},
+    {id:"rem0",done:remaining()<=0,icon:"👑",title:"Dragon Slayer",sub:"Defeat the Dragon",rarity:"legendary",unlock:{icon:"⚔️",name:"Dragon Slayer Sword"}},
+    {id:"allpaths",done:state.books>=1&&state.meals>=1&&state.language>=1&&state.coop>=1,icon:"🧭",title:"All Paths Walked",sub:"Progress on every quest path",rarity:"bronze"},
+    {id:"wellround",done:state.books>=5&&state.meals>=5&&state.language>=5&&state.coop>=5,icon:"⚖",title:"Well-Rounded Hero",sub:"At least 5 on each quest path",rarity:"silver",unlock:{icon:"⚖",name:"Balance Emblem"}},
+    {id:"triple10",done:[state.books>=10,state.meals>=10,state.language>=10,state.coop>=10].filter(Boolean).length>=3,icon:"🔱",title:"Triple Threat",sub:"Reach 10+ on three quest paths",rarity:"gold"},
+    {id:"report1",done:approvedReportCount()>=1,icon:"📨",title:"Quest Reporter",sub:"Get 1 quest report approved",rarity:"bronze"},
+    {id:"report5",done:approvedReportCount()>=5,icon:"📬",title:"Field Agent",sub:"Get 5 quest reports approved",rarity:"silver"},
+    {id:"report10",done:approvedReportCount()>=10,icon:"📮",title:"Master Messenger",sub:"Get 10 quest reports approved",rarity:"gold",unlock:{icon:"📬",name:"Messenger Satchel"}},
+    {id:"questlegend",done:questHP()>=50,icon:"🎖",title:"Quest Legend",sub:"Earn all 50 quest Hero Points",rarity:"legendary",unlock:{icon:"👑",name:"Quest Crown"}},
+    {id:"strike",done:state.legend,icon:"⚡",title:"Legendary Strike",sub:"Apply the Legendary Strike",rarity:"legendary",unlock:{icon:"⚡",name:"Lightning Sigil"}}
+  ];
+}
+function countableUnlocked(){return countableAchievementDefs().filter(a=>a.done).length}
+function achievementHP(){
+  const count=countableUnlocked();
+  let total=0;
+  DEED_MILESTONES.forEach(m=>{if(count>=m.deeds)total=m.total});
+  return total;
+}
+function hp(){return questHP()+achievementHP()}
+function nextDeedMilestone(){
+  const count=countableUnlocked();
+  for(const m of DEED_MILESTONES){if(count<m.deeds)return{remaining:m.deeds-count,bonus:m.bonus,total:m.total,name:m.name,deeds:m.deeds}}
+  return null;
+}
+function getMetaAchievementDefs(){
+  const totalHP=hp();
+  const unlocked=countableUnlocked();
+  return [
+    {id:"hp1",done:totalHP>=1,icon:"⭐",title:"First Hero Point",sub:"Earn 1 Hero Point",rarity:"bronze"},
+    {id:"hp10",done:totalHP>=10,icon:"🌱",title:"Apprentice Hero",sub:"Reach 10 total Hero Points",rarity:"silver"},
+    {id:"hp20",done:totalHP>=20,icon:"🧭",title:"Adventurer",sub:"Reach 20 total Hero Points",rarity:"silver"},
+    {id:"hp30",done:totalHP>=30,icon:"📜",title:"Scholar",sub:"Reach 30 total Hero Points",rarity:"gold"},
+    {id:"hp40",done:totalHP>=40,icon:"🏅",title:"Champion",sub:"Reach 40 total Hero Points",rarity:"gold"},
+    {id:"hp50",done:totalHP>=50,icon:"👑",title:"Legend",sub:"Reach 50 total Hero Points",rarity:"platinum",unlock:{icon:"👑",name:"Golden Crown"}},
+    {id:"hp55",done:totalHP>=55,icon:"💫",title:"Beyond Legend",sub:"Reach 55 total Hero Points",rarity:"platinum"},
+    {id:"hp60",done:totalHP>=60,icon:"🌠",title:"Mythic Hero",sub:"Reach 60 total Hero Points",rarity:"legendary"},
+    {id:"trophy5",done:unlocked>=5,icon:"🏅",title:"Deed Collector",sub:"Complete 5 Heroic Deeds",rarity:"bronze"},
+    {id:"trophy10",done:unlocked>=10,icon:"🎖",title:"Deed Hunter",sub:"Complete 10 Heroic Deeds",rarity:"silver"},
+    {id:"trophy20",done:unlocked>=20,icon:"🥇",title:"Glory Seeker",sub:"Complete 20 Heroic Deeds",rarity:"gold"},
+    {id:"trophy30",done:unlocked>=30,icon:"🏆",title:"Hall Champion",sub:"Complete 30 Heroic Deeds",rarity:"platinum"},
+    {id:"trophy40",done:unlocked>=40,icon:"👑",title:"Deed King",sub:"Complete 40 Heroic Deeds",rarity:"legendary"}
+  ];
+}
+function getAchievementDefs(){return countableAchievementDefs().concat(getMetaAchievementDefs())}
+function achievementsUnlocked(){return getAchievementDefs().filter(a=>a.done).length}
 function hpBal(){return Math.max(0,hp()-state.spent)}
 function readingDays(){return state.books*5+Math.floor(state.books/10)*2}
 function mealDays(){return state.meals}
@@ -520,8 +841,8 @@ function nextMs(n,arr){return arr.find(x=>x>n)||null}
 function add(type){requireParent("Add progress",function(){const beforeHP=hp(),beforeLevel=level(),beforeRemain=remaining();state[type]++;if(type==="books")log("+1 completed book. Dragon takes 5 damage.");if(type==="meals")log("+1 Meal Merit Point. Dragon takes 1 damage.");if(type==="language")log("+1 Language Merit Day. Dragon takes 1 damage.");if(type==="coop")log("+1 Cooperation Credit. Dragon takes 3 damage.");save();const afterHP=hp(),afterLevel=level();if(afterHP>beforeHP)toast("🏆 HERO POINT EARNED<br>+"+(afterHP-beforeHP)+" HP");if(afterLevel!==beforeLevel)toast("⚔ LEVEL UP<br>"+afterLevel+" achieved!");if(remaining()<beforeRemain&&remaining()<=0)toast("🐉 DRAGON DEFEATED<br>The challenge is complete!");});}
 function remove(type){requireParent("Remove progress",function(){state[type]=Math.max(0,state[type]-1);log("-1 "+type);save();});}
 function spendRecovery(){requireParent("Spend Hero Point Recovery",function(){if(hpBal()<1){alert("Not enough Hero Points.");return}state.spent++;state.language++;log("Spent 1 HP to recover a Language Merit Day.");save();toast("✨ RECOVERY USED<br>Language Merit Day restored.");});}
-function applyLegend(){requireParent("Apply Legendary Strike",function(){if(hp()<50){alert("Legend requires 50 Hero Points.");return}if(state.legend){alert("Legend bonus already applied.");return}state.legend=true;log("Legend bonus applied. Dragon takes "+settings.legendBonus+" damage.");save();toast("🌟 LEGENDARY STRIKE<br>"+settings.legendBonus+" damage!");});}
-function progressSnapshot(){return{damage:damage(),hp:hp(),remaining:remaining(),books:state.books,meals:state.meals,language:state.language,coop:state.coop};}
+function applyLegend(){requireParent("Apply Legendary Strike",function(){if(questHP()<50){alert("Legend requires 50 quest Hero Points (from reading, meals, language, and cooperation).");return}if(state.legend){alert("Legend bonus already applied.");return}state.legend=true;log("Legend bonus applied. Dragon takes "+settings.legendBonus+" damage.");save();toast("🌟 LEGENDARY STRIKE<br>"+settings.legendBonus+" damage!");});}
+function progressSnapshot(){return{damage:damage(),hp:hp(),questHP:questHP(),achievementHP:achievementHP(),remaining:remaining(),books:state.books,meals:state.meals,language:state.language,coop:state.coop};}
 function pokeDragon(){
   const r=remaining();
   let pool=dragonTaunts.full;
@@ -567,7 +888,12 @@ function detectProgressChanges(){
   if(!renderSnapshot){renderSnapshot=now;return;}
   const dmgDelta=now.damage-renderSnapshot.damage;
   if(dmgDelta>0) playDragonHit(dmgDelta);
-  if(now.hp>renderSnapshot.hp) flashStat("hp");
+  if(now.hp>renderSnapshot.hp){
+    flashStat("hp");
+    const bonusDelta=now.achievementHP-renderSnapshot.achievementHP;
+    if(bonusDelta>0) toast("🏆 DEED MILESTONE<br>+"+bonusDelta+" Hero Point bonus from Heroic Deeds!");
+    else if(now.questHP>renderSnapshot.questHP) toast("🏆 HERO POINT EARNED<br>+"+(now.hp-renderSnapshot.hp)+" HP");
+  }
   if(now.remaining<renderSnapshot.remaining) flashStat("dragonRemaining");
   renderSnapshot=now;
 }
@@ -592,49 +918,45 @@ function celebrate(icon,title,sub){
   launchConfetti();
 }
 function closeCelebration(){document.getElementById("celebration").classList.remove("show");}
-function getAchievementDefs(){
-  return [
-    {id:"book1",done:state.books>=1,icon:"📖",title:"First Chapter",sub:"Complete 1 book"},
-    {id:"book5",done:state.books>=5,icon:"📚",title:"Bookworm",sub:"Complete 5 books"},
-    {id:"book10",done:state.books>=10,icon:"🧠",title:"Keeper of Knowledge",sub:"Complete 10 books"},
-    {id:"book20",done:state.books>=20,icon:"🏛",title:"Master Scholar",sub:"Complete 20 books"},
-    {id:"meal1",done:state.meals>=1,icon:"🍽",title:"Pull Up a Chair",sub:"Earn 1 Meal Merit Point"},
-    {id:"meal25",done:state.meals>=25,icon:"🥘",title:"Family Tradition",sub:"Earn 25 Meal Merit Points"},
-    {id:"meal50",done:state.meals>=50,icon:"🍖",title:"Banquet Hero",sub:"Earn 50 Meal Merit Points"},
-    {id:"lang7",done:state.language>=7,icon:"🗣",title:"Mindful Words",sub:"Earn 7 Language Merit Days"},
-    {id:"lang30",done:state.language>=30,icon:"📣",title:"Voice of Honor",sub:"Earn 30 Language Merit Days"},
-    {id:"lang100",done:state.language>=100,icon:"🌟",title:"Legendary Courtesy",sub:"Earn 100 Language Merit Days"},
-    {id:"coop1",done:state.coop>=1,icon:"🤝",title:"Helping Hand",sub:"Earn 1 Cooperation Credit"},
-    {id:"coop10",done:state.coop>=10,icon:"🛡",title:"Trusted Ally",sub:"Earn 10 Cooperation Credits"},
-    {id:"coop25",done:state.coop>=25,icon:"🏆",title:"Champion of Brotherhood",sub:"Earn 25 Cooperation Credits"},
-    {id:"dmg1",done:damage()>=1,icon:"⚔",title:"First Blood",sub:"Deal first damage to the Dragon"},
-    {id:"dmg100",done:damage()>=100,icon:"🐉",title:"Dragon Hunter",sub:"Deal 100 Dragon damage"},
-    {id:"dmg365",done:damage()>=365,icon:"🔥",title:"Halfway There",sub:"Deal 365 Dragon damage"},
-    {id:"rem100",done:remaining()<=100,icon:"💀",title:"Ancient Foe",sub:"Reduce Dragon below 100 HP"},
-    {id:"rem0",done:remaining()<=0,icon:"👑",title:"Dragon Slayer",sub:"Defeat the Dragon"},
-    {id:"hp1",done:hp()>=1,icon:"⭐",title:"First Hero Point",sub:"Earn 1 Hero Point"},
-    {id:"hp10",done:hp()>=10,icon:"⚔",title:"Apprentice Hero",sub:"Reach 10 Hero Points"},
-    {id:"hp20",done:hp()>=20,icon:"🧭",title:"Adventurer",sub:"Reach 20 Hero Points"},
-    {id:"hp30",done:hp()>=30,icon:"📜",title:"Scholar",sub:"Reach 30 Hero Points"},
-    {id:"hp40",done:hp()>=40,icon:"🏅",title:"Champion",sub:"Reach 40 Hero Points"},
-    {id:"hp50",done:hp()>=50,icon:"👑",title:"Legend",sub:"Reach 50 Hero Points"}
-  ];
+function checkNewMilestones(){
+  const count=countableUnlocked();
+  const seen=new Set(JSON.parse(localStorage.getItem(MILESTONE_SEEN_KEY)||"[]"));
+  if(!localStorage.getItem(MILESTONE_SEEN_KEY)){
+    DEED_MILESTONES.filter(m=>count>=m.deeds).forEach(m=>seen.add(m.deeds));
+    localStorage.setItem(MILESTONE_SEEN_KEY,JSON.stringify([...seen]));
+    return;
+  }
+  DEED_MILESTONES.forEach(m=>{
+    if(count>=m.deeds&&!seen.has(m.deeds)){
+      seen.add(m.deeds);
+      celebrate("🏛",m.name,"+"+m.bonus+" Hero Point bonus! Total deed bonus: +"+m.total+" HP");
+    }
+  });
+  localStorage.setItem(MILESTONE_SEEN_KEY,JSON.stringify([...seen]));
 }
 function checkNewAchievements(){
-  const defs=getAchievementDefs();
+  const countable=countableAchievementDefs();
+  const meta=getMetaAchievementDefs();
   const seen=new Set(JSON.parse(localStorage.getItem(ACH_SEEN_KEY)||"[]"));
   if(!localStorage.getItem(ACH_SEEN_KEY)){
-    defs.filter(a=>a.done).forEach(a=>seen.add(a.id));
+    countable.concat(meta).filter(a=>a.done).forEach(a=>seen.add(a.id));
     localStorage.setItem(ACH_SEEN_KEY,JSON.stringify([...seen]));
     return;
   }
-  defs.forEach(a=>{
+  countable.forEach(a=>{
     if(a.done&&!seen.has(a.id)){
       seen.add(a.id);
-      celebrate(a.icon,a.title+" Unlocked!",a.sub);
+      celebrate(a.icon,"Heroic Deed: "+a.title,a.sub+(a.unlock?" • Unlocked: "+a.unlock.name:""));
+    }
+  });
+  meta.forEach(a=>{
+    if(a.done&&!seen.has(a.id)){
+      seen.add(a.id);
+      celebrate(a.icon,a.title+" Unlocked!",a.sub+(a.unlock?" • Unlocked: "+a.unlock.name:""));
     }
   });
   localStorage.setItem(ACH_SEEN_KEY,JSON.stringify([...seen]));
+  checkNewMilestones();
 }
 function submitQuestReport(type){
   const note=prompt("Tell your parents what you finished (optional):");
@@ -676,6 +998,16 @@ function dismissReport(id){
 }
 function render(){
   const ds=dragonStage();
+  const r=remaining();
+  const bossCard=document.getElementById("bossCard");
+  if(bossCard){
+    let stage="ancient";
+    if(r<=0) stage="defeated";
+    else if(r<=150) stage="last";
+    else if(r<=350) stage="cornered";
+    else if(r<=550) stage="wounded";
+    bossCard.dataset.stage=stage;
+  }
   document.getElementById("dragonName").textContent=ds[0];
   document.getElementById("dragonStage").textContent=ds[1];
   document.getElementById("dragonArt").textContent=ds[2];
@@ -690,13 +1022,16 @@ function render(){
   document.getElementById("heroLevel").textContent=level();
   document.getElementById("hp").textContent=hp();
   document.getElementById("hpBal").textContent=hpBal();
+  const qhp=questHP(),ahp=achievementHP();
+  const hpBreakdown=document.getElementById("hpBreakdown");
+  if(hpBreakdown) hpBreakdown.textContent=qhp+" quest + "+ahp+" deeds";
   let nl=nextLevel();
   document.getElementById("nextLevel").textContent=nl?(nl[1]-hp())+" HP":"Legend";
   const strikeBtn=document.querySelector(".strike-button");
   if(strikeBtn){
-    const ready=hp()>=50&&!state.legend;
+    const ready=questHP()>=50&&!state.legend;
     strikeBtn.disabled=!ready;
-    strikeBtn.textContent=state.legend?"Legendary Strike Applied":(ready?"Apply Legendary Strike":"Reach Legend to Unlock");
+    strikeBtn.textContent=state.legend?"Legendary Strike Applied":(ready?"Apply Legendary Strike":"Reach 50 Quest HP to Unlock");
   }
   renderBounty();renderQuests();renderLevels();renderAch();renderChronicle();renderLedger();renderPendingReports();renderParent();
   detectProgressChanges();
@@ -704,7 +1039,7 @@ function render(){
   localStorage.setItem("hj_rpg_state",JSON.stringify(state));
   localStorage.setItem("hj_rpg_settings",JSON.stringify(settings));
 }
-function bountyItem(title,msg,pct){return '<div class="quest-card bounty-card"><div class="quest-name">'+title+'</div><div class="quest-reward">'+msg+'</div><div class="bounty-bar"><div class="bounty-fill" style="width:'+Math.min(100,Math.max(0,pct))+'%"></div></div></div>';}
+function bountyItem(cls,title,msg,pct){return '<div class="quest-card bounty-card quest-'+cls+'"><div class="quest-name">'+title+'</div><div class="quest-reward">'+msg+'</div><div class="bounty-bar"><div class="bounty-fill" style="width:'+Math.min(100,Math.max(0,pct))+'%"></div></div></div>';}
 function milestonePct(current,next,prev){
   if(next===null) return 100;
   const span=Math.max(1,next-(prev||0));
@@ -716,17 +1051,17 @@ function renderBounty(){
   const langRem=14-(state.language%14||14);
   const langPct=((14-langRem)/14)*100;
   document.getElementById("bounty").innerHTML=[
-    bountyItem("📚 Reading",r?(r-state.books)+" more book(s) to next HP":"Reading HP maxed. Books still damage Dragon.",milestonePct(state.books,r,prevMs(state.books,settings.readingMs))),
-    bountyItem("🍽 Meals",m?(m-state.meals)+" more meal point(s) to next HP":"Meal HP maxed. Meals still damage Dragon.",milestonePct(state.meals,m,prevMs(state.meals,settings.mealMs))),
-    bountyItem("🗣 Respect",(state.language>0&&state.language%14===0?14:langRem)+" more Merit Day(s) to next HP",langPct),
-    bountyItem("🤝 Brotherhood",c?(c-state.coop)+" more credit(s) to next HP":"Brotherhood HP maxed. Credits still damage Dragon.",milestonePct(state.coop,c,prevMs(state.coop,settings.coopMs)))
+    bountyItem("books","📚 Reading",r?(r-state.books)+" more book(s) to next HP":"Reading HP maxed. Books still damage Dragon.",milestonePct(state.books,r,prevMs(state.books,settings.readingMs))),
+    bountyItem("meals","🍽 Meals",m?(m-state.meals)+" more meal point(s) to next HP":"Meal HP maxed. Meals still damage Dragon.",milestonePct(state.meals,m,prevMs(state.meals,settings.mealMs))),
+    bountyItem("language","🗣 Respect",(state.language>0&&state.language%14===0?14:langRem)+" more Merit Day(s) to next HP",langPct),
+    bountyItem("coop","🤝 Brotherhood",c?(c-state.coop)+" more credit(s) to next HP":"Brotherhood HP maxed. Credits still damage Dragon.",milestonePct(state.coop,c,prevMs(state.coop,settings.coopMs)))
   ].join("");
 }
 function questActions(type,addName){
   if(parentUnlocked()) return '<div class="btns"><button class="action" onclick="add(\''+type+'\')">+ '+addName+'</button><button class="action secondary" onclick="remove(\''+type+'\')">-</button></div>';
   return '<div class="btns"><button class="action good" onclick="submitQuestReport(\''+type+'\')">📨 Report '+addName+'</button></div><p class="kid-hint">Parents approve reports before points are added.</p>';
 }
-function questCard(icon,name,count,days,hpText,addName,type,extra){return '<div class="quest-card"><div class="quest-name">'+icon+' '+name+'</div><div class="quest-reward">'+days+' Dragon damage • '+hpText+'</div><p>Count: <b>'+count+'</b></p>'+questActions(type,addName)+(extra||"")+'</div>';}
+function questCard(icon,name,count,days,hpText,addName,type,extra){return '<div class="quest-card quest-'+type+'"><div class="quest-name">'+icon+' '+name+'</div><div class="quest-reward">'+days+' Dragon damage • '+hpText+'</div><p>Count: <b>'+count+'</b></p>'+questActions(type,addName)+(extra||"")+'</div>';}
 function renderQuests(){
   const recoveryExtra=parentUnlocked()?'<div class="btns"><button class="action good" onclick="spendRecovery()">Spend 1 HP Recovery</button></div>':'<p class="kid-hint">Hero Point recovery is approved by parents.</p>';
   document.getElementById("questCards").innerHTML=[
@@ -736,9 +1071,58 @@ function renderQuests(){
     questCard("🤝","Path of Brotherhood",state.coop,coopDays(),coopHP()+"/10 HP","Credit","coop")
   ].join("");
 }
-function renderLevels(){document.getElementById("levelRoad").innerHTML=settings.levels.map(x=>{const cls=hp()>=x[1]?"done":(nextLevel()&&nextLevel()[0]===x[0]?"current":"");return '<div class="level '+cls+'"><div class="name">'+x[0]+'</div><div>'+(hp()>=x[1]?"✓":hp()+" / "+x[1])+'</div><div class="small">'+x[2]+'</div></div>'}).join("");}
-function badge(done,icon,title,sub){return '<div class="badge '+(done?"done":"")+'"><div class="icon">'+icon+'</div><b>'+title+'</b><br><span class="small">'+sub+'</span></div>';}
-function renderAch(){document.getElementById("achievements").innerHTML=getAchievementDefs().map(a=>badge(a.done,a.icon,a.title,a.sub)).join("");}
+const levelIcons={Apprentice:"🌱",Adventurer:"🧭",Scholar:"📜",Champion:"🏅",Legend:"👑"};
+function renderLevels(){document.getElementById("levelRoad").innerHTML=settings.levels.map(x=>{const cls=hp()>=x[1]?"done":(nextLevel()&&nextLevel()[0]===x[0]?"current":"");const icon=levelIcons[x[0]]||"⚔";return '<div class="level '+cls+'"><div class="level-icon">'+icon+'</div><div class="name">'+x[0]+'</div><div>'+(hp()>=x[1]?"✓ ACHIEVED":hp()+" / "+x[1]+" HP")+'</div><div class="small">'+x[2]+' reward</div></div>'}).join("");}
+function badge(done,icon,title,sub,rarity,unlock){
+  const r=rarity||"bronze";
+  const unlockHtml=unlock?'<div class="unlock-tag">'+unlock.icon+" "+unlock.name+'</div>':"";
+  return '<div class="badge badge-'+r+' '+(done?"done":"")+'"><div class="rarity-tag">'+RARITY_LABELS[r]+'</div><div class="icon">'+icon+'</div><b>'+title+'</b><br><span class="small">'+sub+'</span>'+unlockHtml+'</div>';
+}
+function getAllCollectibles(){
+  const map=new Map();
+  getAchievementDefs().forEach(a=>{
+    if(a.unlock) map.set(a.unlock.name,{icon:a.unlock.icon,name:a.unlock.name,deed:a.title,done:a.done});
+  });
+  return [...map.values()];
+}
+function renderAch(){
+  const countable=countableAchievementDefs();
+  const meta=getMetaAchievementDefs();
+  const counted=countable.filter(a=>a.done).length;
+  const totalCountable=countable.length;
+  const allUnlocked=getAchievementDefs().filter(a=>a.done).length;
+  const allTotal=getAchievementDefs().length;
+  const pct=Math.round(allUnlocked/allTotal*100);
+  const hallTitle=document.getElementById("hallTitle");
+  const hallPctLabel=document.getElementById("hallPctLabel");
+  const hallOverallBar=document.getElementById("hallOverallBar");
+  if(hallTitle) hallTitle.textContent="Hero Hall — "+pct+"% Complete";
+  if(hallPctLabel) hallPctLabel.textContent=pct+"%";
+  if(hallOverallBar) hallOverallBar.style.width=pct+"%";
+  const nextMs=nextDeedMilestone();
+  let milestoneHint=nextMs
+    ? '<span class="milestone-hint">'+nextMs.remaining+" more deed"+(nextMs.remaining===1?"":"s")+" until <b>"+nextMs.name+"</b> (+"+nextMs.bonus+" Hero Point"+(nextMs.bonus===1?"":"s")+")!</span>"
+    : "<span class=\"milestone-hint\">All deed milestones reached — max +"+DEED_BONUS_MAX+" bonus HP!</span>";
+  const achSummary=document.getElementById("achSummary");
+  if(achSummary) achSummary.innerHTML="<b>Heroic Deeds Completed: "+counted+"</b> / "+totalCountable+" • <b>+"+achievementHP()+"</b> deed bonus HP (max +"+DEED_BONUS_MAX+")<br>"+milestoneHint;
+  const raritySections=document.getElementById("raritySections");
+  if(raritySections){
+    raritySections.innerHTML=RARITY_ORDER.map(r=>{
+      const deeds=countable.filter(a=>a.rarity===r);
+      if(!deeds.length) return "";
+      const done=deeds.filter(a=>a.done).length;
+      const barPct=Math.round(done/deeds.length*100);
+      return '<div class="rarity-section"><div class="rarity-head"><span class="rarity-title t-'+r+'">'+RARITY_LABELS[r]+'</span><span class="rarity-count">'+done+' / '+deeds.length+'</span></div><div class="rarity-bar"><div class="fill f-'+r+'" style="width:'+barPct+'%"></div></div><div class="achievements">'+deeds.map(a=>badge(a.done,a.icon,a.title,a.sub,a.rarity,a.unlock)).join("")+'</div></div>';
+    }).join("");
+  }
+  const showcase=document.getElementById("collectibleShowcase");
+  if(showcase){
+    const items=getAllCollectibles();
+    showcase.innerHTML='<h3>🏺 Collectibles</h3><div class="collectible-row">'+items.map(c=>'<div class="collectible-item '+(c.done?"unlocked":"")+'" title="'+(c.done?"Unlocked by: "+c.deed:"Locked")+'"><div class="c-icon">'+c.icon+'</div><div class="c-name">'+c.name+'</div></div>').join("")+'</div>';
+  }
+  const metaEl=document.getElementById("metaAchievements");
+  if(metaEl) metaEl.innerHTML=meta.map(a=>badge(a.done,a.icon,a.title,a.sub,a.rarity,a.unlock)).join("");
+}
 function renderChronicle(){
   const el=document.getElementById("chronicle");
   if(!el) return;
@@ -752,7 +1136,19 @@ function renderPendingReports(){
   if(!pending.length){el.innerHTML='<p class="small">No pending reports right now.</p>';return;}
   el.innerHTML=pending.map(r=>'<div class="report-card"><b>'+questLabels[r.type]+'</b><div class="report-meta">'+new Date(r.created).toLocaleString()+(r.note?("<br>Note: "+r.note):"")+'</div><div class="btns"><button class="action good" onclick="approveReport(\''+r.id+'\')">Approve</button><button class="action secondary" onclick="dismissReport(\''+r.id+'\')">Dismiss</button></div></div>').join("");
 }
-function renderLedger(){const rows=[["Reading",state.books+" books",readingDays(),readingHP()+"/15"],["Path of Banqueting",state.meals+" points",mealDays(),mealHP()+"/15"],["Language",state.language+" days",langDays(),langHP()+"/10"],["Brotherhood",state.coop+" credits",coopDays(),coopHP()+"/10"],["Legend Strike",state.legend?"Applied":"Not applied",state.legend?settings.legendBonus:0,"—"],["TOTAL","",damage(),hp()+"/50"]];document.getElementById("ledger").innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>').join("");}
+function renderLedger(){
+  const maxHP=50+DEED_BONUS_MAX;
+  const rows=[
+    ["Reading",state.books+" books",readingDays(),readingHP()+"/15"],
+    ["Path of Banqueting",state.meals+" points",mealDays(),mealHP()+"/15"],
+    ["Language",state.language+" days",langDays(),langHP()+"/10"],
+    ["Brotherhood",state.coop+" credits",coopDays(),coopHP()+"/10"],
+    ["Deed Bonus",countableUnlocked()+" heroic deeds","—",achievementHP()+"/"+DEED_BONUS_MAX],
+    ["Legend Strike",state.legend?"Applied":"Not applied",state.legend?settings.legendBonus:0,"—"],
+    ["TOTAL (quest + deeds)","",damage(),questHP()+" + "+achievementHP()+" = "+hp()+"/"+maxHP]
+  ];
+  document.getElementById("ledger").innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>').join("");
+}
 function renderParent(){document.getElementById("booksInput").value=state.books;document.getElementById("mealsInput").value=state.meals;document.getElementById("languageInput").value=state.language;document.getElementById("coopInput").value=state.coop;document.getElementById("spentInput").value=state.spent;document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=state.log.map(x=>'<li>'+x+'</li>').join("");updateParentCodeStatus();}
 function saveManual(){requireParent("Save manual changes",function(){state.books=+booksInput.value||0;state.meals=+mealsInput.value||0;state.language=+languageInput.value||0;state.coop=+coopInput.value||0;state.spent=+spentInput.value||0;log("Manual progress updated.");save();});}
 function saveSettings(){requireParent("Save system settings",function(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();});}
