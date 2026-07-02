@@ -1,0 +1,23 @@
+{
+  "name": "Hero's Journey",
+  "short_name": "Hero's Journey",
+  "description": "Killian's Path to Legendary",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#120f1b",
+  "theme_color": "#120f1b",
+  "icons": [
+    {
+      "src": "app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
