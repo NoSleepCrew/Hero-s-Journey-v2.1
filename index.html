@@ -99,17 +99,17 @@ h2{margin:0 0 12px;font-family:var(--font-display);font-size:28px;color:var(--go
 .boss[data-stage="defeated"]{background:radial-gradient(circle at 50% 50%, rgba(224,184,74,.35), transparent 45%),linear-gradient(135deg,#2a2410,#1a2818);box-shadow:inset 0 0 80px rgba(224,184,74,.2)}
 @keyframes boss-danger-pulse{0%,100%{box-shadow:inset 0 0 80px rgba(255,30,30,.15)}50%{box-shadow:inset 0 0 120px rgba(255,50,30,.28)}}
 .dragon-art{
-  text-align:center;font-size:clamp(120px,22vw,190px);
+  text-align:center;
   filter:drop-shadow(0 10px 8px rgba(0,0,0,.55)) drop-shadow(0 0 30px rgba(255,80,40,.25));
   line-height:1;position:relative;z-index:2;
 }
-.dragon-svg{width:clamp(140px,32vw,220px);height:auto;display:block;margin:0 auto;transition:filter .5s ease,transform .2s}
-.dragon-svg--trophy{display:none;width:clamp(100px,24vw,160px)}
-.boss[data-stage="wounded"] .dragon-svg--beast{filter:hue-rotate(-20deg) saturate(1.1)}
-.boss[data-stage="cornered"] .dragon-svg--beast{filter:hue-rotate(-45deg) saturate(1.25)}
-.boss[data-stage="last"] .dragon-svg--beast{filter:hue-rotate(-60deg) saturate(1.4) drop-shadow(0 0 18px rgba(255,60,40,.5))}
-.boss[data-stage="defeated"] .dragon-svg--beast{display:none}
-.boss[data-stage="defeated"] .dragon-svg--trophy{display:block;margin:0 auto;filter:drop-shadow(0 0 20px rgba(224,184,74,.6))}
+.dragon-emoji-img{
+  width:clamp(140px,32vw,200px);height:auto;display:block;margin:0 auto;
+  user-select:none;-webkit-user-drag:none;pointer-events:none;
+  transition:transform .2s,filter .5s ease;
+}
+.boss[data-stage="last"] .dragon-emoji-img{filter:drop-shadow(0 0 18px rgba(255,60,40,.45))}
+.boss[data-stage="defeated"] .dragon-emoji-img{filter:drop-shadow(0 0 20px rgba(224,184,74,.55))}
 .boss-title{font-family:var(--font-display);font-size:clamp(28px,4vw,42px);font-weight:900;color:#ffcf60;text-shadow:0 4px #000,0 0 20px rgba(255,180,60,.3)}
 .boss-stage{font-size:20px;font-weight:800;color:#ffd993;margin:8px 0 14px}
 .hp-big{
@@ -275,9 +275,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 @media(max-width:800px){.rulebook-toc{columns:1}.rule-table{font-size:14px}.rule-table th,.rule-table td{padding:8px 5px}}
 @media(max-width:800px){
   .boss{grid-template-columns:1fr}
-  .dragon-art{font-size:120px}
-  .dragon-svg{width:min(160px,70vw)}
-  .dragon-svg--trophy{width:min(120px,50vw)}
+  .dragon-emoji-img{width:min(160px,68vw)}
   .level-road{flex-wrap:wrap}
   .level{min-width:45%;margin-bottom:12px}
   .level::after{display:none}
@@ -406,39 +404,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="dragon-speech" id="dragonSpeech">Tap me if you dare, hero.</div>
 <div class="damage-floats" id="damageFloats"></div>
 <div class="dragon-art interactive idle" id="dragonArt" onclick="pokeDragon()" title="Tap the dragon" role="img" aria-label="Ancient Dragon">
-<svg class="dragon-svg dragon-svg--beast" viewBox="0 0 240 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-  <defs>
-    <linearGradient id="dragonScale" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#7ddf6a"/>
-      <stop offset="55%" stop-color="#3fa84a"/>
-      <stop offset="100%" stop-color="#2d6e34"/>
-    </linearGradient>
-    <linearGradient id="dragonBelly" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#d8f7a0"/>
-      <stop offset="100%" stop-color="#8bc34a"/>
-    </linearGradient>
-  </defs>
-  <ellipse cx="118" cy="128" rx="62" ry="44" fill="url(#dragonBelly)"/>
-  <path d="M48 118c-8-34 18-72 58-78 34-5 64 12 78 42 10 22 8 48-8 66l-18-10c10-12 12-28 4-42-10-18-34-28-58-24-28 5-46 28-42 52l-14-16z" fill="url(#dragonScale)"/>
-  <path d="M156 52c18-8 36-2 44 12 6 10 4 24-4 32-6-14-18-24-34-26 2-8 0-14-6-18z" fill="#5ecf55"/>
-  <path d="M34 96c-16-6-28 4-30 20-2 14 8 26 22 28 4-16 12-30 24-40-6-2-11-5-16-8z" fill="#4caf50"/>
-  <path d="M178 88c14-10 30-6 36 8 5 12-2 26-16 30-2-12-8-22-18-30 0-4-1-6-2-8z" fill="#4caf50"/>
-  <circle cx="138" cy="72" r="28" fill="url(#dragonScale)"/>
-  <ellipse cx="150" cy="68" rx="8" ry="10" fill="#fff"/>
-  <ellipse cx="152" cy="70" rx="4.5" ry="5.5" fill="#1a1020"/>
-  <circle cx="154" cy="67" r="1.8" fill="#fff"/>
-  <path d="M166 78c10 4 18 14 20 26-8-4-16-4-24-2-2-10-2-18 4-24z" fill="#e85d4e"/>
-  <path d="M118 34c6-12 18-18 28-14-10 2-16 10-18 20-4-2-7-4-10-6z" fill="#5ecf55"/>
-  <path d="M92 44c-8-10-4-24 8-30-6 10-2 22 8 28-4 0-10 1-16-2z" fill="#5ecf55"/>
-  <path d="M70 150c-20 8-34 24-36 42 14-8 28-10 42-6-8-12-4-26 6-36z" fill="url(#dragonScale)"/>
-  <path d="M170 148c18 10 28 26 26 44-16-10-30-12-44-4 6-14 12-28 18-40z" fill="url(#dragonScale)"/>
-</svg>
-<svg class="dragon-svg dragon-svg--trophy" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-  <path d="M30 18h60l-6 26c8 4 14 12 14 22 0 14-12 26-28 26s-28-12-28-26c0-10 6-18 14-22l-6-26z" fill="#e0b84a" stroke="#a67c1a" stroke-width="3"/>
-  <path d="M42 118h36v14H42z" fill="#a67c1a"/>
-  <rect x="34" y="132" width="52" height="8" rx="2" fill="#7a5520"/>
-  <text x="60" y="58" text-anchor="middle" font-size="28" font-weight="bold" fill="#5a3d10">★</text>
-</svg>
+<img class="dragon-emoji-img" id="dragonEmojiImg" src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.1.2/img/apple/160/1f409.png" alt="" draggable="false" />
 </div>
 </div>
 </div>
@@ -879,6 +845,12 @@ function remaining(){return Math.max(0,settings.duration-damage())}
 function addDate(days){const d=new Date(settings.start+"T12:00:00");d.setDate(d.getDate()+days);return d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"})}
 function level(){let l="Unranked";settings.levels.forEach(x=>{if(hp()>=x[1])l=x[0]});return l}
 function nextLevel(){return settings.levels.find(x=>hp()<x[1])}
+function dragonEmojiUrl(code){return "https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.1.2/img/apple/160/"+code+".png";}
+function dragonEmojiForStage(stage){
+  if(stage==="defeated") return "1f3c6";
+  if(stage==="last") return "1f432";
+  return "1f409";
+}
 function dragonStage(){const r=remaining();if(r<=0)return ["Dragon Defeated","The journey is complete."];if(r<=150)return ["Last Stand Dragon","The final battle has begun."];if(r<=350)return ["Cornered Dragon","The dragon is losing ground."];if(r<=550)return ["Wounded Dragon","Your strikes are taking effect."];return ["Ancient Dragon","The great challenge still stands."];}
 function nextMs(n,arr){return arr.find(x=>x>n)||null}
 function add(type){requireParent("Add progress",function(){const beforeHP=hp(),beforeLevel=level(),beforeRemain=remaining();state[type]++;if(type==="books")log("+1 completed book. Dragon takes 5 damage.");if(type==="meals")log("+1 Meal Merit Point. Dragon takes 1 damage.");if(type==="language")log("+1 Language Merit Day. Dragon takes 1 damage.");if(type==="coop")log("+1 Cooperation Credit. Dragon takes 3 damage.");save();const afterHP=hp(),afterLevel=level();if(afterHP>beforeHP)toast("🏆 HERO POINT EARNED<br>+"+(afterHP-beforeHP)+" HP");if(afterLevel!==beforeLevel)toast("⚔ LEVEL UP<br>"+afterLevel+" achieved!");if(remaining()<beforeRemain&&remaining()<=0)toast("🐉 DRAGON DEFEATED<br>The challenge is complete!");});}
@@ -1055,6 +1027,8 @@ function render(){
   document.getElementById("dragonStage").textContent=ds[1];
   const dragonArt=document.getElementById("dragonArt");
   if(dragonArt) dragonArt.setAttribute("aria-label",ds[0]);
+  const dragonImg=document.getElementById("dragonEmojiImg");
+  if(dragonImg&&bossCard) dragonImg.src=dragonEmojiUrl(dragonEmojiForStage(bossCard.dataset.stage||"ancient"));
   document.getElementById("dragonRemaining").textContent=remaining();
   document.getElementById("damageDealt").textContent=damage();
   const pct=Math.round(damage()/settings.duration*100);
