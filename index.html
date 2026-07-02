@@ -745,7 +745,7 @@ function getHabitProgress(count){
 function habitLadderCard(habit,count){
   const p=getHabitProgress(count);
   const desc=habit.description?'<div class="small habit-desc">'+habit.description+"</div>":"";
-  return '<div class="habit-ladder-card badge-'+p.rarity+'"><div class="habit-ladder-head"><span class="habit-icon">'+habit.icon+'</span><span class="habit-name">'+habit.name+'</span><span class="habit-tier-tag">'+p.tierLabel+'</span></div>'+desc+'<div class="habit-count">'+count+" completed</div>"+'<div class="habit-progress-text small">'+p.progressText+'</div><div class="bounty-bar"><div class="bounty-fill f-'+p.rarity+'" style="width:'+Math.min(100,Math.max(0,p.barPct))+'%"></div></div><div class="habit-ladder-actions"><button class="action" onclick="adjustHabit(\''+habit.key+'\',1)">+1</button><button class="action secondary" onclick="adjustHabit(\''+habit.key+'\',-1)">-1</button></div></div>';
+  return '<div class="habit-ladder-card badge-'+p.rarity+'"><div class="habit-ladder-head"><span class="habit-icon">'+habit.icon+'</span><span class="habit-name">'+habit.name+'</span><span class="habit-tier-tag">'+p.tierLabel+'</span></div>'+desc+'<div class="habit-count">'+count+" completed</div>"+'<div class="habit-progress-text small">'+p.progressText+'</div><div class="bounty-bar"><div class="bounty-fill f-'+p.rarity+'" style="width:'+Math.min(100,Math.max(0,p.barPct))+'%"></div></div><div class="habit-ladder-actions"><button class="action" onclick="adjustHabit(\''+habit.key+'\',1)">+1</button></div></div>';
 }
 function checkHabitTierToasts(key,oldCount,newCount){
   const habit=HABIT_LADDERS.find(h=>h.key===key);
