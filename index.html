@@ -376,6 +376,8 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 .habit-desc{margin:0 0 6px;font-style:italic}
 .habit-count{font-size:15px;font-weight:800;margin:4px 0}
 .habit-progress-text{margin:0 0 8px;color:#a8e6cf;font-weight:800}
+.habit-ladder-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.habit-ladder-actions .action{flex:1;min-width:72px;padding:10px 12px;font-size:14px}
 .habit-parent-row{
   display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;
   padding:12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(224,184,74,.25);margin-bottom:10px;
@@ -473,7 +475,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="hero-stat"><div class="stat-icon">💎</div><div class="label">HP Balance</div><div class="value" id="hpBal">0</div></div>
 <div class="hero-stat"><div class="stat-icon">🎯</div><div class="label">Next Level</div><div class="value" id="nextLevel">10 HP</div></div>
 </div></div>
-<div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Independent ladder achievements for everyday heroic habits — scored separately from quests and Heroic Deeds.</p><div class="habit-ladders" id="habitLadders"></div></div>
+<div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Award habit completions here with +1 (Parent Code required). Use the Parent area to correct counts or set exact numbers.</p><div class="habit-ladders" id="habitLadders"></div></div>
 <div class="card"><h2>📜 Hero Chronicle</h2><ol class="chronicle" id="chronicle"></ol></div>
 <div class="card"><h2>Bounty Board</h2><div class="grid" id="bounty"></div></div>
 <div class="card legend-strike">
@@ -669,7 +671,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div><label>Cooperation Credits</label><input id="coopInput" type="number"></div>
 <div><label>Hero Points Spent</label><input id="spentInput" type="number"></div>
 </div><p><button class="action good" onclick="saveManual()">Save Manual Changes</button> <button class="action danger" onclick="resetAll()">Reset All</button></p></details></div>
-<div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Award or adjust habit ladder counts. Parent Code required for each change.</p><div id="parentHabitLadders"></div></div>
+<div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Correct habit ladder counts here: use -1, +1, or set an exact number. Parent Code required for each change.</p><div id="parentHabitLadders"></div></div>
 <div class="card"><details><summary>System Settings</summary><div class="grid">
 <div><label>Start Date</label><input id="startInput" type="date"></div>
 <div><label>Original Duration Days</label><input id="durationInput" type="number"></div>
@@ -743,7 +745,7 @@ function getHabitProgress(count){
 function habitLadderCard(habit,count){
   const p=getHabitProgress(count);
   const desc=habit.description?'<div class="small habit-desc">'+habit.description+"</div>":"";
-  return '<div class="habit-ladder-card badge-'+p.rarity+'"><div class="habit-ladder-head"><span class="habit-icon">'+habit.icon+'</span><span class="habit-name">'+habit.name+'</span><span class="habit-tier-tag">'+p.tierLabel+'</span></div>'+desc+'<div class="habit-count">'+count+" completed</div>"+'<div class="habit-progress-text small">'+p.progressText+'</div><div class="bounty-bar"><div class="bounty-fill f-'+p.rarity+'" style="width:'+Math.min(100,Math.max(0,p.barPct))+'%"></div></div></div>';
+  return '<div class="habit-ladder-card badge-'+p.rarity+'"><div class="habit-ladder-head"><span class="habit-icon">'+habit.icon+'</span><span class="habit-name">'+habit.name+'</span><span class="habit-tier-tag">'+p.tierLabel+'</span></div>'+desc+'<div class="habit-count">'+count+" completed</div>"+'<div class="habit-progress-text small">'+p.progressText+'</div><div class="bounty-bar"><div class="bounty-fill f-'+p.rarity+'" style="width:'+Math.min(100,Math.max(0,p.barPct))+'%"></div></div><div class="habit-ladder-actions"><button class="action" onclick="adjustHabit(\''+habit.key+'\',1)">+1</button><button class="action secondary" onclick="adjustHabit(\''+habit.key+'\',-1)">-1</button></div></div>';
 }
 function checkHabitTierToasts(key,oldCount,newCount){
   const habit=HABIT_LADDERS.find(h=>h.key===key);
@@ -796,7 +798,9 @@ function renderParentHabits(){
   if(!el) return;
   el.innerHTML=HABIT_LADDERS.map(h=>{
     const c=state.habitLadders[h.key]||0;
-    return '<div class="habit-parent-row"><div class="habit-parent-name">'+h.icon+" "+h.name+'</div><div class="habit-parent-controls"><span class="habit-parent-count">'+c+'</span><button class="action secondary" onclick="adjustHabit(\''+h.key+'\',-1)">-1</button><button class="action" onclick="adjustHabit(\''+h.key+'\',1)">+1</button><input id="habit_'+h.key+'" type="number" value="'+c+'" min="0"><button class="action good" onclick="setHabitManual(\''+h.key+'\')">Set</button></div></div>';
+    const p=getHabitProgress(c);
+    const desc=h.description?'<div class="small habit-desc">'+h.description+"</div>":"";
+    return '<div class="habit-parent-row"><div><div class="habit-parent-name">'+h.icon+" "+h.name+'</div>'+desc+'<div class="small habit-progress-text">'+p.tierLabel+" — "+p.progressText+'</div></div><div class="habit-parent-controls"><span class="habit-parent-count">'+c+'</span><button class="action secondary" onclick="adjustHabit(\''+h.key+'\',-1)">-1</button><button class="action" onclick="adjustHabit(\''+h.key+'\',1)">+1</button><input id="habit_'+h.key+'" type="number" value="'+c+'" min="0"><button class="action good" onclick="setHabitManual(\''+h.key+'\')">Set</button></div></div>';
   }).join("");
 }
 function habitLaddersForCloud(){
