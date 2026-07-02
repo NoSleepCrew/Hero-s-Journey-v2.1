@@ -194,8 +194,14 @@ h2{margin:0 0 12px;font-family:var(--font-display);font-size:28px;color:var(--go
 .level .level-icon{font-size:28px;margin-bottom:4px}
 .achievements{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
 .badge{
-  padding:14px;border-radius:16px;border:2px solid #5e4c2b;background:rgba(255,255,255,.05);
+  position:relative;padding:14px;border-radius:16px;border:2px solid #5e4c2b;background:rgba(255,255,255,.05);
   transition:transform .2s,border-color .3s,box-shadow .3s;
+}
+.badge-check{
+  position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;
+  background:linear-gradient(180deg,#6fd67a,#3fa84a);border:2px solid #b8f0c0;color:#fff;
+  font-size:14px;font-weight:900;line-height:18px;text-align:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.35),0 0 10px rgba(84,182,106,.45);
 }
 .badge:hover{transform:scale(1.03)}
 .badge.done{
@@ -1116,7 +1122,8 @@ function renderLevels(){document.getElementById("levelRoad").innerHTML=settings.
 function badge(done,icon,title,sub,rarity,unlock){
   const r=rarity||"bronze";
   const unlockHtml=unlock?'<div class="unlock-tag">'+unlock.icon+" "+unlock.name+'</div>':"";
-  return '<div class="badge badge-'+r+' '+(done?"done":"")+'"><div class="rarity-tag">'+RARITY_LABELS[r]+'</div><div class="icon">'+icon+'</div><b>'+title+'</b><br><span class="small">'+sub+'</span>'+unlockHtml+'</div>';
+  const checkHtml=done?'<div class="badge-check" aria-label="Earned">✓</div>':"";
+  return '<div class="badge badge-'+r+' '+(done?"done":"")+'">'+checkHtml+'<div class="rarity-tag">'+RARITY_LABELS[r]+'</div><div class="icon">'+icon+'</div><b>'+title+'</b><br><span class="small">'+sub+'</span>'+unlockHtml+'</div>';
 }
 let collectibleList=[];
 function getAllCollectibles(){
