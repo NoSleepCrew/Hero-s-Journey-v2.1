@@ -1,0 +1,22 @@
+# Office documents and temp Office lock files
+*.docx
+*.doc
+*.xlsx
+*.xls
+*.pptx
+*.ppt
+~$*
+
+# Design notes, backups, and old app copies
+archive/
+*.bak
+*.backup
+*_backup.*
+hero_journey_*.html
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.tmp
