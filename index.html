@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Hero's Journey RPG Dashboard</title>
+<style>
+:root{
+  --bg:#120f1b; --panel:#211a2e; --ink:#f7efd6; --muted:#c8b98a;
+  --gold:#e0b84a; --red:#c74848; --green:#54b66a; --line:#6b5730;
+  --shadow:0 16px 38px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family: Georgia, "Times New Roman", serif; color:var(--ink);
+  background:radial-gradient(circle at 10% 5%, rgba(224,184,74,.18), transparent 22%),
+             radial-gradient(circle at 90% 20%, rgba(93,134,216,.16), transparent 24%),
+             linear-gradient(160deg,#0d0b13,#221a2d 55%,#0d0b13);
+  min-height:100vh;
+}
+header{text-align:center;padding:28px 16px 18px;border-bottom:3px solid var(--gold);background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,.08))}
+h1{margin:0;font-size:clamp(34px,6vw,70px);letter-spacing:.06em;text-shadow:0 3px 0 #000}
+header p{margin:8px 0 0;font-size:clamp(16px,2.4vw,24px);color:var(--muted)}
+main{max-width:1180px;margin:18px auto 60px;padding:0 14px}
+.screen{display:none}.screen.active{display:block}
+.nav{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}
+.nav button{font-family:inherit;font-size:16px;padding:12px;border-radius:14px;border:2px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.nav button.active{background:linear-gradient(180deg,#5b4323,#2d223c);border-color:var(--gold)}
+.card{background:linear-gradient(180deg,rgba(45,34,60,.96),rgba(33,26,46,.96));border:2px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:18px;margin:14px 0;overflow:hidden}
+h2{margin:0 0 12px;font-size:30px;color:var(--gold);text-shadow:0 2px #000}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.boss{min-height:420px;display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center;background:radial-gradient(circle at 75% 45%, rgba(199,72,72,.25), transparent 28%),linear-gradient(135deg,#201125,#35171a)}
+.dragon-art{text-align:center;font-size:170px;filter:drop-shadow(0 10px 8px rgba(0,0,0,.55));line-height:1}
+.boss-title{font-size:44px;font-weight:900;color:#ffcf60;text-shadow:0 4px #000}
+.boss-stage{font-size:24px;color:#ffd993;margin:8px 0 18px}
+.hp-big{font-size:64px;font-weight:900;color:white;text-shadow:0 4px #000}
+.bar{height:26px;background:#140d16;border:2px solid #5c4128;border-radius:999px;overflow:hidden;box-shadow:inset 0 2px 8px rgba(0,0,0,.7)}
+.fill{height:100%;width:0%;background:linear-gradient(90deg,#ffcc55,#e85d4e);transition:.35s width}
+.hero-stat{background:rgba(255,255,255,.06);border:1px solid rgba(224,184,74,.45);border-radius:18px;padding:16px;text-align:center}
+.hero-stat .label{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.hero-stat .value{font-size:34px;font-weight:900;margin-top:6px}
+.quest-card{background:rgba(255,255,255,.06);border:2px solid rgba(224,184,74,.38);border-radius:20px;padding:16px}
+.quest-name{font-size:24px;font-weight:900;color:#ffdb77}
+.quest-reward{color:var(--muted);margin:4px 0 12px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.action{font-family:inherit;border:0;border-radius:14px;padding:11px 14px;font-size:16px;font-weight:900;color:#1b1408;background:linear-gradient(180deg,#ffd874,#b7831f);box-shadow:0 5px 0 #5a3a0f;cursor:pointer}
+.secondary{background:linear-gradient(180deg,#d5d0c2,#77706a);box-shadow:0 5px 0 #3e3a38;color:#111}
+.danger{background:linear-gradient(180deg,#e07777,#8f2525);box-shadow:0 5px 0 #461111;color:white}
+.good{background:linear-gradient(180deg,#80d38f,#327a3e);box-shadow:0 5px 0 #16401d;color:white}
+.level-road{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.level{padding:14px;border:2px solid #5e4c2b;border-radius:18px;text-align:center;background:rgba(255,255,255,.05);min-height:105px}
+.level.done{border-color:var(--green);background:rgba(84,182,106,.16)}
+.level.current{border-color:var(--gold);background:rgba(224,184,74,.14)}
+.level .name{font-size:20px;font-weight:900}
+.achievements{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.badge{padding:12px;border-radius:16px;border:2px solid #5e4c2b;background:rgba(255,255,255,.05)}
+.badge.done{border-color:var(--green);background:rgba(84,182,106,.15)}
+.badge .icon{font-size:26px}
+table{width:100%;border-collapse:collapse;background:rgba(255,255,255,.04);border-radius:16px;overflow:hidden}
+th,td{padding:10px;border-bottom:1px solid rgba(224,184,74,.25);text-align:left}
+th{color:var(--gold);background:rgba(0,0,0,.22)}
+.small{font-size:13px;color:var(--muted)}
+input{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#f8efd8;color:#18110b;font:16px Arial}
+label{display:block;margin:10px 0 4px;color:#ffdb77}
+details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
+.log{max-height:250px;overflow:auto}
+.toast{position:fixed;left:50%;top:22px;transform:translateX(-50%) translateY(-120px);background:linear-gradient(180deg,#ffdf7e,#b87d18);color:#140d08;border:3px solid #fff1a8;border-radius:20px;padding:18px 22px;box-shadow:0 18px 45px rgba(0,0,0,.5);font-weight:900;text-align:center;z-index:99;transition:.35s transform;min-width:min(92vw,420px)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+@media(max-width:800px){.boss{grid-template-columns:1fr}.dragon-art{font-size:120px}.level-road{grid-template-columns:1fr}.nav{grid-template-columns:repeat(2,1fr)}.hp-big{font-size:46px}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<header><h1>THE HERO'S JOURNEY</h1><p>Killian's Path to Legendary</p></header>
+<main>
+<div class="nav">
+<button onclick="showScreen('home')" id="nav-home" class="active">🐉 Dragon</button>
+<button onclick="showScreen('quests')" id="nav-quests">📜 Quests</button>
+<button onclick="showScreen('hall')" id="nav-hall">🏆 Hero Hall</button>
+<button onclick="showScreen('parent')" id="nav-parent">⚙ Parent</button>
+</div>
+<section id="home" class="screen active">
+<div class="card boss">
+<div>
+<div class="boss-title" id="dragonName">Ancient Dragon</div>
+<div class="boss-stage" id="dragonStage">The journey begins.</div>
+<div class="hp-big"><span id="dragonRemaining">730</span> HP</div>
+<div class="small">Damage dealt: <span id="damageDealt">0</span> / 730</div>
+<div class="bar" style="margin:14px 0"><div class="fill" id="dragonBar"></div></div>
+<div class="small">Current finish date: <b id="finishDate">—</b></div>
+</div>
+<div class="dragon-art" id="dragonArt">🐉</div>
+</div>
+<div class="card"><h2>Hero Status</h2><div class="grid">
+<div class="hero-stat"><div class="label">Level</div><div class="value" id="heroLevel">Unranked</div></div>
+<div class="hero-stat"><div class="label">Hero Points</div><div class="value"><span id="hp">0</span>/50</div></div>
+<div class="hero-stat"><div class="label">Current HP Balance</div><div class="value" id="hpBal">0</div></div>
+<div class="hero-stat"><div class="label">Next Level</div><div class="value" id="nextLevel">10 HP</div></div>
+</div></div>
+<div class="card"><h2>Bounty Board</h2><div class="grid" id="bounty"></div></div>
+</section>
+<section id="quests" class="screen"><div class="card"><h2>Quest Board</h2><div class="grid" id="questCards"></div></div></section>
+<section id="hall" class="screen"><div class="card"><h2>Hero Level Road</h2><div class="level-road" id="levelRoad"></div></div><div class="card"><h2>Achievements</h2><div class="achievements" id="achievements"></div></div></section>
+<section id="parent" class="screen">
+<div class="card"><h2>Progress Ledger</h2><table><thead><tr><th>Quest</th><th>Count</th><th>Dragon Damage</th><th>Hero Points</th></tr></thead><tbody id="ledger"></tbody></table></div>
+<div class="card"><details open><summary>Parent Controls</summary><div class="grid">
+<div><label>Books Completed</label><input id="booksInput" type="number"></div>
+<div><label>Meal Merit Points</label><input id="mealsInput" type="number"></div>
+<div><label>Language Merit Days</label><input id="languageInput" type="number"></div>
+<div><label>Cooperation Credits</label><input id="coopInput" type="number"></div>
+<div><label>Hero Points Spent</label><input id="spentInput" type="number"></div>
+</div><p><button class="action good" onclick="saveManual()">Save Manual Changes</button> <button class="action danger" onclick="resetAll()">Reset All</button></p></details></div>
+<div class="card"><details><summary>System Settings</summary><div class="grid">
+<div><label>Start Date</label><input id="startInput" type="date"></div>
+<div><label>Original Duration Days</label><input id="durationInput" type="number"></div>
+<div><label>Legend Bonus Days</label><input id="legendInput" type="number"></div>
+</div><p><button class="action good" onclick="saveSettings()">Save Settings</button></p></details></div>
+<div class="card"><h2>Event Log</h2><ol class="log" id="log"></ol></div>
+</section>
+</main>
+<script>
+const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
+let settings=JSON.parse(localStorage.getItem("hj_rpg_settings")||"null")||defaults;
+let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[]};
+function save(){localStorage.setItem("hj_rpg_state",JSON.stringify(state));localStorage.setItem("hj_rpg_settings",JSON.stringify(settings));render();}
+function log(msg){state.log.unshift(new Date().toLocaleString()+" — "+msg);state.log=state.log.slice(0,60);}
+function toast(msg){const t=document.getElementById("toast");t.innerHTML=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600);}
+function showScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));document.getElementById("nav-"+id).classList.add("active");}
+function countMs(n,arr,max){return Math.min(max,arr.filter(x=>n>=x).length);}
+function readingHP(){return countMs(state.books,settings.readingMs,15)}
+function mealHP(){return countMs(state.meals,settings.mealMs,15)}
+function langHP(){return Math.min(10,Math.floor(state.language/14))}
+function coopHP(){return countMs(state.coop,settings.coopMs,10)}
+function hp(){return readingHP()+mealHP()+langHP()+coopHP()}
+function hpBal(){return Math.max(0,hp()-state.spent)}
+function readingDays(){return state.books*5+Math.floor(state.books/10)*2}
+function mealDays(){return state.meals}
+function langDays(){return state.language+Math.floor(state.language/14)*7}
+function coopDays(){return state.coop*3}
+function damage(){return Math.min(settings.duration,readingDays()+mealDays()+langDays()+coopDays()+(state.legend?settings.legendBonus:0))}
+function remaining(){return Math.max(0,settings.duration-damage())}
+function addDate(days){const d=new Date(settings.start+"T12:00:00");d.setDate(d.getDate()+days);return d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"})}
+function level(){let l="Unranked";settings.levels.forEach(x=>{if(hp()>=x[1])l=x[0]});return l}
+function nextLevel(){return settings.levels.find(x=>hp()<x[1])}
+function dragonStage(){const r=remaining();if(r<=0)return ["Dragon Defeated","The journey is complete.","🏆"];if(r<=150)return ["Last Stand Dragon","The final battle has begun.","🐲"];if(r<=350)return ["Cornered Dragon","The dragon is losing ground.","🐉"];if(r<=550)return ["Wounded Dragon","Your strikes are taking effect.","🐉"];return ["Ancient Dragon","The great challenge still stands.","🐉"];}
+function nextMs(n,arr){return arr.find(x=>x>n)||null}
+function add(type){const beforeHP=hp(),beforeLevel=level(),beforeRemain=remaining();state[type]++;if(type==="books")log("+1 completed book. Dragon takes 5 damage.");if(type==="meals")log("+1 Meal Merit Point. Dragon takes 1 damage.");if(type==="language")log("+1 Language Merit Day. Dragon takes 1 damage.");if(type==="coop")log("+1 Cooperation Credit. Dragon takes 3 damage.");save();const afterHP=hp(),afterLevel=level();if(afterHP>beforeHP)toast("🏆 HERO POINT EARNED<br>+"+(afterHP-beforeHP)+" HP");if(afterLevel!==beforeLevel)toast("⚔ LEVEL UP<br>"+afterLevel+" achieved!");if(remaining()<beforeRemain&&remaining()<=0)toast("🐉 DRAGON DEFEATED<br>The challenge is complete!");}
+function remove(type){state[type]=Math.max(0,state[type]-1);log("-1 "+type);save();}
+function spendRecovery(){if(hpBal()<1){alert("Not enough Hero Points.");return}state.spent++;state.language++;log("Spent 1 HP to recover a Language Merit Day.");save();toast("✨ RECOVERY USED<br>Language Merit Day restored.")}
+function applyLegend(){if(hp()<50){alert("Legend requires 50 Hero Points.");return}if(state.legend){alert("Legend bonus already applied.");return}state.legend=true;log("Legend bonus applied. Dragon takes "+settings.legendBonus+" damage.");save();toast("🌟 LEGENDARY STRIKE<br>"+settings.legendBonus+" damage!");}
+function render(){const ds=dragonStage();document.getElementById("dragonName").textContent=ds[0];document.getElementById("dragonStage").textContent=ds[1];document.getElementById("dragonArt").textContent=ds[2];document.getElementById("dragonRemaining").textContent=remaining();document.getElementById("damageDealt").textContent=damage();document.getElementById("dragonBar").style.width=(damage()/settings.duration*100)+"%";document.getElementById("finishDate").textContent=addDate(remaining());document.getElementById("heroLevel").textContent=level();document.getElementById("hp").textContent=hp();document.getElementById("hpBal").textContent=hpBal();let nl=nextLevel();document.getElementById("nextLevel").textContent=nl?(nl[1]-hp())+" HP":"Legend";renderBounty();renderQuests();renderLevels();renderAch();renderLedger();renderParent();localStorage.setItem("hj_rpg_state",JSON.stringify(state));localStorage.setItem("hj_rpg_settings",JSON.stringify(settings));}
+function bountyItem(title,msg){return '<div class="quest-card"><div class="quest-name">'+title+'</div><div class="quest-reward">'+msg+'</div></div>'}
+function renderBounty(){const r=nextMs(state.books,settings.readingMs),m=nextMs(state.meals,settings.mealMs),c=nextMs(state.coop,settings.coopMs);const langRem=14-(state.language%14||14);document.getElementById("bounty").innerHTML=[bountyItem("📚 Reading",r?(r-state.books)+" more book(s) to next HP":"Reading HP maxed. Books still damage Dragon."),bountyItem("🍽 Meals",m?(m-state.meals)+" more meal point(s) to next HP":"Meal HP maxed. Meals still damage Dragon."),bountyItem("🗣 Respect",(state.language>0&&state.language%14===0?14:langRem)+" more Merit Day(s) to next HP"),bountyItem("🤝 Brotherhood",c?(c-state.coop)+" more credit(s) to next HP":"Brotherhood HP maxed. Credits still damage Dragon.")].join("");}
+function questCard(icon,name,count,days,hpText,addName,type,extra){return '<div class="quest-card"><div class="quest-name">'+icon+' '+name+'</div><div class="quest-reward">'+days+' Dragon damage • '+hpText+'</div><p>Count: <b>'+count+'</b></p><div class="btns"><button class="action" onclick="add(\''+type+'\')">+ '+addName+'</button><button class="action secondary" onclick="remove(\''+type+'\')">-</button></div>'+(extra||"")+'</div>'}
+function renderQuests(){document.getElementById("questCards").innerHTML=[questCard("📚","Path of Knowledge",state.books,readingDays(),readingHP()+"/15 HP","Book","books"),questCard("🍽","Family Table",state.meals,mealDays(),mealHP()+"/15 HP","Meal","meals"),questCard("🗣","Path of Respect",state.language,langDays(),langHP()+"/10 HP","Day","language",'<div class="btns"><button class="action good" onclick="spendRecovery()">Spend 1 HP Recovery</button></div>'),questCard("🤝","Path of Brotherhood",state.coop,coopDays(),coopHP()+"/10 HP","Credit","coop",'<div class="btns"><button class="action" onclick="applyLegend()">Apply Legend Strike</button></div>')].join("");}
+function renderLevels(){document.getElementById("levelRoad").innerHTML=settings.levels.map(x=>{const cls=hp()>=x[1]?"done":(nextLevel()&&nextLevel()[0]===x[0]?"current":"");return '<div class="level '+cls+'"><div class="name">'+x[0]+'</div><div>'+(hp()>=x[1]?"✓":hp()+" / "+x[1])+'</div><div class="small">'+x[2]+'</div></div>'}).join("");}
+function badge(done,icon,title,sub){return '<div class="badge '+(done?"done":"")+'"><div class="icon">'+icon+'</div><b>'+title+'</b><br><span class="small">'+sub+'</span></div>'}
+function renderAch(){document.getElementById("achievements").innerHTML=[badge(state.books>=1,"📖","First Book","Complete 1 book"),badge(hp()>=1,"⭐","First Hero Point","Earn 1 HP"),badge(state.meals>=10,"🍽","Family Table I","Earn 10 meal points"),badge(state.language>=14,"🗣","Respect I","Earn 14 merit days"),badge(state.coop>=5,"🤝","Brotherhood I","Earn 5 credits"),badge(hp()>=10,"⚔","Apprentice","Reach 10 HP"),badge(hp()>=20,"🛡","Adventurer","Reach 20 HP"),badge(hp()>=30,"📚","Scholar","Reach 30 HP"),badge(hp()>=40,"🏅","Champion","Reach 40 HP"),badge(hp()>=50,"👑","Legend","Reach 50 HP"),badge(remaining()<=0,"🐉","Dragon Defeated","Reduce all 730 days")].join("");}
+function renderLedger(){const rows=[["Reading",state.books+" books",readingDays(),readingHP()+"/15"],["Family Meals",state.meals+" points",mealDays(),mealHP()+"/15"],["Language",state.language+" days",langDays(),langHP()+"/10"],["Brotherhood",state.coop+" credits",coopDays(),coopHP()+"/10"],["Legend Strike",state.legend?"Applied":"Not applied",state.legend?settings.legendBonus:0,"—"],["TOTAL","",damage(),hp()+"/50"]];document.getElementById("ledger").innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>').join("");}
+function renderParent(){document.getElementById("booksInput").value=state.books;document.getElementById("mealsInput").value=state.meals;document.getElementById("languageInput").value=state.language;document.getElementById("coopInput").value=state.coop;document.getElementById("spentInput").value=state.spent;document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=state.log.map(x=>'<li>'+x+'</li>').join("");}
+function saveManual(){state.books=+booksInput.value||0;state.meals=+mealsInput.value||0;state.language=+languageInput.value||0;state.coop=+coopInput.value||0;state.spent=+spentInput.value||0;log("Manual progress updated.");save();}
+function saveSettings(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();}
+function resetAll(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[]};save();}}
+render();
+</script>
+</body>
+</html>
