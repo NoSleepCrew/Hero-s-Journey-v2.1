@@ -351,8 +351,39 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
   animation:bounty-shimmer 2s ease-in-out infinite;
 }
 @keyframes bounty-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.bounty-fill.f-bronze{background:linear-gradient(90deg,#8b5a2b,#cd7f32);box-shadow:0 0 10px rgba(205,127,50,.35)}
+.bounty-fill.f-silver{background:linear-gradient(90deg,#7a8a9a,#c0c0c0);box-shadow:0 0 10px rgba(192,192,192,.3)}
+.bounty-fill.f-gold{background:linear-gradient(90deg,#a67c1a,#ffd874);box-shadow:0 0 10px rgba(255,216,116,.35)}
+.bounty-fill.f-platinum{background:linear-gradient(90deg,#4a8fad,#8ecae6);box-shadow:0 0 10px rgba(142,202,230,.35)}
+.bounty-fill.f-legendary{background:linear-gradient(90deg,#6b3fa0,#d6b6ff);box-shadow:0 0 10px rgba(182,134,255,.35)}
 .bounty-card{transition:transform .2s,box-shadow .2s}
 .bounty-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.35)}
+.habit-ladders{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.habit-ladder-card{
+  padding:14px;border-radius:16px;border:2px solid #5e4c2b;background:rgba(255,255,255,.05);
+  transition:transform .2s,box-shadow .2s;
+}
+.habit-ladder-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.3)}
+.habit-ladder-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.habit-icon{font-size:26px;line-height:1}
+.habit-name{font-size:17px;font-weight:900;color:#ffdb77;flex:1}
+.habit-tier-tag{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;padding:4px 8px;border-radius:999px;border:1px solid rgba(224,184,74,.4);color:#ffe9a8}
+.habit-ladder-card.badge-bronze .habit-tier-tag{border-color:#cd7f32;color:#e8a04a}
+.habit-ladder-card.badge-silver .habit-tier-tag{border-color:#a8b4c4;color:#d0dce8}
+.habit-ladder-card.badge-gold .habit-tier-tag{border-color:#c9a227;color:#ffd874}
+.habit-ladder-card.badge-platinum .habit-tier-tag{border-color:#8ecae6;color:#caf0f8}
+.habit-ladder-card.badge-legendary .habit-tier-tag{border-color:#9b59b6;color:#d6b6ff}
+.habit-desc{margin:0 0 6px;font-style:italic}
+.habit-count{font-size:15px;font-weight:800;margin:4px 0}
+.habit-progress-text{margin:0 0 8px;color:#a8e6cf;font-weight:800}
+.habit-parent-row{
+  display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;
+  padding:12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(224,184,74,.25);margin-bottom:10px;
+}
+.habit-parent-name{font-weight:900;color:#ffdb77}
+.habit-parent-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.habit-parent-controls input{width:72px;margin:0}
+.habit-parent-count{min-width:2.5em;text-align:center;font-weight:900;font-size:18px}
 .chronicle{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto}
 .chronicle li{padding:10px 12px;margin:0 0 8px;border-left:4px solid var(--gold);background:rgba(255,255,255,.05);border-radius:0 12px 12px 0;font-size:14px;line-height:1.4}
 .kid-hint{margin:6px 0 0;color:var(--muted);font-size:13px}
@@ -442,6 +473,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="hero-stat"><div class="stat-icon">💎</div><div class="label">HP Balance</div><div class="value" id="hpBal">0</div></div>
 <div class="hero-stat"><div class="stat-icon">🎯</div><div class="label">Next Level</div><div class="value" id="nextLevel">10 HP</div></div>
 </div></div>
+<div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Independent ladder achievements for everyday heroic habits — scored separately from quests and Heroic Deeds.</p><div class="habit-ladders" id="habitLadders"></div></div>
 <div class="card"><h2>📜 Hero Chronicle</h2><ol class="chronicle" id="chronicle"></ol></div>
 <div class="card"><h2>Bounty Board</h2><div class="grid" id="bounty"></div></div>
 <div class="card legend-strike">
@@ -637,6 +669,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div><label>Cooperation Credits</label><input id="coopInput" type="number"></div>
 <div><label>Hero Points Spent</label><input id="spentInput" type="number"></div>
 </div><p><button class="action good" onclick="saveManual()">Save Manual Changes</button> <button class="action danger" onclick="resetAll()">Reset All</button></p></details></div>
+<div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Award or adjust habit ladder counts. Parent Code required for each change.</p><div id="parentHabitLadders"></div></div>
 <div class="card"><details><summary>System Settings</summary><div class="grid">
 <div><label>Start Date</label><input id="startInput" type="date"></div>
 <div><label>Original Duration Days</label><input id="durationInput" type="number"></div>
@@ -648,8 +681,138 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
 let settings=JSON.parse(localStorage.getItem("hj_rpg_settings")||"null")||defaults;
-let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[]};
+const HABIT_LADDERS=[
+  {key:"firstChapter",name:"First Chapter",icon:"📖"},
+  {key:"cozyReader",name:"Cozy Reader",icon:"🛋"},
+  {key:"dinnerGuest",name:"Dinner Guest",icon:"🍽"},
+  {key:"helpfulAtTable",name:"Helpful at the Table",icon:"🤲"},
+  {key:"familyTime",name:"Family Time",icon:"👨‍👩‍👧‍👦",description:"No screens of any kind"},
+  {key:"riseAndShine",name:"Rise and Shine",icon:"🌅"},
+  {key:"tomorrowsHero",name:"Tomorrow's Hero",icon:"🎒"},
+  {key:"cleanSweep",name:"Clean Sweep",icon:"🧹"},
+  {key:"roomPatrol",name:"Room Patrol",icon:"🛏"},
+  {key:"ownIt",name:"Own It",icon:"❤️"},
+  {key:"goodListener",name:"Good Listener",icon:"👂"},
+  {key:"positiveAttitude",name:"Positive Attitude",icon:"😊"},
+  {key:"kindWords",name:"Kind Words",icon:"💬"},
+  {key:"encourager",name:"Encourager",icon:"🌟"}
+];
+function defaultHabitLadders(){
+  const out={};
+  HABIT_LADDERS.forEach(h=>{out[h.key]=0});
+  return out;
+}
+function ensureHabitLadders(){
+  const defaults=defaultHabitLadders();
+  if(!state.habitLadders||typeof state.habitLadders!=="object") state.habitLadders={...defaults};
+  else HABIT_LADDERS.forEach(h=>{if(typeof state.habitLadders[h.key]!=="number"||isNaN(state.habitLadders[h.key]))state.habitLadders[h.key]=0;});
+}
+function getHabitTier(count){
+  count=Math.max(0,Math.floor(count));
+  if(count>=150) return "legendary";
+  if(count>=50) return "epic";
+  if(count>=10) return "rare";
+  return "common";
+}
+function getHabitProgress(count){
+  count=Math.max(0,Math.floor(count));
+  const tier=getHabitTier(count);
+  const rarityMap={common:"bronze",rare:"silver",epic:"gold",legendary:"legendary"};
+  let progressText,barPct,tierLabel;
+  if(count>=150){
+    tierLabel="Legendary";
+    progressText="Platinum achieved — Legendary unlocked";
+    barPct=100;
+  }else if(count>=50){
+    tierLabel="Epic";
+    const p=Math.min(3,Math.floor(count/50));
+    progressText="Epic unlocked — "+p+" / 3 toward Platinum";
+    barPct=(p/3)*100;
+  }else if(count>=10){
+    tierLabel="Rare";
+    const p=Math.min(5,Math.floor(count/10));
+    progressText="Rare unlocked — "+p+" / 5 toward Epic";
+    barPct=(p/5)*100;
+  }else{
+    tierLabel="Common";
+    progressText=count+" / 10 Common completions";
+    barPct=(count/10)*100;
+  }
+  return{tier,tierLabel,progressText,barPct,rarity:rarityMap[tier]};
+}
+function habitLadderCard(habit,count){
+  const p=getHabitProgress(count);
+  const desc=habit.description?'<div class="small habit-desc">'+habit.description+"</div>":"";
+  return '<div class="habit-ladder-card badge-'+p.rarity+'"><div class="habit-ladder-head"><span class="habit-icon">'+habit.icon+'</span><span class="habit-name">'+habit.name+'</span><span class="habit-tier-tag">'+p.tierLabel+'</span></div>'+desc+'<div class="habit-count">'+count+" completed</div>"+'<div class="habit-progress-text small">'+p.progressText+'</div><div class="bounty-bar"><div class="bounty-fill f-'+p.rarity+'" style="width:'+Math.min(100,Math.max(0,p.barPct))+'%"></div></div></div>';
+}
+function checkHabitTierToasts(key,oldCount,newCount){
+  const habit=HABIT_LADDERS.find(h=>h.key===key);
+  if(!habit) return;
+  const name=habit.name;
+  const msgs=[];
+  if(oldCount<10&&newCount>=10) msgs.push("Rare unlocked: "+name+"!");
+  if(oldCount<50&&newCount>=50) msgs.push("Epic unlocked: "+name+"!");
+  if(oldCount<150&&newCount>=150) msgs.push("Platinum achieved: "+name+"!<br>Legendary unlocked: "+name+"!");
+  msgs.forEach((m,i)=>setTimeout(()=>toast(m),i*2800));
+}
+function adjustHabit(key,delta){
+  requireParent("Adjust Hero Habit",function(){
+    ensureHabitLadders();
+    const oldCount=state.habitLadders[key]||0;
+    const newCount=Math.max(0,oldCount+delta);
+    state.habitLadders[key]=newCount;
+    const habit=HABIT_LADDERS.find(h=>h.key===key);
+    const name=habit?habit.name:key;
+    if(delta>0) log("Hero Habit awarded: "+name+" +"+delta+".");
+    else if(delta<0) log("Hero Habit adjusted: "+name+" "+delta+".");
+    if(newCount!==oldCount) checkHabitTierToasts(key,oldCount,newCount);
+    save();
+  });
+}
+function setHabitManual(key){
+  requireParent("Set Hero Habit count",function(){
+    const input=document.getElementById("habit_"+key);
+    const newCount=Math.max(0,Math.floor(+(input&&input.value)||0));
+    ensureHabitLadders();
+    const oldCount=state.habitLadders[key]||0;
+    if(newCount===oldCount) return;
+    state.habitLadders[key]=newCount;
+    const habit=HABIT_LADDERS.find(h=>h.key===key);
+    const name=habit?habit.name:key;
+    log("Hero Habit count set: "+name+" = "+newCount+".");
+    if(newCount>oldCount) checkHabitTierToasts(key,oldCount,newCount);
+    save();
+  });
+}
+function renderHabitLadders(){
+  ensureHabitLadders();
+  const el=document.getElementById("habitLadders");
+  if(!el) return;
+  el.innerHTML=HABIT_LADDERS.map(h=>habitLadderCard(h,state.habitLadders[h.key]||0)).join("");
+}
+function renderParentHabits(){
+  ensureHabitLadders();
+  const el=document.getElementById("parentHabitLadders");
+  if(!el) return;
+  el.innerHTML=HABIT_LADDERS.map(h=>{
+    const c=state.habitLadders[h.key]||0;
+    return '<div class="habit-parent-row"><div class="habit-parent-name">'+h.icon+" "+h.name+'</div><div class="habit-parent-controls"><span class="habit-parent-count">'+c+'</span><button class="action secondary" onclick="adjustHabit(\''+h.key+'\',-1)">-1</button><button class="action" onclick="adjustHabit(\''+h.key+'\',1)">+1</button><input id="habit_'+h.key+'" type="number" value="'+c+'" min="0"><button class="action good" onclick="setHabitManual(\''+h.key+'\')">Set</button></div></div>';
+  }).join("");
+}
+function habitLaddersForCloud(){
+  ensureHabitLadders();
+  const out={};
+  HABIT_LADDERS.forEach(h=>{out[h.key]=Number(state.habitLadders[h.key]||0);});
+  return out;
+}
+function normalizeHabitLaddersFromCloud(data){
+  const out=defaultHabitLadders();
+  if(data&&typeof data==="object") HABIT_LADDERS.forEach(h=>{out[h.key]=Math.max(0,Number(data[h.key]||0));});
+  return out;
+}
+let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders()};
 if(!Array.isArray(state.pendingReports)) state.pendingReports=[];
+ensureHabitLadders();
 let renderSnapshot=null;
 const ACH_SEEN_KEY="hj_seen_achievements";
 const MILESTONE_SEEN_KEY="hj_seen_deed_milestones";
@@ -1079,7 +1242,7 @@ function render(){
     strikeBtn.disabled=!ready;
     strikeBtn.textContent=state.legend?"Legendary Strike Applied":(ready?"Apply Legendary Strike":"Reach 50 Quest HP to Unlock");
   }
-  renderBounty();renderQuests();renderLevels();renderAch();renderChronicle();renderLedger();renderPendingReports();renderParent();
+  renderBounty();renderQuests();renderLevels();renderAch();renderHabitLadders();renderChronicle();renderLedger();renderPendingReports();renderParent();
   detectProgressChanges();
   checkNewAchievements();
   localStorage.setItem("hj_rpg_state",JSON.stringify(state));
@@ -1216,10 +1379,10 @@ function renderLedger(){
   ];
   document.getElementById("ledger").innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>').join("");
 }
-function renderParent(){document.getElementById("booksInput").value=state.books;document.getElementById("mealsInput").value=state.meals;document.getElementById("languageInput").value=state.language;document.getElementById("coopInput").value=state.coop;document.getElementById("spentInput").value=state.spent;document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=state.log.map(x=>'<li>'+x+'</li>').join("");updateParentCodeStatus();}
+function renderParent(){document.getElementById("booksInput").value=state.books;document.getElementById("mealsInput").value=state.meals;document.getElementById("languageInput").value=state.language;document.getElementById("coopInput").value=state.coop;document.getElementById("spentInput").value=state.spent;document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=state.log.map(x=>'<li>'+x+'</li>').join("");renderParentHabits();updateParentCodeStatus();}
 function saveManual(){requireParent("Save manual changes",function(){state.books=+booksInput.value||0;state.meals=+mealsInput.value||0;state.language=+languageInput.value||0;state.coop=+coopInput.value||0;state.spent=+spentInput.value||0;log("Manual progress updated.");save();});}
 function saveSettings(){requireParent("Save system settings",function(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();});}
-function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[]};renderSnapshot=null;save();}});}
+function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders()};renderSnapshot=null;save();}});}
 render();
 </script>
 
@@ -1258,7 +1421,8 @@ render();
       spent: Number(state.spent || 0),
       legend: Boolean(state.legend || false),
       log: Array.isArray(state.log) ? state.log.slice(0,60) : [],
-      pendingReports: Array.isArray(state.pendingReports) ? state.pendingReports.slice(0,20) : []
+      pendingReports: Array.isArray(state.pendingReports) ? state.pendingReports.slice(0,20) : [],
+      habitLadders: habitLaddersForCloud()
     };
   }
 
@@ -1271,7 +1435,8 @@ render();
       spent: Number(data.spent || 0),
       legend: Boolean(data.legend || false),
       log: Array.isArray(data.log) ? data.log.slice(0,60) : [],
-      pendingReports: Array.isArray(data.pendingReports) ? data.pendingReports.slice(0,20) : []
+      pendingReports: Array.isArray(data.pendingReports) ? data.pendingReports.slice(0,20) : [],
+      habitLadders: normalizeHabitLaddersFromCloud(data.habitLadders)
     };
   }
 
