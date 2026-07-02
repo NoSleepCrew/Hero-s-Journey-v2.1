@@ -1,20 +1,28 @@
 {
+  "id": "/Hero-s-Journey-v2.1/",
   "name": "Hero's Journey",
   "short_name": "Hero's Journey",
   "description": "Killian's Path to Legendary",
-  "start_url": "./",
+  "start_url": "/Hero-s-Journey-v2.1/",
+  "scope": "/Hero-s-Journey-v2.1/",
   "display": "standalone",
   "background_color": "#120f1b",
   "theme_color": "#120f1b",
   "icons": [
     {
-      "src": "app-icon.png",
+      "src": "/Hero-s-Journey-v2.1/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/Hero-s-Journey-v2.1/app-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "app-icon.png",
+      "src": "/Hero-s-Journey-v2.1/app-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
