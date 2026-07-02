@@ -101,42 +101,43 @@ h2{margin:0 0 12px;font-family:var(--font-display);font-size:28px;color:var(--go
 .boss-stats{padding:18px 20px 20px}
 .boss-arena-wrap{position:relative;width:100%}
 .boss-arena{
-  position:relative;width:100%;height:clamp(210px,42vw,400px);min-height:210px;max-height:400px;
+  position:relative;width:100%;height:clamp(220px,56vw,400px);min-height:220px;max-height:400px;
   overflow:hidden;cursor:pointer;user-select:none;
+  background:#06080f;
 }
 .boss-arena-img{
   position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;
-  display:block;transition:filter .6s ease,transform .35s ease;
-  filter:saturate(1.05) contrast(1.08) brightness(.92);
+  display:block;z-index:1;pointer-events:none;transition:transform .35s ease;
 }
 .boss-arena-overlay{
-  position:absolute;inset:0;pointer-events:none;transition:background .6s ease,box-shadow .6s ease;
-  background:linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.05) 35%,rgba(0,0,0,.55) 100%),
-    radial-gradient(circle at 72% 38%, rgba(255,90,30,.22), transparent 42%);
+  position:absolute;inset:0;pointer-events:none;z-index:3;transition:background .6s ease,box-shadow .6s ease;
+  background:linear-gradient(180deg,rgba(0,0,0,.12) 0%,transparent 28%,rgba(0,0,0,.35) 100%);
+}
+.boss-arena-credit{
+  position:absolute;bottom:8px;right:12px;z-index:5;pointer-events:none;
+  font-size:10px;font-weight:800;letter-spacing:.04em;color:rgba(168,230,207,.75);
+  text-shadow:0 1px 4px #000;
 }
 .boss-arena-caption{
-  position:absolute;left:16px;right:16px;bottom:14px;z-index:3;pointer-events:none;
+  position:absolute;left:16px;right:16px;bottom:14px;z-index:7;pointer-events:none;
 }
 .boss-arena-hint{
-  position:absolute;top:12px;right:12px;z-index:3;pointer-events:none;
+  position:absolute;top:12px;right:12px;z-index:7;pointer-events:none;
   font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
   padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(224,184,74,.45);color:#ffe9a8;
 }
-.boss[data-stage="wounded"] .boss-arena-overlay{background:linear-gradient(180deg,rgba(40,10,0,.2),rgba(0,0,0,.55)),radial-gradient(circle at 72% 38%, rgba(255,110,40,.32), transparent 45%)}
-.boss[data-stage="wounded"] .boss-arena-img{filter:saturate(1.1) contrast(1.12) brightness(.88)}
-.boss[data-stage="cornered"] .boss-arena-overlay{background:linear-gradient(180deg,rgba(60,8,0,.28),rgba(0,0,0,.62)),radial-gradient(circle at 72% 38%, rgba(255,70,30,.42), transparent 48%)}
-.boss[data-stage="cornered"] .boss-arena-img{filter:saturate(1.15) contrast(1.15) brightness(.82) hue-rotate(-6deg)}
-.boss[data-stage="last"] .boss-arena-overlay{background:linear-gradient(180deg,rgba(80,0,0,.35),rgba(0,0,0,.68)),radial-gradient(circle at 72% 38%, rgba(255,40,20,.55), transparent 50%);animation:arena-danger-pulse 2s ease-in-out infinite}
-.boss[data-stage="last"] .boss-arena-img{filter:saturate(1.2) contrast(1.2) brightness(.78)}
-.boss[data-stage="defeated"] .boss-arena-overlay{background:linear-gradient(180deg,rgba(30,20,0,.25),rgba(0,0,0,.5)),radial-gradient(circle at 50% 45%, rgba(224,184,74,.35), transparent 55%)}
-.boss[data-stage="defeated"] .boss-arena-img{filter:saturate(.75) contrast(1.05) brightness(1.05) sepia(.15)}
-@keyframes arena-danger-pulse{0%,100%{box-shadow:inset 0 0 40px rgba(255,40,20,.15)}50%{box-shadow:inset 0 0 80px rgba(255,60,30,.35)}}
-.boss-arena.interactive:hover .boss-arena-img{transform:scale(1.02)}
+.boss[data-stage="wounded"] .boss-arena-overlay{background:linear-gradient(180deg,rgba(40,10,0,.12),transparent 40%,rgba(0,0,0,.25)),radial-gradient(circle at 50% 50%, rgba(255,110,40,.12), transparent 55%)}
+.boss[data-stage="cornered"] .boss-arena-overlay{background:linear-gradient(180deg,rgba(60,8,0,.18),transparent 40%,rgba(0,0,0,.32)),radial-gradient(circle at 50% 50%, rgba(255,70,30,.18), transparent 58%)}
+.boss[data-stage="last"] .boss-arena-overlay{background:linear-gradient(180deg,rgba(80,0,0,.22),transparent 38%,rgba(0,0,0,.38)),radial-gradient(circle at 50% 50%, rgba(255,40,20,.22), transparent 60%);animation:arena-danger-pulse 2s ease-in-out infinite}
+.boss[data-stage="defeated"] .boss-arena-overlay{background:linear-gradient(180deg,rgba(30,20,0,.15),transparent 45%,rgba(0,0,0,.2)),radial-gradient(circle at 50% 50%, rgba(224,184,74,.2), transparent 62%)}
+@keyframes arena-danger-pulse{0%,100%{box-shadow:inset 0 0 40px rgba(255,40,20,.12)}50%{box-shadow:inset 0 0 80px rgba(255,60,30,.28)}}
+.boss-arena.interactive:hover .boss-arena-img{transform:scale(1.01)}
 .boss-arena.idle .boss-arena-img{animation:arena-breathe 4s ease-in-out infinite}
 .boss-arena.hit .boss-arena-img{animation:arena-hit .55s ease}
-@keyframes arena-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
-@keyframes arena-hit{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px) scale(1.02)}40%{transform:translateX(6px) scale(1.01)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+@keyframes arena-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.012)}}
+@keyframes arena-hit{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px) scale(1.01)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
 .boss.shake .boss-arena-img{animation:boss-shake .55s ease}
+@keyframes boss-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .boss-title{font-family:var(--font-display);font-size:clamp(24px,4vw,38px);font-weight:900;color:#ffcf60;text-shadow:0 3px 8px #000,0 0 20px rgba(255,180,60,.35);margin:0}
 .boss-stage{font-size:clamp(14px,2.5vw,18px);font-weight:800;color:#ffd993;margin:6px 0 0;text-shadow:0 2px 6px #000}
 .hp-big{
@@ -320,7 +321,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 .rule-section-title{color:#ffdb77;font-size:22px;margin:18px 0 8px;}
 @media(max-width:800px){.rulebook-toc{columns:1}.rule-table{font-size:14px}.rule-table th,.rule-table td{padding:8px 5px}}
 @media(max-width:800px){
-  .boss-arena{height:clamp(200px,56vw,320px);min-height:200px;max-height:320px}
+  .boss-arena{height:clamp(220px,58vw,360px);min-height:220px;max-height:360px}
   .boss-stats{padding:14px}
   .level-road{flex-wrap:wrap}
   .level{min-width:45%;margin-bottom:12px}
@@ -354,10 +355,8 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 }
 .dragon-speech.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .damage-floats{position:absolute;inset:0;pointer-events:none;z-index:6}
-.damage-float{position:absolute;left:58%;top:38%;font-size:clamp(28px,6vw,40px);font-weight:900;color:#ff6b4a;text-shadow:0 2px 0 #000,0 0 16px rgba(255,80,40,.6);animation:damage-float 1.4s ease forwards;pointer-events:none}
+.damage-float{position:absolute;left:52%;top:38%;font-size:clamp(28px,6vw,40px);font-weight:900;color:#ff6b4a;text-shadow:0 2px 0 #000,0 0 16px rgba(255,80,40,.6);animation:damage-float 1.4s ease forwards;pointer-events:none}
 @keyframes damage-float{0%{opacity:0;transform:translateY(12px) scale(.8)}15%{opacity:1;transform:translateY(0) scale(1.1)}100%{opacity:0;transform:translateY(-70px) scale(1)}}
-.boss.shake .boss-arena-img{animation:boss-shake .55s ease}
-@keyframes boss-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .bounty-bar{height:16px;background:#140d16;border:2px solid #5c4128;border-radius:999px;overflow:hidden;margin-top:10px;position:relative}
 .bounty-fill{
   height:100%;background:linear-gradient(90deg,#ffd874,#54b66a);
@@ -493,7 +492,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <header>
 <h1>THE HERO'S JOURNEY</h1>
 <p class="header-tagline">Killian's Path to Legendary</p>
-<p class="header-callout">⚔️ Tap the Battlefield • Report Quests • Become Legend ⚔️</p>
+<p class="header-callout">⚔️ Tap the Dragon • Report Quests • Become Legend ⚔️</p>
 </header>
 <main>
 <div class="nav">
@@ -507,16 +506,17 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <section id="home" class="screen active">
 <div class="card boss" id="bossCard">
 <div class="boss-arena-wrap">
-<div class="boss-arena interactive idle" id="dragonArt" onclick="pokeDragon()" title="Tap the battlefield" role="button" aria-label="Ancient Dragon battlefield">
-<img class="boss-arena-img" id="bossArenaImg" src="hero-arena.png" alt="Killian faces the Ancient Dragon across a burning battlefield" draggable="false" />
+<div class="boss-arena interactive idle" id="dragonArt" onclick="pokeDragon()" title="Tap the dragon" role="button" aria-label="Ancient Dragon">
+<img class="boss-arena-img" id="bossArenaImg" src="killian-dragon-arena.png" alt="Killian's dragon on the storm battlefield" draggable="false" />
 <div class="boss-arena-overlay" aria-hidden="true"></div>
-<div class="boss-arena-hint">Tap battlefield</div>
+<div class="boss-arena-credit">Dragon art by Killian</div>
+<div class="boss-arena-hint">Tap dragon</div>
 <div class="boss-arena-caption">
 <div class="boss-title" id="dragonName">Ancient Dragon</div>
 <div class="boss-stage" id="dragonStage">The journey begins.</div>
 </div>
 <div class="dragon-wrap">
-<div class="dragon-speech" id="dragonSpeech">Tap the battlefield if you dare, hero.</div>
+<div class="dragon-speech" id="dragonSpeech">Tap the dragon if you dare, hero.</div>
 <div class="damage-floats" id="damageFloats"></div>
 </div>
 </div>
@@ -1458,7 +1458,7 @@ function render(){
   document.getElementById("dragonName").textContent=ds[0];
   document.getElementById("dragonStage").textContent=ds[1];
   const dragonArt=document.getElementById("dragonArt");
-  if(dragonArt) dragonArt.setAttribute("aria-label",ds[0]+" battlefield");
+  if(dragonArt) dragonArt.setAttribute("aria-label",ds[0]);
   document.getElementById("dragonRemaining").textContent=remaining();
   document.getElementById("damageDealt").textContent=damage();
   const pct=Math.round(damage()/settings.duration*100);
