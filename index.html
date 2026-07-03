@@ -72,21 +72,28 @@ h1{
 .title-vault-stats{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px;font-weight:800}
 .title-vault-stats span{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(224,184,74,.25);color:#a8e6cf}
 .title-equipped-badge{color:#d6b6ff!important;border-color:rgba(182,134,255,.45)!important;background:rgba(155,89,182,.15)!important}
-.title-vault-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.title-vault-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .title-vault-card{
-  text-align:center;padding:14px 10px 12px;border-radius:16px;border:2px solid #5e4c2b;
-  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.2));transition:.25s;
+  text-align:left;padding:14px 12px 12px;border-radius:16px;border:2px solid #5e4c2b;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.2));transition:.25s;cursor:pointer;
 }
-.title-vault-card.locked{opacity:.42;filter:grayscale(.8)}
+.title-vault-card:hover,.title-vault-card:focus{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.35);outline:none}
+.title-vault-card.locked{opacity:.88;border-color:rgba(94,76,43,.85)}
 .title-vault-card.unlocked{border-color:#d6b6ff;box-shadow:0 0 14px rgba(182,134,255,.3)}
 .title-vault-card.equipped{border-color:var(--green);box-shadow:0 0 16px rgba(84,182,106,.35);background:linear-gradient(180deg,rgba(84,182,106,.12),rgba(0,0,0,.2))}
-.title-vault-icon{font-size:30px;line-height:1}
-.title-vault-habit{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:6px}
-.title-vault-name{font-size:14px;font-weight:900;color:#ffdb77;margin:6px 0 10px;line-height:1.25;min-height:2.5em}
-.title-vault-card.locked .title-vault-name{color:var(--muted);font-style:italic}
-.title-locked-req{font-size:11px;font-weight:800;color:#ffe9a8;line-height:1.3;margin-bottom:4px}
-.title-progress{color:#a8e6cf;font-weight:800}
-.title-equip-btn{width:100%;padding:8px 10px;font-size:13px;margin-top:4px}
+.title-vault-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.title-vault-icon{font-size:28px;line-height:1;flex-shrink:0}
+.title-vault-head-text{min-width:0;flex:1}
+.title-vault-habit{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.title-vault-name{font-size:15px;font-weight:900;color:#ffdb77;margin-top:4px;line-height:1.25}
+.title-vault-card.locked .title-vault-name{color:#e8d49a}
+.title-vault-purpose{font-size:11px;color:var(--muted);line-height:1.4;margin:0 0 6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.title-vault-award{font-size:11px;font-weight:800;color:#a8e6cf;line-height:1.35;margin:0 0 8px}
+.title-vault-progress-wrap{margin-top:6px}
+.title-vault-progress-wrap .bounty-bar{height:8px;margin-bottom:4px}
+.title-progress{color:#a8e6cf;font-weight:800;font-size:12px;text-align:right}
+.title-equip-btn{width:100%;padding:8px 10px;font-size:13px;margin-top:8px}
+.title-vault-tap{font-size:10px;font-weight:800;color:var(--muted);text-align:center;margin-top:6px}
 .header-callout{
   display:inline-block;margin:12px 0 0;padding:8px 18px;border-radius:999px;
   background:linear-gradient(90deg,rgba(224,184,74,.15),rgba(199,72,72,.12));
@@ -836,6 +843,14 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <button class="action" onclick="closeHabitLadderPop()">Got it!</button>
 </div>
 </div>
+<div class="collectible-pop" id="titleVaultPop" onclick="if(event.target===this)closeTitleVaultPop()">
+<div class="collectible-pop-card">
+<div class="collectible-pop-icon" id="titleVaultPopIcon">👑</div>
+<div class="collectible-pop-status locked" id="titleVaultPopStatus">🔒 Locked</div>
+<div class="collectible-pop-title" id="titleVaultPopTitle">Title</div>
+<div class="collectible-pop-body" id="titleVaultPopBody"></div>
+<button class="action secondary" onclick="closeTitleVaultPop()">Close</button>
+</div></div>
 <div class="collectible-pop" id="habitCardPop" onclick="if(event.target===this)closeHabitCardPop()">
 <div class="collectible-pop-card">
 <div class="collectible-pop-icon" id="habitCardPopIcon">🃏</div>
@@ -976,7 +991,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </div>
 </section>
 <section id="quests" class="screen"><div class="card"><h2>Quest Board</h2><div class="grid" id="questCards"></div></div></section>
-<section id="hall" class="screen"><div class="card kingdom-teaser" style="margin-top:0"><p class="kingdom-teaser-whisper" id="hallKingdomWhisper">The walls begin to remember.</p><div class="kingdom-teaser-bar"><div class="fill" id="hallKingdomBar" style="width:0%"></div></div><button type="button" class="kingdom-enter-btn" onclick="showScreen('kingdom')">🏰 View the Restored Kingdom</button></div><div class="card"><h2>Hero Level Road</h2><div class="level-road" id="levelRoad"></div></div><div class="card"><h2>👑 Title Vault</h2><p class="small">Legendary habit titles unlock at <b>150</b> completions on each habit ladder — the same moment as the Legendary card. Browse your titles here and equip one to display under your name.</p><div id="titleVault"></div></div><div class="card hall-card"><h2 id="hallTitle">Hero Hall</h2><div class="hall-overall"><div class="hall-overall-label"><span>Overall Progress</span><span id="hallPctLabel">0%</span></div><div class="hall-overall-bar"><div class="fill" id="hallOverallBar" style="width:0%"></div></div></div><p class="ach-summary" id="achSummary"></p><div class="collectible-showcase" id="collectibleShowcase"></div><div id="raritySections"></div><h3 class="hall-meta-title">Journey Honors</h3><div class="achievements" id="metaAchievements"></div></div></section>
+<section id="hall" class="screen"><div class="card kingdom-teaser" style="margin-top:0"><p class="kingdom-teaser-whisper" id="hallKingdomWhisper">The walls begin to remember.</p><div class="kingdom-teaser-bar"><div class="fill" id="hallKingdomBar" style="width:0%"></div></div><button type="button" class="kingdom-enter-btn" onclick="showScreen('kingdom')">🏰 View the Restored Kingdom</button></div><div class="card"><h2>Hero Level Road</h2><div class="level-road" id="levelRoad"></div></div><div class="card"><h2>👑 Title Vault</h2><p class="small">Legendary habit titles unlock at <b>150</b> completions on each habit ladder — the same moment as the Legendary card. Each card shows the <b>title</b>, what earns +1, and the <b>Legendary prize</b>. Tap a card for full details; equip unlocked titles under your name.</p><div id="titleVault"></div></div><div class="card hall-card"><h2 id="hallTitle">Hero Hall</h2><div class="hall-overall"><div class="hall-overall-label"><span>Overall Progress</span><span id="hallPctLabel">0%</span></div><div class="hall-overall-bar"><div class="fill" id="hallOverallBar" style="width:0%"></div></div></div><p class="ach-summary" id="achSummary"></p><div class="collectible-showcase" id="collectibleShowcase"></div><div id="raritySections"></div><h3 class="hall-meta-title">Journey Honors</h3><div class="achievements" id="metaAchievements"></div></div></section>
 <section id="cards" class="screen"><div class="card"><h2>🃏 Habit Card Collection</h2><p class="small">Cards unlock at Rare (10), Epic (50), and Legendary (150) on each habit ladder. Earn them here, craft or print the real card at home, then parents mark it turned in when the reward is given.</p><div class="habit-card-binder" id="habitCardBinder"></div></div></section>
 <section id="rulebook" class="screen">
 <div class="card" id="prologue">
@@ -1168,7 +1183,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="summer-read-review";
+const APP_BUILD="title-vault-fix";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 function checkAppBuild(){
@@ -1340,9 +1355,13 @@ function habitLaddersForCloud(){
   HABIT_LADDERS.forEach(h=>{out[h.key]=Number(state.habitLadders[h.key]||0);});
   return out;
 }
-function normalizeHabitLaddersFromCloud(data){
+function normalizeHabitLaddersFromCloud(data,localData){
   const out=defaultHabitLadders();
-  if(data&&typeof data==="object") HABIT_LADDERS.forEach(h=>{out[h.key]=Math.max(0,Number(data[h.key]||0));});
+  if(data&&typeof data==="object") HABIT_LADDERS.forEach(h=>{
+    const cloud=Math.max(0,Number(data[h.key])||0);
+    const local=localData&&typeof localData==="object"?Math.max(0,Number(localData[h.key])||0):0;
+    out[h.key]=Math.max(cloud,local);
+  });
   return out;
 }
 function defaultHabitCardTurnIns(){
@@ -1559,30 +1578,78 @@ function unequipTitle(){
   save();
   toast("Title removed.");
 }
+function titleVaultBarRarity(count){
+  if(count>=150) return "legendary";
+  if(count>=50) return "gold";
+  if(count>=10) return "silver";
+  return "bronze";
+}
+let titleVaultList=[];
+function buildTitleVaultList(){
+  titleVaultList=HABIT_LADDERS.filter(h=>h.title);
+  return titleVaultList;
+}
+function showTitleVaultInfo(i){
+  const h=titleVaultList[i];
+  if(!h) return;
+  ensureHabitLadders();
+  ensureTitles();
+  const count=Math.max(0,Math.floor(state.habitLadders[h.key]||0));
+  const isUnlocked=titleUnlocked(h.key);
+  const isEquipped=state.equippedTitleId===h.key;
+  document.getElementById("titleVaultPopIcon").textContent=h.icon;
+  document.getElementById("titleVaultPopTitle").textContent=h.title;
+  const statusEl=document.getElementById("titleVaultPopStatus");
+  const body=document.getElementById("titleVaultPopBody");
+  if(isEquipped){
+    statusEl.textContent="👑 Equipped";
+    statusEl.className="collectible-pop-status unlocked";
+  }else if(isUnlocked){
+    statusEl.textContent="✅ Unlocked";
+    statusEl.className="collectible-pop-status unlocked";
+  }else{
+    statusEl.textContent="🔒 Locked — "+count+" / "+LEGENDARY_TITLE_MIN;
+    statusEl.className="collectible-pop-status locked";
+  }
+  let html="<b>Habit:</b> "+h.name;
+  html+="<span class=\"collect-pop-req\"><b>Purpose — what earns +1:</b><br>"+habitRequirement(h)+"</span>";
+  if(h.legendaryPrize) html+="<span class=\"collect-pop-req\"><b>Legendary prize at 150:</b><br>"+h.legendaryPrize+"</span>";
+  html+="<span class=\"collect-pop-req\"><b>Card rewards at 150:</b><br>$10 + 1 Gold Token + this title</span>";
+  html+="<span class=\"collect-pop-req\">Progress: <b>"+count+"</b> / "+LEGENDARY_TITLE_MIN+" completions</span>";
+  if(isUnlocked&&!isEquipped){
+    html+='<p style="margin:12px 0 0"><button type="button" class="action good" onclick="closeTitleVaultPop();equipTitle(\''+h.key+'\')">Equip this title</button></p>';
+  }else if(isEquipped){
+    html+='<p style="margin:12px 0 0"><button type="button" class="action secondary" onclick="closeTitleVaultPop();unequipTitle()">Unequip</button></p>';
+  }
+  body.innerHTML=html;
+  document.getElementById("titleVaultPop").classList.add("show");
+}
+function closeTitleVaultPop(){document.getElementById("titleVaultPop").classList.remove("show");}
 function renderTitleVault(){
+  ensureHabitLadders();
   ensureTitles();
   const el=document.getElementById("titleVault");
   if(!el) return;
-  const titled=HABIT_LADDERS.filter(h=>h.title);
+  buildTitleVaultList();
+  const titled=titleVaultList;
   const unlocked=state.unlockedTitles.length;
   const equipped=getEquippedTitleInfo();
-  el.innerHTML='<div class="title-vault-stats"><span>Unlocked: '+unlocked+' / '+titled.length+'</span>'+(equipped?'<span class="title-equipped-badge">👑 Equipped: '+equipped.title+'</span>':'<span>No title equipped</span>')+'</div><div class="title-vault-grid">'+titled.map(h=>{
+  el.innerHTML='<div class="title-vault-stats"><span>Unlocked: '+unlocked+' / '+titled.length+'</span>'+(equipped?'<span class="title-equipped-badge">👑 Equipped: '+equipped.title+'</span>':'<span>No title equipped</span>')+'</div><p class="collectible-hint">Tap any title for purpose, prize, and progress.</p><div class="title-vault-grid">'+titled.map((h,i)=>{
     const isUnlocked=titleUnlocked(h.key);
     const isEquipped=state.equippedTitleId===h.key;
-    const count=state.habitLadders[h.key]||0;
+    const count=Math.max(0,Math.floor(state.habitLadders[h.key]||0));
+    const barPct=Math.min(100,Math.round(count/LEGENDARY_TITLE_MIN*100));
     let cls="title-vault-card";
     if(isEquipped) cls+=" equipped";
     else if(isUnlocked) cls+=" unlocked";
     else cls+=" locked";
-    let action="";
-    if(isUnlocked){
-      action=isEquipped
-        ?'<button class="action secondary title-equip-btn" onclick="unequipTitle()">Unequip</button>'
-        :'<button class="action good title-equip-btn" onclick="equipTitle(\''+h.key+'\')">Equip</button>';
-    }else{
-      action='<div class="title-locked-req">Reach Legendary on '+h.name+'</div><div class="title-progress small">'+count+' / '+LEGENDARY_TITLE_MIN+'</div>';
-    }
-    return '<div class="'+cls+'"><div class="title-vault-icon">'+h.icon+'</div><div class="title-vault-habit">'+h.name+'</div><div class="title-vault-name">'+(isUnlocked?h.title:"???")+'</div>'+action+'</div>';
+    const equipHtml=isUnlocked
+      ?(isEquipped
+        ?'<button type="button" class="action secondary title-equip-btn" onclick="event.stopPropagation();unequipTitle()">Unequip</button>'
+        :'<button type="button" class="action good title-equip-btn" onclick="event.stopPropagation();equipTitle(\''+h.key+'\')">Equip</button>')
+      :"";
+    const awardHtml=h.legendaryPrize?'<div class="title-vault-award">🏆 '+h.legendaryPrize+'</div>':"";
+    return '<div class="'+cls+'" role="button" tabindex="0" onclick="showTitleVaultInfo('+i+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();showTitleVaultInfo('+i+')}"><div class="title-vault-head"><div class="title-vault-icon">'+h.icon+'</div><div class="title-vault-head-text"><div class="title-vault-habit">'+h.name+'</div><div class="title-vault-name">'+h.title+'</div></div></div><div class="title-vault-purpose">'+habitRequirement(h)+'</div>'+awardHtml+'<div class="title-vault-progress-wrap"><div class="bounty-bar"><div class="bounty-fill f-'+titleVaultBarRarity(count)+'" style="width:'+barPct+'%"></div></div><div class="title-progress">'+count+' / '+LEGENDARY_TITLE_MIN+'</div></div>'+equipHtml+'<div class="title-vault-tap">Tap for details</div></div>';
   }).join("")+"</div>";
 }
 function renderHeroTitle(){
@@ -2637,7 +2704,7 @@ checkAppBuild();
     };
   }
 
-  function normalizeCloudState(data){
+  function normalizeCloudState(data,localHabitLadders){
     const readingPoints=Math.max(0,Number(data.readingPoints!=null?data.readingPoints:data.readingPageCredits)||0);
     const totalPagesRead=Math.max(readingPoints*PAGES_PER_READING_POINT,Number(data.totalPagesRead)||0);
     return {
@@ -2649,7 +2716,7 @@ checkAppBuild();
       legend: Boolean(data.legend || false),
       log: Array.isArray(data.log) ? data.log.slice(0,60) : [],
       pendingReports: Array.isArray(data.pendingReports) ? data.pendingReports.slice(0,20) : [],
-      habitLadders: normalizeHabitLaddersFromCloud(data.habitLadders),
+      habitLadders: normalizeHabitLaddersFromCloud(data.habitLadders,localHabitLadders),
       habitCardTurnIns: normalizeHabitCardTurnInsFromCloud(data.habitCardTurnIns),
       unlockedTitles: normalizeUnlockedTitlesFromCloud(data.unlockedTitles),
       equippedTitleId: normalizeEquippedTitleFromCloud(data.equippedTitleId),
@@ -2726,7 +2793,8 @@ checkAppBuild();
           try{
             localStorage.setItem("hj_rpg_state_cloud_backup", JSON.stringify(doc.data()));
           }catch(e){}
-          state = normalizeCloudState(doc.data());
+          const localHabits=state.habitLadders;
+          state = normalizeCloudState(doc.data(),localHabits);
           ensureTitles();
           ensureChronicleState();
           ensureScreenTimeState();
@@ -2760,10 +2828,12 @@ checkAppBuild();
         alert("Backup could not be read.");
         return;
       }
+      const habitTotal=HABIT_LADDERS.reduce((sum,h)=>sum+(data.habitLadders&&data.habitLadders[h.key]||0),0);
       const summary = "Books: " + (data.books || 0) +
         "\nMeals: " + (data.meals || 0) +
         "\nLanguage days: " + (data.language || 0) +
         "\nCoop: " + (data.coop || 0) +
+        "\nHabit ladder completions: " + habitTotal +
         "\nLegend strike: " + (data.legend ? "Yes" : "No");
       if(!confirm("Restore this backup to cloud?\n\n" + summary + "\n\nOnly continue if these numbers look correct.")) return;
       applyingCloudUpdate = true;
