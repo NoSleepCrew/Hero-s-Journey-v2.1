@@ -2058,7 +2058,7 @@ function renderParentQuests(){
     return '<div class="habit-parent-row"><div><div class="habit-parent-name">'+q.icon+" "+q.name+'</div><div class="small habit-progress-text">'+questParentMeta(q.key)+'</div></div><div class="habit-parent-controls"><span class="habit-parent-count">'+c+'</span><button type="button" class="action secondary" onclick="remove(\''+q.key+'\')">-1</button><button type="button" class="action" onclick="add(\''+q.key+'\')">+1</button><input id="quest_'+q.key+'" type="number" value="'+c+'" min="0"><button type="button" class="action good" onclick="setQuestManual(\''+q.key+'\')">Set</button></div></div>';
   }).join("");
   const spent=state.spent||0;
-  html+='<div class="habit-parent-row"><div><div class="habit-parent-name">⭐ Hero Points Spent</div><div class="small habit-progress-text">Recovery and other HP spending ('+hpBal()+" HP available)</div></div><div class="habit-parent-controls"><span class="habit-parent-count">'+spent+'</span><button type="button" class="action secondary" onclick="adjustSpent(-1)">-1</button><button type="button" class="action" onclick="adjustSpent(1)">+1</button><input id="quest_spent" type="number" value="'+spent+'" min="0"><button type="button" class="action good" onclick="setSpentManual()">Set</button></div></div>';
+  html+='<div class="habit-parent-row"><div><div class="habit-parent-name">⭐ Hero Points Spent</div><div class="small habit-progress-text">Recovery and other HP spending ('+hpBal()+' HP available)</div></div><div class="habit-parent-controls"><span class="habit-parent-count">'+spent+'</span><button type="button" class="action secondary" onclick="adjustSpent(-1)">-1</button><button type="button" class="action" onclick="adjustSpent(1)">+1</button><input id="quest_spent" type="number" value="'+spent+'" min="0"><button type="button" class="action good" onclick="setSpentManual()">Set</button></div></div>';
   el.innerHTML=html;
 }
 function setQuestManual(key){
@@ -2081,7 +2081,7 @@ function adjustSpent(delta){
     const neu=Math.max(0,old+delta);
     if(neu===old) return;
     state.spent=neu;
-    log("Hero Points spent "+(delta>0?"+":"")+delta+" (now "+neu+").");
+    log("Hero Points spent "+(delta>0?"+":"")+Math.abs(delta)+" (now "+neu+").");
     save();
   });
 }
