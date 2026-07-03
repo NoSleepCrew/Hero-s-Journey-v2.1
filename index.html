@@ -9,6 +9,9 @@
 <meta name="theme-color" content="#120f1b" />
 <meta name="apple-mobile-web-app-title" content="Hero's Journey" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <link rel="icon" type="image/png" sizes="512x512" href="/Hero-s-Journey-v2.1/app-icon-512.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="/Hero-s-Journey-v2.1/apple-touch-icon.png" />
 <link rel="manifest" href="/Hero-s-Journey-v2.1/manifest.webmanifest" />
@@ -1119,7 +1122,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <p class="small" id="parentCodeStatus">Parent code: connecting to cloud...</p>
 <p><button class="action good" onclick="changeParentCode()">Set / Change Parent Code</button> <button class="action secondary" onclick="lockParentSession()">Lock Now</button></p>
 </div>
-<div class="card"><h2>Cloud Sync</h2><p id="syncStatus">Connecting to Firebase...</p><p class="small parent-lock-note"><b>Accidental overwrite?</b> If progress looks wrong (dragon suddenly defeated), try restoring from a local backup before changing numbers manually.</p><p><button class="action good" onclick="restoreFromLocalBackup()">Restore from Local Backup</button></p></div>
+<div class="card"><h2>Cloud Sync</h2><p id="syncStatus">Connecting to Firebase...</p><p class="small" id="appBuildLabel">App build: —</p><p class="small parent-lock-note"><b>Accidental overwrite?</b> If progress looks wrong (dragon suddenly defeated), try restoring from a local backup before changing numbers manually.</p><p><button class="action good" onclick="restoreFromLocalBackup()">Restore from Local Backup</button></p></div>
 <div class="card"><h2>📋 Quest Reports</h2><p class="small">Killian can submit quest reports from the Quest Board. Approve or dismiss them here.</p><div id="pendingReports"></div></div>
 <div class="card"><h2>Progress Ledger</h2><table><thead><tr><th>Quest</th><th>Count</th><th>Dragon Damage</th><th>Hero Points</th></tr></thead><tbody id="ledger"></tbody></table></div>
 <div class="card"><details open><summary>Parent Controls</summary><div class="grid">
@@ -1141,6 +1144,19 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
+const APP_BUILD="20260702-2";
+function checkAppBuild(){
+  const el=document.getElementById("appBuildLabel");
+  if(el) el.textContent="App build: "+APP_BUILD;
+  const prev=localStorage.getItem("hj_app_build");
+  if(!prev){localStorage.setItem("hj_app_build",APP_BUILD);return;}
+  if(prev!==APP_BUILD){
+    localStorage.setItem("hj_app_build",APP_BUILD);
+    setTimeout(function(){
+      toast("📲 App updated!<br>If using the home screen icon: delete it and add again.<br>In Safari: refresh this page.");
+    },1500);
+  }
+}
 let settings=JSON.parse(localStorage.getItem("hj_rpg_settings")||"null")||defaults;
 const HABIT_CARD_TIERS=[
   {id:"rare",min:10,label:"Rare",stipend:2,token:"Bronze",borderClass:"tier-rare"},
@@ -2354,6 +2370,7 @@ function saveManual(){requireParent("Save manual changes",function(){state.books
 function saveSettings(){requireParent("Save system settings",function(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();});}
 function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false};renderSnapshot=null;save();}});}
 render();
+checkAppBuild();
 </script>
 
 <script>
