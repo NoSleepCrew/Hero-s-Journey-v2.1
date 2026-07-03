@@ -59,7 +59,31 @@ h1{
   animation:title-glow 3s ease-in-out infinite alternate;
 }
 @keyframes title-glow{from{filter:drop-shadow(0 3px 0 #000) drop-shadow(0 0 12px rgba(224,184,74,.25))}to{filter:drop-shadow(0 3px 0 #000) drop-shadow(0 0 22px rgba(224,184,74,.5))}}
+.header-hero-name{margin:8px 0 0;font-family:var(--font-display);font-size:clamp(20px,3vw,28px);font-weight:900;color:#fff4c4;letter-spacing:.06em}
+.header-hero-title{margin:4px 0 0;font-size:clamp(15px,2.2vw,19px);font-weight:900;color:#d6b6ff;text-shadow:0 0 14px rgba(182,134,255,.35);display:none}
 .header-tagline{margin:10px 0 0;font-size:clamp(17px,2.5vw,22px);color:#ffdb77;font-weight:800}
+.hero-identity{text-align:center;margin:0 0 16px;padding:14px 12px;border-radius:16px;background:rgba(155,89,182,.1);border:1px solid rgba(182,134,255,.35)}
+.hero-identity-name{font-family:var(--font-display);font-size:26px;font-weight:900;color:#fff4c4;letter-spacing:.05em}
+.hero-identity-title{margin-top:6px;font-size:16px;font-weight:900;color:#d6b6ff}
+.hero-identity-title.empty{color:var(--muted);font-size:14px;font-weight:700}
+.title-vault-stats{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px;font-weight:800}
+.title-vault-stats span{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(224,184,74,.25);color:#a8e6cf}
+.title-equipped-badge{color:#d6b6ff!important;border-color:rgba(182,134,255,.45)!important;background:rgba(155,89,182,.15)!important}
+.title-vault-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.title-vault-card{
+  text-align:center;padding:14px 10px 12px;border-radius:16px;border:2px solid #5e4c2b;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.2));transition:.25s;
+}
+.title-vault-card.locked{opacity:.42;filter:grayscale(.8)}
+.title-vault-card.unlocked{border-color:#d6b6ff;box-shadow:0 0 14px rgba(182,134,255,.3)}
+.title-vault-card.equipped{border-color:var(--green);box-shadow:0 0 16px rgba(84,182,106,.35);background:linear-gradient(180deg,rgba(84,182,106,.12),rgba(0,0,0,.2))}
+.title-vault-icon{font-size:30px;line-height:1}
+.title-vault-habit{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:6px}
+.title-vault-name{font-size:14px;font-weight:900;color:#ffdb77;margin:6px 0 10px;line-height:1.25;min-height:2.5em}
+.title-vault-card.locked .title-vault-name{color:var(--muted);font-style:italic}
+.title-locked-req{font-size:11px;font-weight:800;color:#ffe9a8;line-height:1.3;margin-bottom:4px}
+.title-progress{color:#a8e6cf;font-weight:800}
+.title-equip-btn{width:100%;padding:8px 10px;font-size:13px;margin-top:4px}
 .header-callout{
   display:inline-block;margin:12px 0 0;padding:8px 18px;border-radius:999px;
   background:linear-gradient(90deg,rgba(224,184,74,.15),rgba(199,72,72,.12));
@@ -327,6 +351,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
   .level{min-width:45%;margin-bottom:12px}
   .level::after{display:none}
   .nav{grid-template-columns:repeat(2,1fr)}
+  .nav.nav-seven{grid-template-columns:repeat(4,1fr)}
   .hp-big{font-size:46px}
   header::before,header::after{display:none}
 }
@@ -456,6 +481,259 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 @keyframes confetti-fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
 .strike-button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;transform:none}
 
+/* ── The Sanctum of Remembrance (Chronicle) ── */
+.nav.nav-seven{grid-template-columns:repeat(4,1fr)}
+@media(min-width:900px){.nav.nav-seven{grid-template-columns:repeat(7,1fr)}}
+@media(max-width:899px){.nav.nav-seven .nav-short{display:none}}
+.kingdom-teaser{
+  text-align:center;padding:16px 14px;border-radius:18px;margin:14px 0;
+  background:linear-gradient(180deg,rgba(20,14,28,.92),rgba(8,6,14,.95));
+  border:2px solid rgba(224,184,74,.35);position:relative;overflow:hidden;
+}
+.kingdom-teaser::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 0%,rgba(224,184,74,.12),transparent 55%);
+}
+.kingdom-teaser-whisper{
+  font-family:var(--font-display);font-size:clamp(15px,2.5vw,19px);color:#c8b98a;
+  font-style:italic;margin:0 0 10px;letter-spacing:.04em;
+}
+.kingdom-teaser-bar{
+  height:8px;background:#140d16;border:1px solid #5e4c2b;border-radius:999px;overflow:hidden;margin:0 0 12px;
+}
+.kingdom-teaser-bar .fill{
+  height:100%;background:linear-gradient(90deg,#4a3520,#e0b84a 50%,#a8e6cf);
+  transition:width 1.2s cubic-bezier(.4,0,.2,1);box-shadow:0 0 12px rgba(224,184,74,.45);
+}
+.kingdom-enter-btn{
+  font-family:var(--font-display);font-size:15px;letter-spacing:.06em;
+  padding:12px 22px;border-radius:999px;border:2px solid rgba(224,184,74,.55);
+  background:linear-gradient(180deg,rgba(224,184,74,.22),rgba(60,40,18,.4));
+  color:#fff4c4;cursor:pointer;font-weight:900;transition:.25s;
+}
+.kingdom-enter-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(224,184,74,.25)}
+.boss-arena-restoration{
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(circle at 50% 40%,transparent 20%,rgba(8,6,14,var(--arena-fog,.72)) 100%);
+  transition:background 1.5s ease,opacity 1.5s ease;
+}
+.boss-arena-restoration::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(18,12,8,.55),transparent 35%,rgba(6,4,10,.45));
+  mix-blend-mode:multiply;transition:opacity 1.5s ease;
+}
+.boss-arena-dust{
+  position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;
+  opacity:var(--dust-opacity,.65);transition:opacity 1.5s ease;
+}
+.boss-arena-dust span{
+  position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(224,184,74,.35);
+  animation:dust-drift var(--dur,8s) linear infinite;
+}
+@keyframes dust-drift{
+  0%{transform:translateY(0) translateX(0);opacity:0}
+  10%{opacity:.8}90%{opacity:.5}100%{transform:translateY(-120px) translateX(20px);opacity:0}
+}
+.boss-arena-img.kingdom-linked{
+  filter:grayscale(calc(1 - var(--restore,0) * .85)) brightness(calc(.55 + var(--restore,0) * .55)) contrast(calc(.85 + var(--restore,0) * .15));
+  transition:filter 1.8s ease;
+}
+.boss-arena-light{
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 85%,rgba(224,184,74,calc(var(--restore,0) * .22)),transparent 62%);
+  opacity:calc(.3 + var(--restore,0) * .7);transition:opacity 1.5s ease;
+}
+.boss[data-stage="defeated"] .boss-arena-restoration{--arena-fog:.08;opacity:.4}
+.boss[data-stage="defeated"] .boss-arena-dust{--dust-opacity:0}
+.boss[data-stage="defeated"] .boss-arena-img.kingdom-linked{filter:grayscale(0) brightness(1.05) contrast(1.05)}
+
+.sanctum{
+  --restore:0;--dragon-beat:0;
+  position:relative;min-height:min(88vh,920px);border-radius:24px;overflow:hidden;
+  border:3px solid rgba(224,184,74,.35);
+  box-shadow:0 24px 80px rgba(0,0,0,.55),inset 0 0 80px rgba(0,0,0,.4);
+  background:#06040a;
+}
+.sanctum.complete{border-color:rgba(224,184,74,.75);box-shadow:0 24px 80px rgba(0,0,0,.55),0 0 60px rgba(224,184,74,.15),inset 0 0 40px rgba(224,184,74,.06)}
+.sanctum-sky{
+  position:absolute;inset:0;
+  background:radial-gradient(circle at 20% 15%,rgba(93,134,216,.12),transparent 40%),
+             radial-gradient(circle at 80% 25%,rgba(155,89,182,.1),transparent 35%),
+             linear-gradient(180deg,#0a0812 0%,#14101c 45%,#08060e 100%);
+}
+.sanctum-stars{position:absolute;inset:0;opacity:calc(.35 + var(--restore) * .55);animation:sanctum-stars 8s ease-in-out infinite alternate}
+@keyframes sanctum-stars{from{opacity:calc(.25 + var(--restore) * .4)}to{opacity:calc(.45 + var(--restore) * .65)}}
+.sanctum-fog{
+  position:absolute;inset:0;z-index:4;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 100%,rgba(12,8,18,calc(.92 - var(--restore) * .75)),transparent 70%);
+  transition:opacity 2s ease;
+}
+.sanctum-vignette{
+  position:absolute;inset:0;z-index:8;pointer-events:none;
+  box-shadow:inset 0 0 120px rgba(0,0,0,calc(.75 - var(--restore) * .35));
+}
+.sanctum-header{
+  position:relative;z-index:10;text-align:center;padding:28px 16px 12px;
+}
+.sanctum-title{
+  margin:0;font-family:var(--font-display);font-size:clamp(26px,4.5vw,42px);font-weight:900;
+  background:linear-gradient(180deg,#fff4c4,#e0b84a 55%,#8a6520);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,.8));
+}
+.sanctum-sub{
+  margin:8px 0 0;font-size:14px;font-weight:800;color:#a8e6cf;letter-spacing:.12em;text-transform:uppercase;
+}
+.sanctum-whisper{
+  margin:14px auto 0;max-width:520px;font-family:var(--font-display);font-size:clamp(14px,2.2vw,18px);
+  color:#c8b98a;font-style:italic;line-height:1.45;min-height:2.8em;
+  animation:whisper-fade 6s ease-in-out infinite alternate;
+}
+@keyframes whisper-fade{from{opacity:.75}to{opacity:1}}
+.sanctum-mural-wrap{
+  position:relative;z-index:5;margin:8px auto 0;width:min(100%,980px);padding:0 12px;
+}
+.sanctum-mural-frame{
+  position:relative;border-radius:18px;overflow:hidden;
+  border:3px solid rgba(94,76,43,calc(.9 - var(--restore) * .3));
+  box-shadow:0 16px 48px rgba(0,0,0,.5),inset 0 0 40px rgba(0,0,0,calc(.5 - var(--restore) * .25));
+}
+.sanctum-mural{
+  position:relative;width:100%;aspect-ratio:1.75;max-height:420px;
+  background:#06080f;overflow:hidden;
+}
+.sanctum-mural img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;
+  filter:grayscale(calc(1 - var(--restore) * .9)) brightness(calc(.45 + var(--restore) * .6)) sepia(calc(.35 - var(--restore) * .35));
+  transition:filter 2s ease,transform 8s ease;
+  transform:scale(calc(1 + var(--restore) * .02));
+}
+.sanctum.complete .sanctum-mural img{filter:grayscale(0) brightness(1.08) sepia(0)}
+.sanctum-mural-shards{
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:linear-gradient(115deg,transparent 40%,rgba(224,184,74,calc(var(--restore) * .08)) 50%,transparent 60%);
+  opacity:calc(.5 + var(--restore) * .5);
+}
+.sanctum-mural-legend-seal{
+  position:absolute;left:50%;bottom:18%;transform:translateX(-50%);z-index:6;
+  padding:10px 18px;border-radius:12px;
+  background:rgba(0,0,0,calc(.75 - var(--restore) * .5));
+  border:2px solid rgba(224,184,74,calc(.25 + var(--restore) * .55));
+  font-family:var(--font-display);font-size:clamp(11px,2vw,14px);color:#ffe9a8;
+  letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;
+  opacity:calc(1 - var(--restore) * .15);transition:.8s ease;
+}
+.sanctum.complete .sanctum-mural-legend-seal{background:rgba(224,184,74,.15);color:#fff4c4}
+.sanctum-glass-row{
+  display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding:14px 12px 0;max-width:980px;margin:0 auto;
+  position:relative;z-index:6;
+}
+.sanctum-glass{
+  aspect-ratio:.65;border-radius:8px 8px 4px 4px;position:relative;overflow:hidden;
+  border:2px solid rgba(40,32,48,calc(.95 - var(--restore) * .4));
+  background:rgba(12,10,18,calc(.95 - var(--restore) * .3));
+  transition:background 1.2s ease,border-color 1.2s ease,box-shadow 1.2s ease;
+}
+.sanctum-glass.lit{
+  border-color:rgba(224,184,74,.45);
+  box-shadow:0 0 16px rgba(224,184,74,calc(.08 + var(--restore) * .2)),inset 0 0 20px rgba(224,184,74,.08);
+}
+.sanctum-glass-inner{
+  position:absolute;inset:3px;border-radius:4px;
+  background:var(--glass-color,linear-gradient(180deg,rgba(80,60,120,.4),rgba(20,14,30,.8)));
+  opacity:var(--glass-lit,0);transition:opacity 1s ease;
+}
+.sanctum-glass.lit .sanctum-glass-inner{opacity:calc(.35 + var(--restore) * .65)}
+.sanctum-glass-icon{
+  position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(16px,3vw,22px);
+  opacity:calc(.15 + var(--glass-lit,0) * .85);filter:grayscale(calc(1 - var(--glass-lit,0)));
+  transition:opacity .8s ease,filter .8s ease;
+}
+.sanctum-heraldry{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:16px 12px 20px;
+  max-width:980px;margin:0 auto;position:relative;z-index:6;
+}
+.sanctum-crest{
+  text-align:center;padding:8px 4px;border-radius:12px;
+  border:2px solid rgba(60,48,36,calc(.9 - var(--restore) * .2));
+  background:rgba(255,255,255,calc(.02 + var(--crest-lit,0) * .06));
+  transition:.6s ease;min-height:64px;
+}
+.sanctum-crest.lit{border-color:rgba(224,184,74,calc(.2 + var(--crest-lit,0) * .55));box-shadow:0 0 12px rgba(224,184,74,calc(var(--crest-lit,0) * .25))}
+.sanctum-crest-icon{font-size:20px;line-height:1;opacity:calc(.2 + var(--crest-lit,0) * .8);transition:opacity .6s}
+.sanctum-crest-name{font-size:7px;font-weight:900;color:#ffe9a8;margin-top:4px;opacity:calc(var(--crest-lit,0));line-height:1.1;text-transform:uppercase;letter-spacing:.04em}
+.sanctum-torches{
+  position:absolute;top:0;bottom:0;left:0;right:0;z-index:3;pointer-events:none;
+}
+.sanctum-torch{
+  position:absolute;width:40px;height:120px;opacity:calc(.15 + var(--restore) * .85);
+}
+.sanctum-torch.left{left:2%;top:22%}.sanctum-torch.right{right:2%;top:22%}
+.sanctum-torch-flame{
+  width:14px;height:20px;margin:0 auto;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  background:radial-gradient(circle,#ffe9a8,#e0b84a 40%,transparent 70%);
+  animation:torch-flicker 2s ease-in-out infinite alternate;
+  box-shadow:0 0 20px rgba(255,180,60,calc(.2 + var(--restore) * .5));
+}
+@keyframes torch-flicker{from{transform:scale(1) translateY(0);opacity:.85}to{transform:scale(1.08) translateY(-2px);opacity:1}}
+.sanctum-torch-pole{width:6px;height:80px;margin:4px auto 0;background:linear-gradient(180deg,#5e4c2b,#3a2a18);border-radius:3px}
+.sanctum-legend-panel{
+  position:relative;z-index:10;margin:0 12px 24px;padding:20px 18px;border-radius:18px;
+  background:linear-gradient(180deg,rgba(30,22,14,.95),rgba(12,8,6,.98));
+  border:2px solid rgba(224,184,74,.3);display:none;
+}
+.sanctum.complete .sanctum-legend-panel{display:block;animation:legend-panel-in 1.2s ease}
+@keyframes legend-panel-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.sanctum-legend-panel h3{
+  margin:0 0 12px;font-family:var(--font-display);font-size:22px;color:#ffdb77;text-align:center;
+}
+.sanctum-legend-body{
+  font-size:15px;line-height:1.65;color:#f7efd6;max-width:680px;margin:0 auto;text-align:center;
+}
+.sanctum-legend-body em{color:#d6b6ff;font-style:normal;font-weight:800}
+.sanctum-legend-close{
+  color:#ffe9a8;font-family:var(--font-display);font-size:16px;font-weight:900;
+  margin:16px 0 0;text-align:center;font-style:italic;
+}
+.sanctum-dust-layer{position:absolute;inset:0;z-index:7;pointer-events:none;overflow:hidden}
+.sanctum-dust-layer span{
+  position:absolute;width:2px;height:2px;background:rgba(255,230,180,.4);border-radius:50%;
+  animation:sanctum-dust var(--d,10s) linear infinite;
+}
+@keyframes sanctum-dust{0%{transform:translateY(100vh) translateX(0);opacity:0}15%{opacity:.6}100%{transform:translateY(-20px) translateX(30px);opacity:0}}
+
+.chronicle-reveal{
+  position:fixed;inset:0;z-index:200;display:none;place-items:center;padding:16px;
+  background:rgba(4,2,8,.92);backdrop-filter:blur(8px);
+}
+.chronicle-reveal.show{display:grid;animation:reveal-bg 1s ease}
+@keyframes reveal-bg{from{opacity:0}to{opacity:1}}
+.chronicle-reveal-scroll{
+  max-width:640px;width:100%;max-height:90vh;overflow-y:auto;padding:32px 28px;border-radius:24px;
+  border:3px solid rgba(224,184,74,.65);
+  background:linear-gradient(180deg,#2a1e12 0%,#14101c 40%,#0a0810 100%);
+  box-shadow:0 0 80px rgba(224,184,74,.2),inset 0 0 60px rgba(0,0,0,.4);
+  animation:reveal-scroll-in 1.4s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes reveal-scroll-in{from{opacity:0;transform:scale(.88) translateY(40px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.chronicle-reveal-scroll h2{
+  margin:0 0 8px;font-family:var(--font-display);font-size:clamp(24px,5vw,36px);
+  text-align:center;color:#fff4c4;
+}
+.chronicle-reveal-scroll .reveal-sub{
+  text-align:center;color:#a8e6cf;font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px;
+}
+.chronicle-reveal-scroll .reveal-body{
+  font-size:clamp(15px,2.5vw,17px);line-height:1.7;color:#f7efd6;text-align:center;
+}
+.chronicle-reveal-scroll .reveal-body p{margin:0 0 1.1em}
+.chronicle-reveal-scroll .reveal-close-line{
+  margin-top:20px;font-family:var(--font-display);font-size:18px;color:#e0b84a;font-style:italic;text-align:center;
+}
+.chronicle-reveal-actions{text-align:center;margin-top:22px}
+.chronicle-reveal-actions .action{min-width:200px}
+[data-sound]{cursor:pointer}
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
@@ -480,6 +758,17 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <button class="action" onclick="closeCollectiblePop()">Got it!</button>
 </div>
 </div>
+<div class="chronicle-reveal" id="chronicleReveal" onclick="if(event.target===this)closeChronicleReveal()">
+<div class="chronicle-reveal-scroll" data-sound="page-turn">
+<h2 id="revealTitle">The Kingdom Remembers</h2>
+<div class="reveal-sub" id="revealSub">The Ancient Dragon has fallen</div>
+<div class="reveal-body" id="revealBody"></div>
+<div class="reveal-close-line" id="revealCloseLine">The kingdom remembers Killian.</div>
+<div class="chronicle-reveal-actions">
+<button class="action" onclick="closeChronicleReveal(true)" data-sound="magic-hum">Enter the Restored Kingdom</button>
+</div>
+</div>
+</div>
 <div class="collectible-pop" id="habitCardPop" onclick="if(event.target===this)closeHabitCardPop()">
 <div class="collectible-pop-card">
 <div class="collectible-pop-icon" id="habitCardPopIcon">🃏</div>
@@ -491,13 +780,16 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </div>
 <header>
 <h1>THE HERO'S JOURNEY</h1>
+<p class="header-hero-name">Killian</p>
+<p class="header-hero-title" id="headerEquippedTitle"></p>
 <p class="header-tagline">Killian's Path to Legendary</p>
 <p class="header-callout">⚔️ Tap the Dragon • Report Quests • Become Legend ⚔️</p>
 </header>
 <main>
-<div class="nav">
+<div class="nav nav-seven">
 <button onclick="showScreen('home')" id="nav-home" class="active">🐉 Dragon</button>
 <button onclick="showScreen('quests')" id="nav-quests">📜 Quests</button>
+<button onclick="showScreen('kingdom')" id="nav-kingdom">🏰 <span class="nav-short">Kingdom</span></button>
 <button onclick="showScreen('hall')" id="nav-hall">🏆 Hero Hall</button>
 <button onclick="showScreen('cards')" id="nav-cards">🃏 Cards</button>
 <button onclick="showScreen('rulebook')" id="nav-rulebook">📖 Rulebook</button>
@@ -507,7 +799,10 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="card boss" id="bossCard">
 <div class="boss-arena-wrap">
 <div class="boss-arena interactive idle" id="dragonArt" onclick="pokeDragon()" title="Tap the dragon" role="button" aria-label="Ancient Dragon">
-<img class="boss-arena-img" id="bossArenaImg" src="killian-dragon-arena.png" alt="Killian's dragon on the storm battlefield" draggable="false" />
+<img class="boss-arena-img kingdom-linked" id="bossArenaImg" src="killian-dragon-arena.png" alt="Killian's dragon on the storm battlefield" draggable="false" />
+<div class="boss-arena-restoration" id="arenaRestoration" aria-hidden="true"></div>
+<div class="boss-arena-light" id="arenaLight" aria-hidden="true"></div>
+<div class="boss-arena-dust" id="arenaDust" aria-hidden="true"></div>
 <div class="boss-arena-overlay" aria-hidden="true"></div>
 <div class="boss-arena-credit">Dragon art by Killian</div>
 <div class="boss-arena-hint">Tap dragon</div>
@@ -533,14 +828,18 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="small" style="margin-top:12px">Current finish date: <b id="finishDate">—</b></div>
 </div>
 </div>
-<div class="card"><h2>⚔️ Hero Status</h2><div class="grid">
+<div class="card"><h2>⚔️ Hero Status</h2><div class="hero-identity"><div class="hero-identity-name">Killian</div><div class="hero-identity-title empty" id="dashboardEquippedTitle">No title equipped — unlock titles in Hero Hall</div></div><div class="grid">
 <div class="hero-stat stat-level"><div class="stat-icon">👑</div><div class="label">Level</div><div class="value" id="heroLevel">Unranked</div></div>
 <div class="hero-stat"><div class="stat-icon">⭐</div><div class="label">Hero Points</div><div class="value"><span id="hp">0</span></div><div class="small" id="hpBreakdown">0 quest + 0 deeds</div></div>
 <div class="hero-stat"><div class="stat-icon">💎</div><div class="label">HP Balance</div><div class="value" id="hpBal">0</div></div>
 <div class="hero-stat"><div class="stat-icon">🎯</div><div class="label">Next Level</div><div class="value" id="nextLevel">10 HP</div></div>
 </div></div>
+<div class="kingdom-teaser" id="kingdomTeaser">
+<p class="kingdom-teaser-whisper" id="kingdomTeaserWhisper">The walls begin to remember.</p>
+<div class="kingdom-teaser-bar"><div class="fill" id="kingdomTeaserBar" style="width:0%"></div></div>
+<button type="button" class="kingdom-enter-btn" onclick="showScreen('kingdom')" data-sound="wind">🏰 Enter the Sanctum</button>
+</div>
 <div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Award habit completions here with +1 (Parent Code required). View earned cards in the <b>🃏 Cards</b> tab. Use Parent to correct counts.</p><div class="habit-ladders" id="habitLadders"></div></div>
-<div class="card"><h2>📜 Hero Chronicle</h2><ol class="chronicle" id="chronicle"></ol></div>
 <div class="card"><h2>Bounty Board</h2><div class="grid" id="bounty"></div></div>
 <div class="card legend-strike">
 <h2>⚡ Legendary Strike</h2>
@@ -550,8 +849,43 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <p>This one-time strike applies the eighty (80) day Legend reduction to the Ancient Dragon.</p>
 </div>
 </section>
+<section id="kingdom" class="screen">
+<div class="sanctum" id="sanctumRoot" data-sound="fireplace">
+<div class="sanctum-sky"></div>
+<div class="sanctum-stars" aria-hidden="true"></div>
+<div class="sanctum-torches" aria-hidden="true">
+<div class="sanctum-torch left"><div class="sanctum-torch-flame"></div><div class="sanctum-torch-pole"></div></div>
+<div class="sanctum-torch right"><div class="sanctum-torch-flame"></div><div class="sanctum-torch-pole"></div></div>
+</div>
+<div class="sanctum-fog" aria-hidden="true"></div>
+<div class="sanctum-vignette" aria-hidden="true"></div>
+<div class="sanctum-dust-layer" id="sanctumDust" aria-hidden="true"></div>
+<div class="sanctum-header">
+<h2 class="sanctum-title">The Sanctum of Remembrance</h2>
+<p class="sanctum-sub">Where the kingdom remembers</p>
+<p class="sanctum-whisper" id="sanctumWhisper">Something has changed.</p>
+</div>
+<div class="sanctum-mural-wrap">
+<div class="sanctum-mural-frame">
+<div class="sanctum-mural" id="sanctumMural">
+<img src="killian-dragon-arena.png" alt="The sealed kingdom mural" draggable="false" />
+<div class="sanctum-mural-shards" aria-hidden="true"></div>
+<div class="sanctum-mural-legend-seal" id="sanctumSeal">The legend sleeps behind the dragon</div>
+</div>
+</div>
+</div>
+<div class="sanctum-glass-row" id="sanctumGlass" aria-label="Restored stained glass"></div>
+<div class="sanctum-heraldry" id="sanctumHeraldry" aria-label="Habit heraldry"></div>
+<div class="sanctum-legend-panel" id="sanctumLegendPanel">
+<h3>The Complete Legend</h3>
+<div class="sanctum-legend-body" id="sanctumLegendBody"></div>
+<p class="sanctum-legend-close">The kingdom remembers Killian.</p>
+<button type="button" class="action secondary" style="display:block;margin:14px auto 0" onclick="openChronicleReveal()" data-sound="page-turn">Read the Legend Again</button>
+</div>
+</div>
+</section>
 <section id="quests" class="screen"><div class="card"><h2>Quest Board</h2><div class="grid" id="questCards"></div></div></section>
-<section id="hall" class="screen"><div class="card"><h2>Hero Level Road</h2><div class="level-road" id="levelRoad"></div></div><div class="card hall-card"><h2 id="hallTitle">Hero Hall</h2><div class="hall-overall"><div class="hall-overall-label"><span>Overall Progress</span><span id="hallPctLabel">0%</span></div><div class="hall-overall-bar"><div class="fill" id="hallOverallBar" style="width:0%"></div></div></div><p class="ach-summary" id="achSummary"></p><div class="collectible-showcase" id="collectibleShowcase"></div><div id="raritySections"></div><h3 class="hall-meta-title">Journey Honors</h3><div class="achievements" id="metaAchievements"></div></div></section>
+<section id="hall" class="screen"><div class="card kingdom-teaser" style="margin-top:0"><p class="kingdom-teaser-whisper" id="hallKingdomWhisper">The walls begin to remember.</p><div class="kingdom-teaser-bar"><div class="fill" id="hallKingdomBar" style="width:0%"></div></div><button type="button" class="kingdom-enter-btn" onclick="showScreen('kingdom')">🏰 View the Restored Kingdom</button></div><div class="card"><h2>Hero Level Road</h2><div class="level-road" id="levelRoad"></div></div><div class="card"><h2>👑 Title Vault</h2><p class="small">Legendary habit titles unlock at <b>150</b> completions on each habit ladder — the same moment as the Legendary card. Browse your titles here and equip one to display under your name.</p><div id="titleVault"></div></div><div class="card hall-card"><h2 id="hallTitle">Hero Hall</h2><div class="hall-overall"><div class="hall-overall-label"><span>Overall Progress</span><span id="hallPctLabel">0%</span></div><div class="hall-overall-bar"><div class="fill" id="hallOverallBar" style="width:0%"></div></div></div><p class="ach-summary" id="achSummary"></p><div class="collectible-showcase" id="collectibleShowcase"></div><div id="raritySections"></div><h3 class="hall-meta-title">Journey Honors</h3><div class="achievements" id="metaAchievements"></div></div></section>
 <section id="cards" class="screen"><div class="card"><h2>🃏 Habit Card Collection</h2><p class="small">Cards unlock at Rare (10), Epic (50), and Legendary (150) on each habit ladder. Earn them here, craft or print the real card at home, then parents mark it turned in when the reward is given.</p><div class="habit-card-binder" id="habitCardBinder"></div></div></section>
 <section id="rulebook" class="screen">
 <div class="card" id="prologue">
@@ -825,7 +1159,10 @@ function checkHabitTierToasts(key,oldCount,newCount){
   const msgs=[];
   if(oldCount<10&&newCount>=10) msgs.push("Rare unlocked: "+name+"!<br>🃏 Rare card earned!");
   if(oldCount<50&&newCount>=50) msgs.push("Epic unlocked: "+name+"!<br>🃏 Epic card earned!");
-  if(oldCount<150&&newCount>=150) msgs.push("Platinum achieved: "+name+"!<br>Legendary unlocked: "+name+"!<br>🃏 Legendary card earned!");
+  if(oldCount<150&&newCount>=150){
+    const titleLine=habit.title?"<br>👑 Title unlocked: "+habit.title+"!":"";
+    msgs.push("Platinum achieved: "+name+"!<br>Legendary unlocked: "+name+"!<br>🃏 Legendary card earned!"+titleLine);
+  }
   msgs.forEach((m,i)=>setTimeout(()=>toast(m),i*2800));
 }
 function adjustHabit(key,delta){
@@ -838,7 +1175,10 @@ function adjustHabit(key,delta){
     const name=habit?habit.name:key;
     if(delta>0) log("Hero Habit awarded: "+name+" +"+delta+".");
     else if(delta<0) log("Hero Habit adjusted: "+name+" "+delta+".");
-    if(newCount!==oldCount) checkHabitTierToasts(key,oldCount,newCount);
+    if(newCount!==oldCount){
+      checkHabitTierToasts(key,oldCount,newCount);
+      ensureTitles();
+    }
     save();
   });
 }
@@ -853,7 +1193,10 @@ function setHabitManual(key){
     const habit=HABIT_LADDERS.find(h=>h.key===key);
     const name=habit?habit.name:key;
     log("Hero Habit count set: "+name+" = "+newCount+".");
-    if(newCount>oldCount) checkHabitTierToasts(key,oldCount,newCount);
+    if(newCount>oldCount){
+      checkHabitTierToasts(key,oldCount,newCount);
+      ensureTitles();
+    }else if(newCount!==oldCount) ensureTitles();
     save();
   });
 }
@@ -1056,10 +1399,303 @@ function normalizeHabitCardTurnInsFromCloud(data){
   });
   return out;
 }
-let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns()};
+const LEGENDARY_TITLE_MIN=HABIT_CARD_TIERS.find(t=>t.id==="legendary").min;
+function defaultUnlockedTitles(){return [];}
+function ensureTitles(){
+  if(!Array.isArray(state.unlockedTitles)) state.unlockedTitles=[];
+  ensureHabitLadders();
+  HABIT_LADDERS.forEach(h=>{
+    if(!h.title) return;
+    const count=Math.max(0,Math.floor(state.habitLadders[h.key]||0));
+    if(count>=LEGENDARY_TITLE_MIN&&!state.unlockedTitles.includes(h.key)) state.unlockedTitles.push(h.key);
+  });
+  state.unlockedTitles=state.unlockedTitles.filter(k=>HABIT_LADDERS.some(h=>h.key===k&&h.title));
+  if(state.equippedTitleId&&!state.unlockedTitles.includes(state.equippedTitleId)) state.equippedTitleId=null;
+}
+function titleUnlocked(key){
+  ensureTitles();
+  return state.unlockedTitles.includes(key);
+}
+function getEquippedTitleInfo(){
+  ensureTitles();
+  if(!state.equippedTitleId) return null;
+  const habit=HABIT_LADDERS.find(h=>h.key===state.equippedTitleId);
+  if(!habit||!habit.title) return null;
+  return{key:habit.key,title:habit.title,icon:habit.icon,habitName:habit.name};
+}
+function equipTitle(key){
+  ensureTitles();
+  if(!titleUnlocked(key)){alert("This title is not unlocked yet.");return;}
+  const habit=HABIT_LADDERS.find(h=>h.key===key);
+  if(!habit||!habit.title){alert("Unknown title.");return;}
+  state.equippedTitleId=key;
+  log("Title equipped: "+habit.title+".");
+  save();
+  toast("👑 TITLE EQUIPPED<br>"+habit.icon+" "+habit.title);
+}
+function unequipTitle(){
+  if(!state.equippedTitleId) return;
+  const habit=HABIT_LADDERS.find(h=>h.key===state.equippedTitleId);
+  const name=habit?habit.title:state.equippedTitleId;
+  state.equippedTitleId=null;
+  log("Title unequipped: "+name+".");
+  save();
+  toast("Title removed.");
+}
+function renderTitleVault(){
+  ensureTitles();
+  const el=document.getElementById("titleVault");
+  if(!el) return;
+  const titled=HABIT_LADDERS.filter(h=>h.title);
+  const unlocked=state.unlockedTitles.length;
+  const equipped=getEquippedTitleInfo();
+  el.innerHTML='<div class="title-vault-stats"><span>Unlocked: '+unlocked+' / '+titled.length+'</span>'+(equipped?'<span class="title-equipped-badge">👑 Equipped: '+equipped.title+'</span>':'<span>No title equipped</span>')+'</div><div class="title-vault-grid">'+titled.map(h=>{
+    const isUnlocked=titleUnlocked(h.key);
+    const isEquipped=state.equippedTitleId===h.key;
+    const count=state.habitLadders[h.key]||0;
+    let cls="title-vault-card";
+    if(isEquipped) cls+=" equipped";
+    else if(isUnlocked) cls+=" unlocked";
+    else cls+=" locked";
+    let action="";
+    if(isUnlocked){
+      action=isEquipped
+        ?'<button class="action secondary title-equip-btn" onclick="unequipTitle()">Unequip</button>'
+        :'<button class="action good title-equip-btn" onclick="equipTitle(\''+h.key+'\')">Equip</button>';
+    }else{
+      action='<div class="title-locked-req">Reach Legendary on '+h.name+'</div><div class="title-progress small">'+count+' / '+LEGENDARY_TITLE_MIN+'</div>';
+    }
+    return '<div class="'+cls+'"><div class="title-vault-icon">'+h.icon+'</div><div class="title-vault-habit">'+h.name+'</div><div class="title-vault-name">'+(isUnlocked?h.title:"???")+'</div>'+action+'</div>';
+  }).join("")+"</div>";
+}
+function renderHeroTitle(){
+  const info=getEquippedTitleInfo();
+  const headerEl=document.getElementById("headerEquippedTitle");
+  const dashEl=document.getElementById("dashboardEquippedTitle");
+  if(headerEl){
+    if(info){
+      headerEl.textContent=info.icon+" "+info.title;
+      headerEl.style.display="block";
+    }else{
+      headerEl.textContent="";
+      headerEl.style.display="none";
+    }
+  }
+  if(dashEl){
+    if(info){
+      dashEl.textContent=info.icon+" "+info.title;
+      dashEl.className="hero-identity-title equipped";
+    }else{
+      dashEl.textContent="No title equipped — unlock titles in Hero Hall";
+      dashEl.className="hero-identity-title empty";
+    }
+  }
+}
+function unlockedTitlesForCloud(){
+  ensureTitles();
+  return state.unlockedTitles.slice();
+}
+function normalizeUnlockedTitlesFromCloud(data){
+  const out=[];
+  if(Array.isArray(data)) data.forEach(k=>{if(typeof k==="string"&&HABIT_LADDERS.some(h=>h.key===k&&h.title)&&!out.includes(k)) out.push(k);});
+  return out;
+}
+function normalizeEquippedTitleFromCloud(data){
+  return (typeof data==="string"&&HABIT_LADDERS.some(h=>h.key===data&&h.title))?data:null;
+}
+let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false};
 if(!Array.isArray(state.pendingReports)) state.pendingReports=[];
 ensureHabitLadders();
 ensureHabitCardTurnIns();
+ensureTitles();
+function ensureChronicleState(){
+  if(typeof state.chronicleLegendRevealed!=="boolean") state.chronicleLegendRevealed=false;
+}
+ensureChronicleState();
+const KINGDOM_WHISPERS=[
+  {min:0,text:"The walls begin to remember."},
+  {min:8,text:"Dust stirs in the sealed halls."},
+  {min:18,text:"The dawn grows brighter."},
+  {min:30,text:"Ancient symbols begin to glow."},
+  {min:45,text:"Torches remember their flame."},
+  {min:60,text:"The scribes still wait."},
+  {min:75,text:"The kingdom almost remembers."},
+  {min:88,text:"The dragon's shadow thins."},
+  {min:100,text:"The kingdom remembers."}
+];
+const SANCTUM_GLASS=[
+  {icon:"⚔",color:"linear-gradient(180deg,rgba(255,120,80,.55),rgba(60,20,20,.7))",lit:function(){return damage()>=1}},
+  {icon:"📖",color:"linear-gradient(180deg,rgba(100,160,255,.5),rgba(20,40,80,.7))",lit:function(){return state.books>=1}},
+  {icon:"🍽",color:"linear-gradient(180deg,rgba(255,180,80,.5),rgba(80,50,20,.7))",lit:function(){return state.meals>=5}},
+  {icon:"🐉",color:"linear-gradient(180deg,rgba(255,80,60,.55),rgba(40,10,10,.75))",lit:function(){return damage()>=settings.duration*0.25}},
+  {icon:"⚡",color:"linear-gradient(180deg,rgba(255,220,100,.55),rgba(80,60,20,.7))",lit:function(){return damage()>=settings.duration*0.5}},
+  {icon:"👑",color:"linear-gradient(180deg,rgba(214,182,255,.55),rgba(60,30,90,.75))",lit:function(){return damage()>=settings.duration*0.75||remaining()<=0}}
+];
+function kingdomWhisperFor(pct){
+  let msg=KINGDOM_WHISPERS[0].text;
+  KINGDOM_WHISPERS.forEach(w=>{if(pct>=w.min) msg=w.text});
+  return msg;
+}
+function computeKingdomRestoration(){
+  ensureHabitLadders();
+  ensureTitles();
+  const maxD=settings.duration;
+  const dragonPct=Math.min(100,damage()/maxD*100);
+  let habitScore=0;
+  HABIT_LADDERS.forEach(h=>{
+    const c=Math.max(0,Math.floor(state.habitLadders[h.key]||0));
+    if(c>=150) habitScore+=1;
+    else if(c>=50) habitScore+=0.65;
+    else if(c>=10) habitScore+=0.35;
+    else habitScore+=Math.min(0.15,c/80);
+  });
+  const habitPct=(habitScore/HABIT_LADDERS.length)*100;
+  const deeds=countableAchievementDefs();
+  const deedPct=deeds.length?(countableUnlocked()/deeds.length)*100:0;
+  const titleTotal=HABIT_LADDERS.filter(h=>h.title).length;
+  const titlePct=titleTotal?(state.unlockedTitles.length/titleTotal)*100:0;
+  const bookPct=Math.min(100,(state.books/15)*100);
+  const raw=dragonPct*0.38+habitPct*0.28+deedPct*0.18+titlePct*0.08+bookPct*0.08;
+  const dragonDefeated=remaining()<=0;
+  const overall=dragonDefeated?100:Math.min(99.5,Math.round(raw*10)/10);
+  const restore=overall/100;
+  return{overall,restore,dragonPct,habitPct,deedPct,titlePct,bookPct,dragonDefeated};
+}
+function habitCrestLit(count){
+  count=Math.max(0,Math.floor(count));
+  if(count>=150) return 1;
+  if(count>=50) return 0.72;
+  if(count>=10) return 0.42;
+  if(count>=1) return 0.18;
+  return 0;
+}
+function buildCompleteLegend(){
+  const name="Killian";
+  const equipped=getEquippedTitleInfo();
+  const titles=state.unlockedTitles.map(k=>{const h=HABIT_LADDERS.find(x=>x.key===k);return h?h.title:null}).filter(Boolean);
+  const parts=[];
+  parts.push("<p>Long ago, a kingdom flourished — until the Ancient Dragon sealed its hope, its history, and its beauty. The realm forgot its own story.</p>");
+  parts.push("<p>"+name+" did not arrive as a legend. He arrived as a boy who kept showing up — in mornings, at tables, with kind words, with books open and promises kept.</p>");
+  if(state.books>=1) parts.push("<p>He walked the Path of Knowledge. Each book was a step toward light returning to the halls.</p>");
+  if(state.meals>=5||state.language>=7) parts.push("<p>At the feast and in his speech, he learned respect — not as a rule on a wall, but as who he chose to be.</p>");
+  if(countableUnlocked()>=2) parts.push("<p>Witnesses recorded his Heroic Deeds — moments when character spoke louder than any trophy.</p>");
+  if(titles.length){
+    const names=titles.slice(0,5).join(", ")+(titles.length>5?"…":"");
+    const eq=equipped?" The realm knew him as <em>"+equipped.title+"</em>.":"";
+    parts.push("<p>The Council spoke names over him:"+eq+" Among them: "+names+".</p>");
+  }
+  const habitsLit=HABIT_LADDERS.filter(h=>(state.habitLadders[h.key]||0)>=10).length;
+  if(habitsLit>=3) parts.push("<p>Habit by habit, he did not restore pages. He restored the kingdom — stone by stone, banner by banner, torch by torch.</p>");
+  if(state.legend) parts.push("<p>When he stood as Legend, the storm itself bent. The Legendary Strike echoed through the keep.</p>");
+  parts.push("<p>When the Ancient Dragon fell, the seal broke. The mural behind the wyrm revealed what had been written all along — not by scribes alone, but by the life he lived.</p>");
+  parts.push("<p>"+name+" did not journey to defeat a dragon. He became the kind of person who could. And that is why the kingdom remembers.</p>");
+  return parts.join("");
+}
+function ensureArenaDust(){
+  const el=document.getElementById("arenaDust");
+  if(!el||el.dataset.ready) return;
+  el.dataset.ready="1";
+  for(let i=0;i<14;i++){
+    const s=document.createElement("span");
+    s.style.left=(Math.random()*100)+"%";
+    s.style.top=(35+Math.random()*55)+"%";
+    s.style.setProperty("--dur",(5+Math.random()*9)+"s");
+    s.style.animationDelay=(Math.random()*6)+"s";
+    el.appendChild(s);
+  }
+}
+function ensureSanctumDust(){
+  const el=document.getElementById("sanctumDust");
+  if(!el||el.dataset.ready) return;
+  el.dataset.ready="1";
+  for(let i=0;i<20;i++){
+    const s=document.createElement("span");
+    s.style.left=(Math.random()*100)+"%";
+    s.style.bottom="-5px";
+    s.style.setProperty("--d",(8+Math.random()*12)+"s");
+    s.style.animationDelay=(Math.random()*8)+"s";
+    el.appendChild(s);
+  }
+}
+function renderArenaRestoration(k){
+  ensureArenaDust();
+  const img=document.getElementById("bossArenaImg");
+  const restoration=document.getElementById("arenaRestoration");
+  const light=document.getElementById("arenaLight");
+  const dust=document.getElementById("arenaDust");
+  const root=document.documentElement;
+  const restore=k.dragonDefeated?1:k.restore;
+  if(img) img.style.setProperty("--restore",restore);
+  if(restoration) restoration.style.setProperty("--arena-fog",String(Math.max(.05,.72-restore*.68)));
+  if(light) light.style.setProperty("--restore",restore);
+  if(dust) dust.style.setProperty("--dust-opacity",String(Math.max(0,.7-restore*.75)));
+  root.style.setProperty("--restore",restore);
+}
+function renderKingdomSanctum(){
+  ensureSanctumDust();
+  ensureChronicleState();
+  const k=computeKingdomRestoration();
+  const root=document.getElementById("sanctumRoot");
+  const whisper=document.getElementById("sanctumWhisper");
+  const seal=document.getElementById("sanctumSeal");
+  const legendBody=document.getElementById("sanctumLegendBody");
+  const teaserWhisper=document.getElementById("kingdomTeaserWhisper");
+  const teaserBar=document.getElementById("kingdomTeaserBar");
+  const restore=k.dragonDefeated?1:k.restore;
+  if(root){
+    root.style.setProperty("--restore",restore);
+    root.classList.toggle("complete",k.dragonDefeated);
+  }
+  const msg=kingdomWhisperFor(k.overall);
+  if(whisper) whisper.textContent=msg;
+  if(teaserWhisper) teaserWhisper.textContent=msg;
+  if(teaserBar) teaserBar.style.width=k.overall+"%";
+  const hallWhisper=document.getElementById("hallKingdomWhisper");
+  const hallBar=document.getElementById("hallKingdomBar");
+  if(hallWhisper) hallWhisper.textContent=msg;
+  if(hallBar) hallBar.style.width=k.overall+"%";
+  if(seal){
+    seal.textContent=k.dragonDefeated?"The legend is complete":"The legend sleeps behind the dragon";
+  }
+  const glassEl=document.getElementById("sanctumGlass");
+  if(glassEl){
+    glassEl.innerHTML=SANCTUM_GLASS.map(g=>{
+      const lit=g.lit();
+      return '<div class="sanctum-glass'+(lit?" lit":"")+'" style="--glass-color:'+g.color+';--glass-lit:'+(lit?1:0)+'"><div class="sanctum-glass-inner"></div><div class="sanctum-glass-icon">'+g.icon+'</div></div>';
+    }).join("");
+  }
+  const heraldEl=document.getElementById("sanctumHeraldry");
+  if(heraldEl){
+    heraldEl.innerHTML=HABIT_LADDERS.map(h=>{
+      const c=state.habitLadders[h.key]||0;
+      const lit=habitCrestLit(c);
+      const title=h.title&&c>=150?'<div class="sanctum-crest-name">'+h.title.split(" ").slice(-1)[0]+'</div>':"";
+      return '<div class="sanctum-crest'+(lit>0.15?" lit":"")+'" style="--crest-lit:'+lit+'" title="'+h.name+'"><div class="sanctum-crest-icon">'+h.icon+'</div>'+title+'</div>';
+    }).join("");
+  }
+  if(legendBody&&k.dragonDefeated) legendBody.innerHTML=buildCompleteLegend();
+  renderArenaRestoration(k);
+}
+function openChronicleReveal(){
+  const body=document.getElementById("revealBody");
+  if(body) body.innerHTML=buildCompleteLegend();
+  document.getElementById("chronicleReveal").classList.add("show");
+  launchConfetti();
+}
+function closeChronicleReveal(goKingdom){
+  document.getElementById("chronicleReveal").classList.remove("show");
+  state.chronicleLegendRevealed=true;
+  save();
+  if(goKingdom) showScreen("kingdom");
+}
+function checkChronicleDefeatReveal(wasRemaining){
+  ensureChronicleState();
+  if(wasRemaining>0&&remaining()<=0&&!state.chronicleLegendRevealed){
+    setTimeout(function(){
+      openChronicleReveal();
+    },1200);
+  }
+}
 let renderSnapshot=null;
 const ACH_SEEN_KEY="hj_seen_achievements";
 const MILESTONE_SEEN_KEY="hj_seen_deed_milestones";
@@ -1175,6 +1811,12 @@ async function showScreen(id){
   document.getElementById(id).classList.add("active");
   document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
   document.getElementById("nav-"+id).classList.add("active");
+  if(id==="kingdom"){
+    renderKingdomSanctum();
+    if(remaining()<=0&&!state.chronicleLegendRevealed){
+      setTimeout(function(){if(!state.chronicleLegendRevealed) openChronicleReveal();},700);
+    }
+  }
 }
 
 function countMs(n,arr,max){return Math.min(max,arr.filter(x=>n>=x).length);}
@@ -1342,6 +1984,7 @@ function detectProgressChanges(){
     else if(now.questHP>renderSnapshot.questHP) toast("🏆 HERO POINT EARNED<br>+"+(now.hp-renderSnapshot.hp)+" HP");
   }
   if(now.remaining<renderSnapshot.remaining) flashStat("dragonRemaining");
+  checkChronicleDefeatReveal(renderSnapshot.remaining);
   renderSnapshot=now;
 }
 function launchConfetti(){
@@ -1481,7 +2124,7 @@ function render(){
     strikeBtn.disabled=!ready;
     strikeBtn.textContent=state.legend?"Legendary Strike Applied":(ready?"Apply Legendary Strike":"Reach 50 Quest HP to Unlock");
   }
-  renderBounty();renderQuests();renderLevels();renderAch();renderHabitLadders();renderHabitCardBinder();renderChronicle();renderLedger();renderPendingReports();renderParent();
+  renderBounty();renderQuests();renderLevels();renderAch();renderTitleVault();renderHeroTitle();renderHabitLadders();renderHabitCardBinder();renderKingdomSanctum();renderLedger();renderPendingReports();renderParent();
   detectProgressChanges();
   checkNewAchievements();
   localStorage.setItem("hj_rpg_state",JSON.stringify(state));
@@ -1592,12 +2235,6 @@ function renderAch(){
   const metaEl=document.getElementById("metaAchievements");
   if(metaEl) metaEl.innerHTML=meta.map(a=>badge(a.done,a.icon,a.title,a.sub,a.rarity,a.unlock)).join("");
 }
-function renderChronicle(){
-  const el=document.getElementById("chronicle");
-  if(!el) return;
-  const entries=(state.log||[]).slice(0,8);
-  el.innerHTML=entries.length?entries.map(x=>'<li>'+x+'</li>').join(''):'<li class="small">No adventures logged yet. Complete a quest and send a report!</li>';
-}
 function renderPendingReports(){
   const el=document.getElementById("pendingReports");
   if(!el) return;
@@ -1621,7 +2258,7 @@ function renderLedger(){
 function renderParent(){document.getElementById("booksInput").value=state.books;document.getElementById("mealsInput").value=state.meals;document.getElementById("languageInput").value=state.language;document.getElementById("coopInput").value=state.coop;document.getElementById("spentInput").value=state.spent;document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=state.log.map(x=>'<li>'+x+'</li>').join("");renderParentHabits();renderParentHabitCards();updateParentCodeStatus();}
 function saveManual(){requireParent("Save manual changes",function(){state.books=+booksInput.value||0;state.meals=+mealsInput.value||0;state.language=+languageInput.value||0;state.coop=+coopInput.value||0;state.spent=+spentInput.value||0;log("Manual progress updated.");save();});}
 function saveSettings(){requireParent("Save system settings",function(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();});}
-function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns()};renderSnapshot=null;save();}});}
+function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false};renderSnapshot=null;save();}});}
 render();
 </script>
 
@@ -1662,7 +2299,10 @@ render();
       log: Array.isArray(state.log) ? state.log.slice(0,60) : [],
       pendingReports: Array.isArray(state.pendingReports) ? state.pendingReports.slice(0,20) : [],
       habitLadders: habitLaddersForCloud(),
-      habitCardTurnIns: habitCardTurnInsForCloud()
+      habitCardTurnIns: habitCardTurnInsForCloud(),
+      unlockedTitles: unlockedTitlesForCloud(),
+      equippedTitleId: state.equippedTitleId || null,
+      chronicleLegendRevealed: Boolean(state.chronicleLegendRevealed || false)
     };
   }
 
@@ -1677,7 +2317,10 @@ render();
       log: Array.isArray(data.log) ? data.log.slice(0,60) : [],
       pendingReports: Array.isArray(data.pendingReports) ? data.pendingReports.slice(0,20) : [],
       habitLadders: normalizeHabitLaddersFromCloud(data.habitLadders),
-      habitCardTurnIns: normalizeHabitCardTurnInsFromCloud(data.habitCardTurnIns)
+      habitCardTurnIns: normalizeHabitCardTurnInsFromCloud(data.habitCardTurnIns),
+      unlockedTitles: normalizeUnlockedTitlesFromCloud(data.unlockedTitles),
+      equippedTitleId: normalizeEquippedTitleFromCloud(data.equippedTitleId),
+      chronicleLegendRevealed: Boolean(data.chronicleLegendRevealed || false)
     };
   }
 
@@ -1738,6 +2381,8 @@ render();
           setSyncStatus("Cloud document created.");
         } else {
           state = normalizeCloudState(doc.data());
+          ensureTitles();
+          ensureChronicleState();
           localStorage.setItem("hj_rpg_state", JSON.stringify(state));
           setSyncStatus("Cloud sync active. Loaded: " + new Date().toLocaleTimeString());
           render();
