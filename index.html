@@ -203,6 +203,10 @@ h2{margin:0 0 12px;font-family:var(--font-display);font-size:28px;color:var(--go
 .hero-stat .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}
 .hero-stat .value{font-size:32px;font-weight:900;margin-top:4px;color:#fff8e8}
 .hero-stat.stat-level .value{color:#ffdb77}
+.screen-time-card{border-color:rgba(100,180,255,.55);background:linear-gradient(180deg,rgba(40,80,160,.18),rgba(255,255,255,.04))}
+.screen-time-balance{text-align:center;padding:14px 10px 8px;margin:10px 0 14px;border-radius:16px;background:rgba(0,0,0,.22);border:1px solid rgba(100,180,255,.35)}
+.screen-time-big{font-size:clamp(32px,7vw,44px);font-weight:900;color:#9fd0ff;line-height:1.1}
+.screen-time-sub{margin-top:6px;color:var(--muted);font-weight:700}
 .quest-card{
   background:rgba(255,255,255,.06);border:2px solid rgba(224,184,74,.38);border-radius:20px;padding:16px;
   transition:transform .2s,box-shadow .2s,border-color .2s;
@@ -884,6 +888,15 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="hero-stat"><div class="stat-icon">💎</div><div class="label">HP Balance</div><div class="value" id="hpBal">0</div></div>
 <div class="hero-stat"><div class="stat-icon">🎯</div><div class="label">Next Level</div><div class="value" id="nextLevel">10 HP</div></div>
 </div></div>
+<div class="card screen-time-card quest-books" id="screenTimeCard">
+<h2>📱 Screen Time Wallet</h2>
+<p class="small">Every <b>25 pages</b> read earns <b>30 minutes</b> of screen time and credits <b>Path of Knowledge</b> (+1 book on the quest path).</p>
+<div class="screen-time-balance">
+<div class="screen-time-big" id="screenTimeBalance">0 min</div>
+<div class="screen-time-sub small" id="screenTimeBlocks">0 × 25 pages logged (0 pages total)</div>
+</div>
+<div id="screenTimeActions"></div>
+</div>
 <div class="kingdom-teaser" id="kingdomTeaser">
 <p class="kingdom-teaser-whisper" id="kingdomTeaserWhisper">The walls begin to remember.</p>
 <div class="kingdom-teaser-bar"><div class="fill" id="kingdomTeaserBar" style="width:0%"></div></div>
@@ -1138,7 +1151,9 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="9487a21";
+const APP_BUILD="9768a89-st";
+const PAGES_PER_SCREEN_BLOCK=25;
+const SCREEN_MINUTES_PER_BLOCK=30;
 function checkAppBuild(){
   const el=document.getElementById("appBuildLabel");
   if(el) el.textContent="App build: "+APP_BUILD;
@@ -1588,11 +1603,18 @@ function normalizeUnlockedTitlesFromCloud(data){
 function normalizeEquippedTitleFromCloud(data){
   return (typeof data==="string"&&HABIT_LADDERS.some(h=>h.key===data&&h.title))?data:null;
 }
-let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false};
+let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPageCredits:0};
 if(!Array.isArray(state.pendingReports)) state.pendingReports=[];
 ensureHabitLadders();
 ensureHabitCardTurnIns();
 ensureTitles();
+function ensureScreenTimeState(){
+  if(typeof state.screenTimeMinutes!=="number"||isNaN(state.screenTimeMinutes)) state.screenTimeMinutes=0;
+  if(typeof state.readingPageCredits!=="number"||isNaN(state.readingPageCredits)) state.readingPageCredits=0;
+  state.screenTimeMinutes=Math.max(0,Math.floor(state.screenTimeMinutes));
+  state.readingPageCredits=Math.max(0,Math.floor(state.readingPageCredits));
+}
+ensureScreenTimeState();
 function ensureChronicleState(){
   if(typeof state.chronicleLegendRevealed!=="boolean") state.chronicleLegendRevealed=false;
 }
@@ -2031,6 +2053,66 @@ function level(){let l="Unranked";settings.levels.forEach(x=>{if(hp()>=x[1])l=x[
 function nextLevel(){return settings.levels.find(x=>hp()<x[1])}
 function dragonStage(){const r=remaining();if(r<=0)return ["Dragon Defeated","The journey is complete."];if(r<=150)return ["Last Stand Dragon","The final battle has begun."];if(r<=350)return ["Cornered Dragon","The dragon is losing ground."];if(r<=550)return ["Wounded Dragon","Your strikes are taking effect."];return ["Ancient Dragon","The great challenge still stands."];}
 function nextMs(n,arr){return arr.find(x=>x>n)||null}
+function formatScreenTime(mins){
+  const m=Math.max(0,Math.floor(mins));
+  if(m===0) return "0 min";
+  const h=Math.floor(m/60),r=m%60;
+  if(h===0) return r+" min";
+  if(r===0) return h+(h===1?" hr":" hrs");
+  return h+"h "+r+"m";
+}
+function awardReadingPageBlock(){
+  requireParent("Award 25 pages read",function(){
+    ensureScreenTimeState();
+    const beforeHP=hp(),beforeLevel=level(),beforeRemain=remaining();
+    state.readingPageCredits++;
+    state.screenTimeMinutes+=SCREEN_MINUTES_PER_BLOCK;
+    state.books++;
+    log("+25 pages read → +"+SCREEN_MINUTES_PER_BLOCK+" min screen time and +1 book (Path of Knowledge).");
+    save();
+    questChangeToasts(beforeHP,beforeLevel,beforeRemain);
+    toast("📖 +25 PAGES<br>+"+SCREEN_MINUTES_PER_BLOCK+" min screen time & Path of Knowledge!");
+  });
+}
+function removeReadingPageBlock(){
+  requireParent("Remove last 25-page block",function(){
+    ensureScreenTimeState();
+    if(state.readingPageCredits<=0) return;
+    state.readingPageCredits--;
+    state.screenTimeMinutes=Math.max(0,state.screenTimeMinutes-SCREEN_MINUTES_PER_BLOCK);
+    state.books=Math.max(0,state.books-1);
+    log("-25 pages block removed (−"+SCREEN_MINUTES_PER_BLOCK+" min screen time, −1 book).");
+    save();
+  });
+}
+function resetScreenTime(){
+  requireParent("Reset screen time wallet",function(){
+    if(!state.screenTimeMinutes&&!state.readingPageCredits) return;
+    if(!confirm("Reset screen time to 0? Path of Knowledge book count will stay the same.")) return;
+    ensureScreenTimeState();
+    state.screenTimeMinutes=0;
+    state.readingPageCredits=0;
+    log("Screen time wallet reset to 0.");
+    save();
+    toast("📱 Screen time reset");
+  });
+}
+function renderScreenTimeWallet(){
+  ensureScreenTimeState();
+  const bal=document.getElementById("screenTimeBalance");
+  const blocks=document.getElementById("screenTimeBlocks");
+  const actions=document.getElementById("screenTimeActions");
+  if(!bal||!blocks||!actions) return;
+  const credits=state.readingPageCredits;
+  const pages=credits*PAGES_PER_SCREEN_BLOCK;
+  bal.textContent=formatScreenTime(state.screenTimeMinutes);
+  blocks.textContent=credits+" × "+PAGES_PER_SCREEN_BLOCK+" pages logged ("+pages+" pages total)";
+  if(parentUnlocked()){
+    actions.innerHTML='<div class="btns"><button type="button" class="action good" onclick="awardReadingPageBlock()">+ '+PAGES_PER_SCREEN_BLOCK+' Pages (+30 min)</button><button type="button" class="action secondary" onclick="removeReadingPageBlock()">− Block</button><button type="button" class="action danger" onclick="resetScreenTime()">Reset Screen Time</button></div><p class="small">Each block adds +1 book to Path of Knowledge and dragon progress.</p>';
+  }else{
+    actions.innerHTML='<p class="kid-hint">Ask a parent to log every '+PAGES_PER_SCREEN_BLOCK+' pages you read. Each block banks <b>30 minutes</b> of screen time.</p>';
+  }
+}
 function questChangeToasts(beforeHP,beforeLevel,beforeRemain){
   const afterHP=hp(),afterLevel=level();
   if(afterHP>beforeHP) toast("🏆 HERO POINT EARNED<br>+"+(afterHP-beforeHP)+" HP");
@@ -2293,7 +2375,7 @@ function render(){
     strikeBtn.disabled=!ready;
     strikeBtn.textContent=state.legend?"Legendary Strike Applied":(ready?"Apply Legendary Strike":"Reach 50 Quest HP to Unlock");
   }
-  renderBounty();renderQuests();renderLevels();renderAch();renderTitleVault();renderHeroTitle();renderHabitLadders();renderHabitCardBinder();renderKingdomSanctum();renderLedger();renderPendingReports();renderParent();
+  renderBounty();renderQuests();renderLevels();renderAch();renderTitleVault();renderHeroTitle();renderHabitLadders();renderHabitCardBinder();renderKingdomSanctum();renderScreenTimeWallet();renderLedger();renderPendingReports();renderParent();
   detectProgressChanges();
   checkNewAchievements();
   localStorage.setItem("hj_rpg_state",JSON.stringify(state));
@@ -2426,7 +2508,7 @@ function renderLedger(){
 }
 function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=state.log.map(x=>'<li>'+x+'</li>').join("");renderParentQuests();renderParentHabits();renderParentHabitCards();updateParentCodeStatus();}
 function saveSettings(){requireParent("Save system settings",function(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();});}
-function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false};renderSnapshot=null;save();}});}
+function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPageCredits:0};renderSnapshot=null;save();}});}
 render();
 checkAppBuild();
 </script>
@@ -2480,7 +2562,9 @@ checkAppBuild();
       habitCardTurnIns: habitCardTurnInsForCloud(),
       unlockedTitles: unlockedTitlesForCloud(),
       equippedTitleId: state.equippedTitleId || null,
-      chronicleLegendRevealed: Boolean(state.chronicleLegendRevealed || false)
+      chronicleLegendRevealed: Boolean(state.chronicleLegendRevealed || false),
+      screenTimeMinutes: Number(state.screenTimeMinutes || 0),
+      readingPageCredits: Number(state.readingPageCredits || 0)
     };
   }
 
@@ -2498,7 +2582,9 @@ checkAppBuild();
       habitCardTurnIns: normalizeHabitCardTurnInsFromCloud(data.habitCardTurnIns),
       unlockedTitles: normalizeUnlockedTitlesFromCloud(data.unlockedTitles),
       equippedTitleId: normalizeEquippedTitleFromCloud(data.equippedTitleId),
-      chronicleLegendRevealed: Boolean(data.chronicleLegendRevealed || false)
+      chronicleLegendRevealed: Boolean(data.chronicleLegendRevealed || false),
+      screenTimeMinutes: Math.max(0, Number(data.screenTimeMinutes || 0)),
+      readingPageCredits: Math.max(0, Number(data.readingPageCredits || 0))
     };
   }
 
@@ -2571,6 +2657,7 @@ checkAppBuild();
           state = normalizeCloudState(doc.data());
           ensureTitles();
           ensureChronicleState();
+          ensureScreenTimeState();
           localStorage.setItem("hj_rpg_state", JSON.stringify(state));
           setSyncStatus("Cloud sync active. Loaded: " + new Date().toLocaleTimeString());
           render();
@@ -2611,6 +2698,7 @@ checkAppBuild();
       state = normalizeCloudState(data);
       ensureTitles();
       ensureChronicleState();
+      ensureScreenTimeState();
       renderSnapshot = null;
       log("Progress restored from local backup.");
       applyingCloudUpdate = false;
