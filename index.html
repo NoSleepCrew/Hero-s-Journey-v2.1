@@ -589,6 +589,39 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
   color:#c8b98a;font-style:italic;line-height:1.45;min-height:2.8em;
   animation:whisper-fade 6s ease-in-out infinite alternate;
 }
+.sanctum-restore-wrap{
+  max-width:520px;margin:16px auto 0;padding:0 16px;position:relative;z-index:10;
+}
+.sanctum-restore-label{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;
+  font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:#a8e6cf;
+}
+.sanctum-restore-label span:last-child{color:#ffdb77;font-size:15px}
+.sanctum-restore-bar{
+  height:10px;background:#140d16;border:2px solid #5e4c2b;border-radius:999px;overflow:hidden;
+}
+.sanctum-restore-bar .fill{
+  height:100%;background:linear-gradient(90deg,#4a3520,#e0b84a 55%,#a8e6cf);
+  transition:width 1.2s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px rgba(224,184,74,.35);
+}
+.sanctum-restore-hint{
+  margin:10px 0 0;font-size:13px;font-weight:700;color:var(--muted);line-height:1.45;text-align:center;
+}
+.sanctum-restore-hint b{color:#ffe9a8}
+.sanctum-read-legend-btn{
+  display:none;margin:12px auto 0;font-family:var(--font-display);
+}
+.sanctum.complete .sanctum-read-legend-btn{display:inline-block}
+.sanctum-glass-hint,.sanctum-heraldry-hint{
+  text-align:center;font-size:12px;font-weight:800;color:var(--muted);margin:0;padding:0 12px;
+  position:relative;z-index:6;
+}
+.sanctum-locked-panel{
+  position:relative;z-index:10;margin:0 12px 24px;padding:18px;border-radius:16px;text-align:center;
+  border:2px dashed rgba(224,184,74,.35);background:rgba(0,0,0,.25);
+}
+.sanctum-locked-panel p{margin:0 0 12px;color:#c8b98a;font-weight:700;line-height:1.45}
+.sanctum.complete .sanctum-locked-panel{display:none}
 @keyframes whisper-fade{from{opacity:.75}to{opacity:1}}
 .sanctum-mural-wrap{
   position:relative;z-index:5;margin:8px auto 0;width:min(100%,980px);padding:0 12px;
@@ -864,6 +897,12 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <h2 class="sanctum-title">The Sanctum of Remembrance</h2>
 <p class="sanctum-sub">Where the kingdom remembers</p>
 <p class="sanctum-whisper" id="sanctumWhisper">Something has changed.</p>
+<div class="sanctum-restore-wrap">
+<div class="sanctum-restore-label"><span id="sanctumRestoreLabel">Kingdom restoration</span><span id="sanctumRestorePct">0%</span></div>
+<div class="sanctum-restore-bar"><div class="fill" id="sanctumRestoreBar" style="width:0%"></div></div>
+<p class="sanctum-restore-hint" id="sanctumRestoreHint">This heals automatically as you play — no extra work.</p>
+<button type="button" class="action sanctum-read-legend-btn" onclick="openChronicleReveal()" data-sound="page-turn">📜 Read Your Complete Legend</button>
+</div>
 </div>
 <div class="sanctum-mural-wrap">
 <div class="sanctum-mural-frame">
@@ -874,8 +913,14 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </div>
 </div>
 </div>
+<p class="sanctum-glass-hint" id="sanctumGlassHint">Stained glass relights as you journey — dragon blows, books, feasts, and deeds.</p>
 <div class="sanctum-glass-row" id="sanctumGlass" aria-label="Restored stained glass"></div>
+<p class="sanctum-heraldry-hint">Habit crests glow as you climb each Hero Habit Ladder.</p>
 <div class="sanctum-heraldry" id="sanctumHeraldry" aria-label="Habit heraldry"></div>
+<div class="sanctum-locked-panel" id="sanctumLockedPanel">
+<p id="sanctumLockedText">The <b>complete legend</b> stays sealed until the Ancient Dragon falls. Keep fighting on the 🐉 Dragon tab — the kingdom restores itself in the background.</p>
+<button type="button" class="action" onclick="showScreen('home')">🐉 Return to the Dragon</button>
+</div>
 <div class="sanctum-legend-panel" id="sanctumLegendPanel">
 <h3>The Complete Legend</h3>
 <div class="sanctum-legend-body" id="sanctumLegendBody"></div>
@@ -1060,7 +1105,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <p class="small" id="parentCodeStatus">Parent code: connecting to cloud...</p>
 <p><button class="action good" onclick="changeParentCode()">Set / Change Parent Code</button> <button class="action secondary" onclick="lockParentSession()">Lock Now</button></p>
 </div>
-<div class="card"><h2>Cloud Sync</h2><p id="syncStatus">Connecting to Firebase...</p></div>
+<div class="card"><h2>Cloud Sync</h2><p id="syncStatus">Connecting to Firebase...</p><p class="small parent-lock-note"><b>Accidental overwrite?</b> If progress looks wrong (dragon suddenly defeated), try restoring from a local backup before changing numbers manually.</p><p><button class="action good" onclick="restoreFromLocalBackup()">Restore from Local Backup</button></p></div>
 <div class="card"><h2>📋 Quest Reports</h2><p class="small">Killian can submit quest reports from the Quest Board. Approve or dismiss them here.</p><div id="pendingReports"></div></div>
 <div class="card"><h2>Progress Ledger</h2><table><thead><tr><th>Quest</th><th>Count</th><th>Dragon Damage</th><th>Hero Points</th></tr></thead><tbody id="ledger"></tbody></table></div>
 <div class="card"><details open><summary>Parent Controls</summary><div class="grid">
@@ -1524,12 +1569,12 @@ const KINGDOM_WHISPERS=[
   {min:100,text:"The kingdom remembers."}
 ];
 const SANCTUM_GLASS=[
-  {icon:"⚔",color:"linear-gradient(180deg,rgba(255,120,80,.55),rgba(60,20,20,.7))",lit:function(){return damage()>=1}},
-  {icon:"📖",color:"linear-gradient(180deg,rgba(100,160,255,.5),rgba(20,40,80,.7))",lit:function(){return state.books>=1}},
-  {icon:"🍽",color:"linear-gradient(180deg,rgba(255,180,80,.5),rgba(80,50,20,.7))",lit:function(){return state.meals>=5}},
-  {icon:"🐉",color:"linear-gradient(180deg,rgba(255,80,60,.55),rgba(40,10,10,.75))",lit:function(){return damage()>=settings.duration*0.25}},
-  {icon:"⚡",color:"linear-gradient(180deg,rgba(255,220,100,.55),rgba(80,60,20,.7))",lit:function(){return damage()>=settings.duration*0.5}},
-  {icon:"👑",color:"linear-gradient(180deg,rgba(214,182,255,.55),rgba(60,30,90,.75))",lit:function(){return damage()>=settings.duration*0.75||remaining()<=0}}
+  {icon:"⚔",label:"First strike",color:"linear-gradient(180deg,rgba(255,120,80,.55),rgba(60,20,20,.7))",lit:function(){return damage()>=1}},
+  {icon:"📖",label:"Path of Knowledge",color:"linear-gradient(180deg,rgba(100,160,255,.5),rgba(20,40,80,.7))",lit:function(){return state.books>=1}},
+  {icon:"🍽",label:"Path of Banqueting",color:"linear-gradient(180deg,rgba(255,180,80,.5),rgba(80,50,20,.7))",lit:function(){return state.meals>=5}},
+  {icon:"🐉",label:"Dragon wounded",color:"linear-gradient(180deg,rgba(255,80,60,.55),rgba(40,10,10,.75))",lit:function(){return damage()>=settings.duration*0.25}},
+  {icon:"⚡",label:"Turning fight",color:"linear-gradient(180deg,rgba(255,220,100,.55),rgba(80,60,20,.7))",lit:function(){return damage()>=settings.duration*0.5}},
+  {icon:"👑",label:"Dragon fallen",color:"linear-gradient(180deg,rgba(214,182,255,.55),rgba(60,30,90,.75))",lit:function(){return remaining()<=0}}
 ];
 function kingdomWhisperFor(pct){
   let msg=KINGDOM_WHISPERS[0].text;
@@ -1624,7 +1669,7 @@ function renderArenaRestoration(k){
   const light=document.getElementById("arenaLight");
   const dust=document.getElementById("arenaDust");
   const root=document.documentElement;
-  const restore=k.dragonDefeated?1:k.restore;
+  const restore=k.dragonDefeated?1:Math.min(k.restore,0.88);
   if(img) img.style.setProperty("--restore",restore);
   if(restoration) restoration.style.setProperty("--arena-fog",String(Math.max(.05,.72-restore*.68)));
   if(light) light.style.setProperty("--restore",restore);
@@ -1641,27 +1686,46 @@ function renderKingdomSanctum(){
   const legendBody=document.getElementById("sanctumLegendBody");
   const teaserWhisper=document.getElementById("kingdomTeaserWhisper");
   const teaserBar=document.getElementById("kingdomTeaserBar");
-  const restore=k.dragonDefeated?1:k.restore;
+  const visualRestore=k.dragonDefeated?1:Math.min(k.restore,0.88);
   if(root){
-    root.style.setProperty("--restore",restore);
+    root.style.setProperty("--restore",visualRestore);
     root.classList.toggle("complete",k.dragonDefeated);
   }
   const msg=kingdomWhisperFor(k.overall);
   if(whisper) whisper.textContent=msg;
   if(teaserWhisper) teaserWhisper.textContent=msg;
   if(teaserBar) teaserBar.style.width=k.overall+"%";
+  const restoreLabel=document.getElementById("sanctumRestoreLabel");
+  const restorePct=document.getElementById("sanctumRestorePct");
+  const restoreBar=document.getElementById("sanctumRestoreBar");
+  const restoreHint=document.getElementById("sanctumRestoreHint");
+  const lockedText=document.getElementById("sanctumLockedText");
+  if(restoreLabel) restoreLabel.textContent=k.dragonDefeated?"Legend complete":"Kingdom restoration";
+  if(restorePct) restorePct.textContent=(k.dragonDefeated?100:k.overall)+"%";
+  if(restoreBar) restoreBar.style.width=(k.dragonDefeated?100:k.overall)+"%";
+  if(restoreHint){
+    if(k.dragonDefeated){
+      restoreHint.innerHTML="The Ancient Dragon has <b>fallen</b>. The full legend is yours — scroll down or tap the button above.";
+    }else{
+      const journeyPct=Math.round(damage()/settings.duration*100);
+      restoreHint.innerHTML="Restores when you <b>damage the dragon</b> (quests), <b>climb habit ladders</b>, and <b>earn deeds</b>. Journey: <b>"+journeyPct+"%</b> — the story unlocks at <b>100%</b> (dragon defeated).";
+    }
+  }
+  if(lockedText&&!k.dragonDefeated){
+    lockedText.innerHTML="The <b>complete legend</b> stays sealed until the Ancient Dragon falls (<b>"+remaining()+" HP</b> left). You don't manage this screen — just play, and the kingdom heals.";
+  }
   const hallWhisper=document.getElementById("hallKingdomWhisper");
   const hallBar=document.getElementById("hallKingdomBar");
   if(hallWhisper) hallWhisper.textContent=msg;
   if(hallBar) hallBar.style.width=k.overall+"%";
   if(seal){
-    seal.textContent=k.dragonDefeated?"The legend is complete":"The legend sleeps behind the dragon";
+    seal.textContent=k.dragonDefeated?"The legend is complete — the dragon has fallen":"The legend sleeps while the dragon lives";
   }
   const glassEl=document.getElementById("sanctumGlass");
   if(glassEl){
     glassEl.innerHTML=SANCTUM_GLASS.map(g=>{
       const lit=g.lit();
-      return '<div class="sanctum-glass'+(lit?" lit":"")+'" style="--glass-color:'+g.color+';--glass-lit:'+(lit?1:0)+'"><div class="sanctum-glass-inner"></div><div class="sanctum-glass-icon">'+g.icon+'</div></div>';
+      return '<div class="sanctum-glass'+(lit?" lit":"")+'" title="'+(lit?"Restored: ":"Awaiting: ")+g.label+'" style="--glass-color:'+g.color+';--glass-lit:'+(lit?1:0)+'"><div class="sanctum-glass-inner"></div><div class="sanctum-glass-icon">'+g.icon+'</div></div>';
     }).join("");
   }
   const heraldEl=document.getElementById("sanctumHeraldry");
@@ -2283,6 +2347,15 @@ render();
   let applyingCloudUpdate = false;
   const originalSave = window.save;
 
+  function isCloudSaveBlocked(){
+    if(window.__HJ_BLOCK_CLOUD_SAVE) return true;
+    if(localStorage.getItem("hj_block_cloud")==="1") return true;
+    try{
+      if(new URLSearchParams(location.search).get("demo")==="1") return true;
+    }catch(e){}
+    return false;
+  }
+
   function setSyncStatus(message){
     const el = document.getElementById("syncStatus");
     if(el) el.textContent = message;
@@ -2325,16 +2398,21 @@ render();
   }
 
   window.save = function(){
+    try{
+      localStorage.setItem("hj_rpg_state_backup", JSON.stringify(state));
+    }catch(e){}
     localStorage.setItem("hj_rpg_state", JSON.stringify(state));
     localStorage.setItem("hj_rpg_settings", JSON.stringify(settings));
 
-    if(cloudReady && !applyingCloudUpdate){
+    if(cloudReady && !applyingCloudUpdate && !isCloudSaveBlocked()){
       progressRef.set(cleanStateForCloud(), {merge:true}).then(() => {
         setSyncStatus("Cloud sync active. Saved: " + new Date().toLocaleTimeString());
       }).catch((error) => {
         setSyncStatus("Cloud save failed: " + error.message);
         console.error(error);
       });
+    }else if(isCloudSaveBlocked()){
+      setSyncStatus("Cloud sync disabled (demo/local mode). Local save only.");
     }
 
     render();
@@ -2377,9 +2455,14 @@ render();
       progressRef.onSnapshot(async (doc) => {
         applyingCloudUpdate = true;
         if(!doc.exists){
-          await progressRef.set(cleanStateForCloud(), {merge:true});
+          if(!isCloudSaveBlocked()){
+            await progressRef.set(cleanStateForCloud(), {merge:true});
+          }
           setSyncStatus("Cloud document created.");
         } else {
+          try{
+            localStorage.setItem("hj_rpg_state_cloud_backup", JSON.stringify(doc.data()));
+          }catch(e){}
           state = normalizeCloudState(doc.data());
           ensureTitles();
           ensureChronicleState();
@@ -2400,6 +2483,36 @@ render();
       console.error(error);
     }
   }
+
+  window.restoreFromLocalBackup = function(){
+    requireParent("Restore progress from local backup", function(){
+      const raw = localStorage.getItem("hj_rpg_state_backup") || localStorage.getItem("hj_rpg_state_cloud_backup");
+      if(!raw){
+        alert("No local backup found on this device. Use Parent Controls below to re-enter Killian's counts manually.");
+        return;
+      }
+      let data;
+      try{ data = JSON.parse(raw); }catch(e){
+        alert("Backup could not be read.");
+        return;
+      }
+      const summary = "Books: " + (data.books || 0) +
+        "\nMeals: " + (data.meals || 0) +
+        "\nLanguage days: " + (data.language || 0) +
+        "\nCoop: " + (data.coop || 0) +
+        "\nLegend strike: " + (data.legend ? "Yes" : "No");
+      if(!confirm("Restore this backup to cloud?\n\n" + summary + "\n\nOnly continue if these numbers look correct.")) return;
+      applyingCloudUpdate = true;
+      state = normalizeCloudState(data);
+      ensureTitles();
+      ensureChronicleState();
+      renderSnapshot = null;
+      log("Progress restored from local backup.");
+      applyingCloudUpdate = false;
+      save();
+      toast("✅ Progress restored from backup");
+    });
+  };
 
   startCloudSync();
 })();

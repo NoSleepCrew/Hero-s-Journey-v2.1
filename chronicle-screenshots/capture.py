@@ -1,16 +1,24 @@
-"""One-off Chronicle UI screenshots. Run: python capture.py"""
+"""Chronicle UI screenshots — NEVER writes to Firebase.
+
+Uses ?demo=1 and hj_block_cloud so save() is local-only.
+Run: python capture.py
+"""
 import os
 from playwright.sync_api import sync_playwright
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.dirname(os.path.abspath(__file__))
-URL = "file:///" + BASE.replace("\\", "/").replace(" ", "%20") + "/index.html"
+URL = "file:///" + BASE.replace("\\", "/").replace(" ", "%20") + "/index.html?demo=1"
 
 def main():
     os.makedirs(OUT, exist_ok=True)
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1200, "height": 900})
+        page.add_init_script("""
+            localStorage.setItem('hj_block_cloud', '1');
+            window.__HJ_BLOCK_CLOUD_SAVE = true;
+        """)
         page.goto(URL, wait_until="load", timeout=60000)
         page.wait_for_timeout(2500)
         page.evaluate("""
@@ -35,7 +43,8 @@ def main():
             state.books=12; state.meals=20; state.language=28; state.coop=15;
             state.habitLadders.riseAndShine=85; state.habitLadders.firstChapter=120;
             state.unlockedTitles=['riseAndShine']; state.equippedTitleId='riseAndShine';
-            save();
+            state.chronicleLegendRevealed=false;
+            render();
         """)
         page.wait_for_timeout(1500)
         page.screenshot(path=os.path.join(OUT, "03-sanctum-progress.png"), full_page=True)
@@ -43,7 +52,7 @@ def main():
         page.evaluate("""
             state.books=200; state.meals=100; state.language=100; state.coop=50;
             state.legend=true; state.chronicleLegendRevealed=true;
-            save();
+            render();
         """)
         page.wait_for_timeout(2000)
         page.screenshot(path=os.path.join(OUT, "04-sanctum-complete.png"), full_page=True)
