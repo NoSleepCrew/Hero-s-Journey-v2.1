@@ -1125,13 +1125,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="card"><h2>Cloud Sync</h2><p id="syncStatus">Connecting to Firebase...</p><p class="small" id="appBuildLabel">App build: —</p><p class="small parent-lock-note"><b>Accidental overwrite?</b> If progress looks wrong (dragon suddenly defeated), try restoring from a local backup before changing numbers manually.</p><p><button class="action good" onclick="restoreFromLocalBackup()">Restore from Local Backup</button></p></div>
 <div class="card"><h2>📋 Quest Reports</h2><p class="small">Killian can submit quest reports from the Quest Board. Approve or dismiss them here.</p><div id="pendingReports"></div></div>
 <div class="card"><h2>Progress Ledger</h2><table><thead><tr><th>Quest</th><th>Count</th><th>Dragon Damage</th><th>Hero Points</th></tr></thead><tbody id="ledger"></tbody></table></div>
-<div class="card"><details open><summary>Parent Controls</summary><div class="grid">
-<div><label>Books Completed</label><input id="booksInput" type="number"></div>
-<div><label>Meal Merit Points</label><input id="mealsInput" type="number"></div>
-<div><label>Language Merit Days</label><input id="languageInput" type="number"></div>
-<div><label>Cooperation Credits</label><input id="coopInput" type="number"></div>
-<div><label>Hero Points Spent</label><input id="spentInput" type="number"></div>
-</div><p><button class="action good" onclick="saveManual()">Save Manual Changes</button> <button class="action danger" onclick="resetAll()">Reset All</button></p></details></div>
+<div class="card"><h2>📜 Main Quest Progress</h2><p class="small">Adjust each quest path: use <b>-1</b>, <b>+1</b>, or type a number and tap <b>Set</b>. Parent Code required for each change.</p><div id="parentMainQuests"></div><p style="margin-top:12px"><button class="action danger" onclick="resetAll()">Reset All Progress</button></p></div>
 <div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Correct habit ladder counts here: use -1, +1, or set an exact number. Parent Code required for each change.</p><div id="parentHabitLadders"></div></div>
 <div class="card"><h2>🃏 Habit Card Turn-In</h2><p class="small">Mark cards turned in when Killian redeems the physical card and reward. Parent Code required.</p><div id="parentHabitCards"></div></div>
 <div class="card"><details><summary>System Settings</summary><div class="grid">
@@ -2037,7 +2031,72 @@ function level(){let l="Unranked";settings.levels.forEach(x=>{if(hp()>=x[1])l=x[
 function nextLevel(){return settings.levels.find(x=>hp()<x[1])}
 function dragonStage(){const r=remaining();if(r<=0)return ["Dragon Defeated","The journey is complete."];if(r<=150)return ["Last Stand Dragon","The final battle has begun."];if(r<=350)return ["Cornered Dragon","The dragon is losing ground."];if(r<=550)return ["Wounded Dragon","Your strikes are taking effect."];return ["Ancient Dragon","The great challenge still stands."];}
 function nextMs(n,arr){return arr.find(x=>x>n)||null}
-function add(type){requireParent("Add progress",function(){const beforeHP=hp(),beforeLevel=level(),beforeRemain=remaining();state[type]++;if(type==="books")log("+1 completed book. Dragon takes 5 damage.");if(type==="meals")log("+1 Meal Merit Point. Dragon takes 1 damage.");if(type==="language")log("+1 Language Merit Day. Dragon takes 1 damage.");if(type==="coop")log("+1 Cooperation Credit. Dragon takes 3 damage.");save();const afterHP=hp(),afterLevel=level();if(afterHP>beforeHP)toast("🏆 HERO POINT EARNED<br>+"+(afterHP-beforeHP)+" HP");if(afterLevel!==beforeLevel)toast("⚔ LEVEL UP<br>"+afterLevel+" achieved!");if(remaining()<beforeRemain&&remaining()<=0)toast("🐉 DRAGON DEFEATED<br>The challenge is complete!");});}
+function questChangeToasts(beforeHP,beforeLevel,beforeRemain){
+  const afterHP=hp(),afterLevel=level();
+  if(afterHP>beforeHP) toast("🏆 HERO POINT EARNED<br>+"+(afterHP-beforeHP)+" HP");
+  if(afterLevel!==beforeLevel) toast("⚔ LEVEL UP<br>"+afterLevel+" achieved!");
+  if(remaining()<beforeRemain&&remaining()<=0) toast("🐉 DRAGON DEFEATED<br>The challenge is complete!");
+}
+const MAIN_QUEST_DEFS=[
+  {key:"books",icon:"📚",name:"Path of Knowledge"},
+  {key:"meals",icon:"🍽",name:"Path of Banqueting"},
+  {key:"language",icon:"🗣",name:"Path of Respect"},
+  {key:"coop",icon:"🤝",name:"Path of Brotherhood"}
+];
+function questParentMeta(key){
+  if(key==="books") return readingHP()+"/15 HP • "+readingDays()+" dragon damage";
+  if(key==="meals") return mealHP()+"/15 HP • "+mealDays()+" dragon damage";
+  if(key==="language") return langHP()+"/10 HP • "+langDays()+" dragon damage";
+  if(key==="coop") return coopHP()+"/10 HP • "+coopDays()+" dragon damage";
+  return "";
+}
+function renderParentQuests(){
+  const el=document.getElementById("parentMainQuests");
+  if(!el) return;
+  let html=MAIN_QUEST_DEFS.map(q=>{
+    const c=state[q.key]||0;
+    return '<div class="habit-parent-row"><div><div class="habit-parent-name">'+q.icon+" "+q.name+'</div><div class="small habit-progress-text">'+questParentMeta(q.key)+'</div></div><div class="habit-parent-controls"><span class="habit-parent-count">'+c+'</span><button type="button" class="action secondary" onclick="remove(\''+q.key+'\')">-1</button><button type="button" class="action" onclick="add(\''+q.key+'\')">+1</button><input id="quest_'+q.key+'" type="number" value="'+c+'" min="0"><button type="button" class="action good" onclick="setQuestManual(\''+q.key+'\')">Set</button></div></div>';
+  }).join("");
+  const spent=state.spent||0;
+  html+='<div class="habit-parent-row"><div><div class="habit-parent-name">⭐ Hero Points Spent</div><div class="small habit-progress-text">Recovery and other HP spending ('+hpBal()+" HP available)</div></div><div class="habit-parent-controls"><span class="habit-parent-count">'+spent+'</span><button type="button" class="action secondary" onclick="adjustSpent(-1)">-1</button><button type="button" class="action" onclick="adjustSpent(1)">+1</button><input id="quest_spent" type="number" value="'+spent+'" min="0"><button type="button" class="action good" onclick="setSpentManual()">Set</button></div></div>';
+  el.innerHTML=html;
+}
+function setQuestManual(key){
+  requireParent("Set quest count",function(){
+    const input=document.getElementById("quest_"+key);
+    const newCount=Math.max(0,Math.floor(+(input&&input.value)||0));
+    const oldCount=state[key]||0;
+    if(newCount===oldCount) return;
+    const beforeHP=hp(),beforeLevel=level(),beforeRemain=remaining();
+    state[key]=newCount;
+    const q=MAIN_QUEST_DEFS.find(x=>x.key===key);
+    log("Quest count set: "+(q?q.name:key)+" = "+newCount+".");
+    save();
+    questChangeToasts(beforeHP,beforeLevel,beforeRemain);
+  });
+}
+function adjustSpent(delta){
+  requireParent("Adjust Hero Points spent",function(){
+    const old=state.spent||0;
+    const neu=Math.max(0,old+delta);
+    if(neu===old) return;
+    state.spent=neu;
+    log("Hero Points spent "+(delta>0?"+":"")+delta+" (now "+neu+").");
+    save();
+  });
+}
+function setSpentManual(){
+  requireParent("Set Hero Points spent",function(){
+    const input=document.getElementById("quest_spent");
+    const newCount=Math.max(0,Math.floor(+(input&&input.value)||0));
+    const oldCount=state.spent||0;
+    if(newCount===oldCount) return;
+    state.spent=newCount;
+    log("Hero Points spent set to "+newCount+".");
+    save();
+  });
+}
+function add(type){requireParent("Add progress",function(){const beforeHP=hp(),beforeLevel=level(),beforeRemain=remaining();state[type]++;if(type==="books")log("+1 completed book. Dragon takes 5 damage.");if(type==="meals")log("+1 Meal Merit Point. Dragon takes 1 damage.");if(type==="language")log("+1 Language Merit Day. Dragon takes 1 damage.");if(type==="coop")log("+1 Cooperation Credit. Dragon takes 3 damage.");save();questChangeToasts(beforeHP,beforeLevel,beforeRemain);});}
 function remove(type){requireParent("Remove progress",function(){state[type]=Math.max(0,state[type]-1);log("-1 "+type);save();});}
 function spendRecovery(){requireParent("Spend Hero Point Recovery",function(){if(hpBal()<1){alert("Not enough Hero Points.");return}state.spent++;state.language++;log("Spent 1 HP to recover a Language Merit Day.");save();toast("✨ RECOVERY USED<br>Language Merit Day restored.");});}
 function applyLegend(){requireParent("Apply Legendary Strike",function(){if(questHP()<50){alert("Legend requires 50 quest Hero Points (from reading, meals, language, and cooperation).");return}if(state.legend){alert("Legend bonus already applied.");return}state.legend=true;log("Legend bonus applied. Dragon takes "+settings.legendBonus+" damage.");save();toast("🌟 LEGENDARY STRIKE<br>"+settings.legendBonus+" damage!");});}
@@ -2365,8 +2424,7 @@ function renderLedger(){
   ];
   document.getElementById("ledger").innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>').join("");
 }
-function renderParent(){document.getElementById("booksInput").value=state.books;document.getElementById("mealsInput").value=state.meals;document.getElementById("languageInput").value=state.language;document.getElementById("coopInput").value=state.coop;document.getElementById("spentInput").value=state.spent;document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=state.log.map(x=>'<li>'+x+'</li>').join("");renderParentHabits();renderParentHabitCards();updateParentCodeStatus();}
-function saveManual(){requireParent("Save manual changes",function(){state.books=+booksInput.value||0;state.meals=+mealsInput.value||0;state.language=+languageInput.value||0;state.coop=+coopInput.value||0;state.spent=+spentInput.value||0;log("Manual progress updated.");save();});}
+function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=state.log.map(x=>'<li>'+x+'</li>').join("");renderParentQuests();renderParentHabits();renderParentHabitCards();updateParentCodeStatus();}
 function saveSettings(){requireParent("Save system settings",function(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();});}
 function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false};renderSnapshot=null;save();}});}
 render();
