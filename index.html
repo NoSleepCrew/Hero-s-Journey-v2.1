@@ -221,12 +221,14 @@ h2{margin:0 0 12px;font-family:var(--font-display);font-size:28px;color:var(--go
   padding:14px 14px 12px;border-radius:16px;
   background:rgba(0,0,0,.22);border:1px solid rgba(100,180,255,.35);
 }
+.screen-time-tracker-inner{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between}
+.screen-time-tracker-display{flex:1;min-width:160px}
 .screen-time-tracker-head{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800;margin-bottom:6px}
 .screen-time-available{font-size:clamp(22px,5vw,32px);font-weight:900;color:#9fd0ff;line-height:1.2}
 .screen-time-blocks{font-size:12px;color:#a8c8e8;margin-top:6px;font-weight:700}
-.screen-time-controls{margin-top:12px;padding-top:10px;border-top:1px solid rgba(100,180,255,.2)}
-.screen-time-controls .small{margin:0 0 8px;color:var(--muted);font-weight:700}
-.screen-time-spend-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.screen-time-controls{margin-top:0;padding-top:0;border-top:0;flex:0 1 auto}
+.screen-time-spend-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.screen-time-spend-row .action[disabled]{opacity:.55;cursor:not-allowed;box-shadow:none;transform:none}
 .quest-card{
   background:rgba(255,255,255,.06);border:2px solid rgba(224,184,74,.38);border-radius:20px;padding:16px;
   transition:transform .2s,box-shadow .2s,border-color .2s;
@@ -918,17 +920,21 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </div></div>
 <div class="card quest-books screen-time-bank-card" id="screenTimeCard">
 <h2>📖 Summer Reading</h2>
-<p class="small">Track reading progress here. Parents award <b>25 pages read</b> on the <b>Quest Board</b>.</p>
+<p class="small">Track reading progress and screen time below.</p>
 <div class="screen-time-reading-stat" id="readingProgressLabel"><div class="label">Path of Knowledge</div><b id="readingPointsLabel">0</b> Reading Points · <b id="totalPagesLabel">0</b> pages read (lifetime)<br><span class="small">Books completed: <b id="dashboardBooksLabel">0</b></span></div>
 <div class="screen-time-tracker">
 <div class="screen-time-tracker-head">Available Screen Time</div>
+<div class="screen-time-tracker-inner">
+<div class="screen-time-tracker-display">
 <div class="screen-time-available" id="screenTimeAvailable">0 minutes</div>
 <div class="screen-time-blocks" id="screenTimeBlocks">0 × 30-minute blocks</div>
+</div>
 <div id="screenTimeActions" class="screen-time-controls">
-<p class="small">Adjust bank only — does not change reading progress</p>
 <div class="screen-time-spend-row">
-<button type="button" class="action secondary" onclick="adjustScreenTimeBankCore(30)">+30 Minutes</button>
-<button type="button" class="action secondary" onclick="adjustScreenTimeBankCore(-30)">−30 Minutes</button>
+<button type="button" class="action good" id="btn25PagesRead" disabled aria-disabled="true">25 Pages Read</button>
+<button type="button" class="action secondary" id="btnScreenTimePlus30" disabled aria-disabled="true">+30 Minutes</button>
+<button type="button" class="action secondary" id="btnScreenTimeMinus30" disabled aria-disabled="true">−30 Minutes</button>
+</div>
 </div>
 </div>
 </div>
@@ -1188,7 +1194,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="screen-time-ui-v3";
+const APP_BUILD="screen-time-ui-v4";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 function checkAppBuild(){
