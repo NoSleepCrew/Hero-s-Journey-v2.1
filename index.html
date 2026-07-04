@@ -210,6 +210,31 @@ h2{margin:0 0 12px;font-family:var(--font-display);font-size:28px;color:var(--go
 .hero-stat .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}
 .hero-stat .value{font-size:32px;font-weight:900;margin-top:4px;color:#fff8e8}
 .hero-stat.stat-level .value{color:#ffdb77}
+.hero-treasury-card{
+  border-color:rgba(224,184,74,.55);
+  background:linear-gradient(180deg,rgba(120,90,20,.18),rgba(255,255,255,.04));
+  text-align:center;
+}
+.hero-treasury-balance{
+  font-size:clamp(36px,8vw,52px);font-weight:900;color:#ffdb77;line-height:1.15;
+  text-shadow:0 2px 12px rgba(224,184,74,.35);margin:8px 0 4px;
+}
+.hero-treasury-note{color:var(--muted);font-size:13px;margin:0}
+.treasury-parent-forms{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:14px 0}
+.treasury-form-panel{
+  padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.04);
+  border:1px solid rgba(224,184,74,.25);
+}
+.treasury-form-panel h3{margin:0 0 10px;font-size:15px;color:#ffdb77}
+.treasury-form-panel label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px;font-weight:700}
+.treasury-form-panel input{width:100%;margin:0 0 4px}
+.treasury-form-panel .action{margin-top:10px;width:100%}
+.treasury-ledger-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.treasury-ledger-table th,.treasury-ledger-table td{padding:8px 10px;text-align:left;border-bottom:1px solid rgba(224,184,74,.15);vertical-align:top}
+.treasury-ledger-table th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.treasury-ledger-added{color:#7dffb0;font-weight:800}
+.treasury-ledger-subtracted{color:#ff9a8a;font-weight:800}
+.treasury-ledger-empty{color:var(--muted);font-size:13px;padding:12px 0}
 .screen-time-bank-card{border-color:rgba(100,180,255,.5);background:linear-gradient(180deg,rgba(60,100,180,.12),rgba(255,255,255,.04))}
 .screen-time-reading-stat{
   display:flex;flex-direction:column;justify-content:center;padding:12px 14px;border-radius:16px;margin-bottom:12px;
@@ -918,6 +943,12 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="hero-stat"><div class="stat-icon">💎</div><div class="label">HP Balance</div><div class="value" id="hpBal">0</div></div>
 <div class="hero-stat"><div class="stat-icon">🎯</div><div class="label">Next Level</div><div class="value" id="nextLevel">10 HP</div></div>
 </div></div>
+<div class="card hero-treasury-card">
+<h2>💰 Hero Treasury</h2>
+<p class="small">Money saved from hero rewards and adventures.</p>
+<div class="hero-treasury-balance" id="heroTreasuryBalance">$0.00</div>
+<p class="hero-treasury-note">Parents update the treasury when rewards are Paid.</p>
+</div>
 <div class="card quest-books screen-time-bank-card" id="screenTimeCard">
 <h2>📖 Summer Reading</h2>
 <p class="small">Track reading progress and screen time below.</p>
@@ -1471,6 +1502,28 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="card"><h2>⏱ Screen Time Controls</h2><p class="small">Adjust the Screen Time Bank only. Available time is shown on the Dashboard. Permanent reading progress is never changed here.</p><div id="parentScreenTime"></div></div>
 <div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Correct habit ladder counts here: use -1, +1, or set an exact number. Parent Code required for each change.</p><div id="parentHabitLadders"></div></div>
 <div class="card"><h2>🃏 Habit Card Turn-In</h2><p class="small">Mark cards turned in when Killian redeems the physical card and reward. Parent Code required.</p><div id="parentHabitCards"></div></div>
+<div class="card"><h2>💰 Hero Treasury Ledger</h2><p class="small">Manual money tracker. <b>Hero Treasury Balance</b> = all money added − all money subtracted. Not connected to Hero Points or cards yet.</p>
+<p><b>Current balance:</b> <span id="parentTreasuryBalance">$0.00</span></p>
+<div class="treasury-parent-forms">
+<div class="treasury-form-panel">
+<h3>Add Money</h3>
+<label for="treasuryAddAmount">Amount ($)</label>
+<input id="treasuryAddAmount" type="number" step="0.01" min="0.01" placeholder="0.00">
+<label for="treasuryAddReason">Reason earned</label>
+<input id="treasuryAddReason" type="text" placeholder="e.g. Apprentice level reward Paid">
+<button type="button" class="action good" onclick="submitTreasuryAdd()">Add to Treasury</button>
+</div>
+<div class="treasury-form-panel">
+<h3>Subtract Money</h3>
+<label for="treasurySubtractAmount">Amount ($)</label>
+<input id="treasurySubtractAmount" type="number" step="0.01" min="0.01" placeholder="0.00">
+<label for="treasurySubtractReason">Reason spent</label>
+<input id="treasurySubtractReason" type="text" placeholder="e.g. Bought a book">
+<button type="button" class="action secondary" onclick="submitTreasurySubtract()">Subtract from Treasury</button>
+</div>
+</div>
+<div id="treasuryLedgerWrap"></div>
+</div>
 <div class="card"><details><summary>System Settings</summary><div class="grid">
 <div><label>Start Date</label><input id="startInput" type="date"></div>
 <div><label>Original Duration Days</label><input id="durationInput" type="number"></div>
@@ -1481,7 +1534,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="rulebook-refine-v2";
+const APP_BUILD="hero-treasury-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 function checkAppBuild(){
@@ -1985,7 +2038,7 @@ function normalizeUnlockedTitlesFromCloud(data){
 function normalizeEquippedTitleFromCloud(data){
   return (typeof data==="string"&&HABIT_LADDERS.some(h=>h.key===data&&h.title))?data:null;
 }
-let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0};
+let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:[]};
 if(!Array.isArray(state.pendingReports)) state.pendingReports=[];
 ensureHabitLadders();
 ensureHabitCardTurnIns();
@@ -2007,6 +2060,112 @@ function ensureChronicleState(){
   if(typeof state.chronicleLegendRevealed!=="boolean") state.chronicleLegendRevealed=false;
 }
 ensureChronicleState();
+function defaultHeroTreasuryLedger(){return [];}
+function normalizeTreasuryAmount(n){
+  const v=Math.round(Number(n)*100)/100;
+  return isFinite(v)&&v>0?v:0;
+}
+function normalizeHeroTreasuryEntry(raw){
+  if(!raw||typeof raw!=="object") return null;
+  const type=raw.type==="subtracted"?"subtracted":(raw.type==="added"?"added":null);
+  const amount=normalizeTreasuryAmount(raw.amount);
+  const reason=String(raw.reason||"").trim();
+  if(!type||!amount||!reason) return null;
+  const date=(typeof raw.date==="string"&&raw.date)?raw.date:new Date().toISOString();
+  const id=(typeof raw.id==="string"&&raw.id)?raw.id:(date+"-"+Math.random().toString(36).slice(2,9));
+  return {id,type,amount,reason,date};
+}
+function normalizeHeroTreasuryFromCloud(data){
+  const raw=Array.isArray(data)?data:(Array.isArray(data&&data.heroTreasuryLedger)?data.heroTreasuryLedger:[]);
+  const out=[];
+  raw.forEach(entry=>{const n=normalizeHeroTreasuryEntry(entry);if(n) out.push(n);});
+  return out;
+}
+function ensureHeroTreasury(){
+  if(!Array.isArray(state.heroTreasuryLedger)) state.heroTreasuryLedger=defaultHeroTreasuryLedger();
+  state.heroTreasuryLedger=state.heroTreasuryLedger.map(normalizeHeroTreasuryEntry).filter(Boolean);
+}
+function heroTreasuryLedgerForCloud(){
+  ensureHeroTreasury();
+  return state.heroTreasuryLedger.map(e=>({id:e.id,date:e.date,type:e.type,amount:e.amount,reason:e.reason}));
+}
+function heroTreasuryBalance(){
+  ensureHeroTreasury();
+  let total=0;
+  state.heroTreasuryLedger.forEach(e=>{total+=e.type==="subtracted"?-e.amount:e.amount;});
+  return Math.round(total*100)/100;
+}
+function formatTreasuryMoney(amount){
+  const n=Math.round(Number(amount)*100)/100;
+  const sign=n<0?"-":"";
+  return sign+"$"+Math.abs(n).toFixed(2);
+}
+function formatTreasuryDate(iso){
+  try{
+    return new Date(iso).toLocaleString(undefined,{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+  }catch(e){
+    return iso;
+  }
+}
+function escapeTreasuryHtml(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function appendHeroTreasuryEntry(type,amount,reason){
+  ensureHeroTreasury();
+  const entry={id:Date.now()+"-"+Math.random().toString(36).slice(2,9),date:new Date().toISOString(),type,amount,reason};
+  state.heroTreasuryLedger.unshift(entry);
+  return entry;
+}
+function submitTreasuryAdd(){
+  requireParent("Add money to Hero Treasury",function(){
+    const amount=normalizeTreasuryAmount(document.getElementById("treasuryAddAmount").value);
+    const reason=String(document.getElementById("treasuryAddReason").value||"").trim();
+    if(!amount){alert("Enter an amount greater than zero.");return;}
+    if(!reason){alert("Enter a reason this money was earned.");return;}
+    appendHeroTreasuryEntry("added",amount,reason);
+    log("Hero Treasury +"+formatTreasuryMoney(amount)+": "+reason);
+    document.getElementById("treasuryAddAmount").value="";
+    document.getElementById("treasuryAddReason").value="";
+    save();
+    toast("💰 TREASURY<br>+"+formatTreasuryMoney(amount));
+  });
+}
+function submitTreasurySubtract(){
+  requireParent("Subtract money from Hero Treasury",function(){
+    const amount=normalizeTreasuryAmount(document.getElementById("treasurySubtractAmount").value);
+    const reason=String(document.getElementById("treasurySubtractReason").value||"").trim();
+    if(!amount){alert("Enter an amount greater than zero.");return;}
+    if(!reason){alert("Enter a reason this money was spent.");return;}
+    appendHeroTreasuryEntry("subtracted",amount,reason);
+    log("Hero Treasury -"+formatTreasuryMoney(amount)+": "+reason);
+    document.getElementById("treasurySubtractAmount").value="";
+    document.getElementById("treasurySubtractReason").value="";
+    save();
+    toast("💰 TREASURY<br>-"+formatTreasuryMoney(amount));
+  });
+}
+function renderHeroTreasury(){
+  ensureHeroTreasury();
+  const bal=heroTreasuryBalance();
+  const dash=document.getElementById("heroTreasuryBalance");
+  if(dash) dash.textContent=formatTreasuryMoney(bal);
+  const parentBal=document.getElementById("parentTreasuryBalance");
+  if(parentBal) parentBal.textContent=formatTreasuryMoney(bal);
+  const wrap=document.getElementById("treasuryLedgerWrap");
+  if(!wrap) return;
+  if(!state.heroTreasuryLedger.length){
+    wrap.innerHTML='<p class="treasury-ledger-empty">No treasury entries yet. Add or subtract money above — entries are never deleted.</p>';
+    return;
+  }
+  const rows=state.heroTreasuryLedger.map(e=>{
+    const cls=e.type==="added"?"treasury-ledger-added":"treasury-ledger-subtracted";
+    const sign=e.type==="added"?"+":"−";
+    const typeLabel=e.type==="added"?"Added":"Subtracted";
+    return "<tr><td>"+escapeTreasuryHtml(formatTreasuryDate(e.date))+"</td><td class=\""+cls+"\">"+typeLabel+"</td><td class=\""+cls+"\">"+sign+formatTreasuryMoney(e.amount)+"</td><td>"+escapeTreasuryHtml(e.reason)+"</td></tr>";
+  }).join("");
+  wrap.innerHTML='<table class="treasury-ledger-table"><thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Reason</th></tr></thead><tbody>'+rows+"</tbody></table>";
+}
+ensureHeroTreasury();
 const KINGDOM_WHISPERS=[
   {min:0,text:"The walls begin to remember."},
   {min:8,text:"Dust stirs in the sealed halls."},
@@ -2796,7 +2955,7 @@ function render(){
     strikeBtn.disabled=!ready;
     strikeBtn.textContent=state.legend?"Legendary Strike Applied":(ready?"Apply Legendary Strike":"Reach 50 Quest HP to Unlock");
   }
-  renderBounty();renderQuests();renderLevels();renderAch();renderTitleVault();renderHeroTitle();renderHabitLadders();renderHabitCardBinder();renderKingdomSanctum();renderScreenTimeWallet();renderLedger();renderPendingReports();renderParent();
+  renderBounty();renderQuests();renderLevels();renderAch();renderTitleVault();renderHeroTitle();renderHabitLadders();renderHabitCardBinder();renderKingdomSanctum();renderScreenTimeWallet();renderHeroTreasury();renderLedger();renderPendingReports();renderParent();
   detectProgressChanges();
   checkNewAchievements();
   localStorage.setItem("hj_rpg_state",JSON.stringify(state));
@@ -2946,9 +3105,9 @@ function renderParentScreenTime(){
     '</div>'+
     '<p class="small" style="margin-top:8px">These buttons adjust the bank only. Check the Dashboard for available time.</p>';
 }
-function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=(Array.isArray(state.log)?state.log:[]).map(x=>'<li>'+x+'</li>').join("");renderParentQuests();renderParentScreenTime();renderParentHabits();renderParentHabitCards();updateParentCodeStatus();}
+function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=(Array.isArray(state.log)?state.log:[]).map(x=>'<li>'+x+'</li>').join("");renderParentQuests();renderParentScreenTime();renderParentHabits();renderParentHabitCards();renderHeroTreasury();updateParentCodeStatus();}
 function saveSettings(){requireParent("Save system settings",function(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();});}
-function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0};renderSnapshot=null;save();}});}
+function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:defaultHeroTreasuryLedger()};renderSnapshot=null;save();}});}
 render();
 checkAppBuild();
 </script>
@@ -3005,7 +3164,8 @@ checkAppBuild();
       chronicleLegendRevealed: Boolean(state.chronicleLegendRevealed || false),
       screenTimeMinutes: Number(state.screenTimeMinutes || 0),
       readingPoints: Number(state.readingPoints || 0),
-      totalPagesRead: Number(state.totalPagesRead || 0)
+      totalPagesRead: Number(state.totalPagesRead || 0),
+      heroTreasuryLedger: heroTreasuryLedgerForCloud()
     };
   }
 
@@ -3028,7 +3188,8 @@ checkAppBuild();
       chronicleLegendRevealed: Boolean(data.chronicleLegendRevealed || false),
       screenTimeMinutes: Math.max(0, Number(data.screenTimeMinutes || 0)),
       readingPoints: readingPoints,
-      totalPagesRead: totalPagesRead
+      totalPagesRead: totalPagesRead,
+      heroTreasuryLedger: normalizeHeroTreasuryFromCloud(data.heroTreasuryLedger)
     };
   }
 
@@ -3103,6 +3264,7 @@ checkAppBuild();
           ensureTitles();
           ensureChronicleState();
           ensureScreenTimeState();
+          ensureHeroTreasury();
           localStorage.setItem("hj_rpg_state", JSON.stringify(state));
           setSyncStatus("Cloud sync active. Loaded: " + new Date().toLocaleTimeString());
           render();
@@ -3134,11 +3296,13 @@ checkAppBuild();
         return;
       }
       const habitTotal=HABIT_LADDERS.reduce((sum,h)=>sum+(data.habitLadders&&data.habitLadders[h.key]||0),0);
+      const treasuryEntries=Array.isArray(data.heroTreasuryLedger)?data.heroTreasuryLedger.length:0;
       const summary = "Books: " + (data.books || 0) +
         "\nMeals: " + (data.meals || 0) +
         "\nLanguage days: " + (data.language || 0) +
         "\nCoop: " + (data.coop || 0) +
         "\nHabit ladder completions: " + habitTotal +
+        "\nHero Treasury entries: " + treasuryEntries +
         "\nLegend strike: " + (data.legend ? "Yes" : "No");
       if(!confirm("Restore this backup to cloud?\n\n" + summary + "\n\nOnly continue if these numbers look correct.")) return;
       applyingCloudUpdate = true;
@@ -3146,6 +3310,7 @@ checkAppBuild();
       ensureTitles();
       ensureChronicleState();
       ensureScreenTimeState();
+      ensureHeroTreasury();
       renderSnapshot = null;
       log("Progress restored from local backup.");
       applyingCloudUpdate = false;
