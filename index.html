@@ -2051,6 +2051,9 @@ async function showScreen(id){
   if(id==="home"){
     renderScreenTimeWallet();
   }
+  if(id==="parent"){
+    renderParent();
+  }
 }
 
 function countMs(n,arr,max){return Math.min(max,arr.filter(x=>n>=x).length);}
@@ -2656,7 +2659,7 @@ function renderParentScreenTime(){
     '</div>'+
     '<p class="small" style="margin-top:8px">These buttons adjust the bank only. Check the Dashboard for available time.</p>';
 }
-function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=state.log.map(x=>'<li>'+x+'</li>').join("");renderParentQuests();renderParentScreenTime();renderParentHabits();renderParentHabitCards();updateParentCodeStatus();}
+function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=(Array.isArray(state.log)?state.log:[]).map(x=>'<li>'+x+'</li>').join("");renderParentQuests();renderParentScreenTime();renderParentHabits();renderParentHabitCards();updateParentCodeStatus();}
 function saveSettings(){requireParent("Save system settings",function(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();});}
 function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0};renderSnapshot=null;save();}});}
 render();
