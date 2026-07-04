@@ -924,7 +924,13 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="screen-time-tracker-head">Available Screen Time</div>
 <div class="screen-time-available" id="screenTimeAvailable">0 minutes</div>
 <div class="screen-time-blocks" id="screenTimeBlocks">0 × 30-minute blocks</div>
-<div id="screenTimeActions"></div>
+<div id="screenTimeActions" class="screen-time-controls">
+<p class="small">Adjust bank only — does not change reading progress</p>
+<div class="screen-time-spend-row">
+<button type="button" class="action secondary" onclick="adjustScreenTimeBankCore(30)">+30 Minutes</button>
+<button type="button" class="action secondary" onclick="adjustScreenTimeBankCore(-30)">−30 Minutes</button>
+</div>
+</div>
 </div>
 </div>
 <div class="kingdom-teaser" id="kingdomTeaser">
@@ -1182,7 +1188,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="screen-time-ui-v2";
+const APP_BUILD="screen-time-ui-v3";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 function checkAppBuild(){
@@ -2034,6 +2040,10 @@ async function showScreen(id){
     if(remaining()<=0&&!state.chronicleLegendRevealed){
       setTimeout(function(){if(!state.chronicleLegendRevealed) openChronicleReveal();},700);
     }
+    return;
+  }
+  if(id==="home"){
+    renderScreenTimeWallet();
   }
 }
 
@@ -2213,20 +2223,12 @@ function renderScreenTimeWallet(){
   const pts=document.getElementById("readingPointsLabel");
   const pages=document.getElementById("totalPagesLabel");
   const booksEl=document.getElementById("dashboardBooksLabel");
-  const actions=document.getElementById("screenTimeActions");
-  if(!avail||!actions) return;
+  if(!avail) return;
   avail.textContent=formatScreenTimeMinutesLong(state.screenTimeMinutes);
   if(blocks) blocks.textContent=formatScreenTimeBlocks(state.screenTimeMinutes);
   if(pts) pts.textContent=state.readingPoints;
   if(pages) pages.textContent=state.totalPagesRead;
   if(booksEl) booksEl.textContent=state.books;
-  actions.innerHTML=
-    '<div class="screen-time-controls">'+
-    '<p class="small">Adjust bank only — does not change reading progress</p>'+
-    '<div class="screen-time-spend-row">'+
-    '<button type="button" class="action secondary" onclick="adjustScreenTimeBankCore(30)">+30 Minutes</button>'+
-    '<button type="button" class="action secondary" onclick="adjustScreenTimeBankCore(-30)">−30 Minutes</button>'+
-    '</div></div>';
 }
 function questChangeToasts(beforeHP,beforeLevel,beforeRemain){
   const afterHP=hp(),afterLevel=level();
@@ -2460,6 +2462,7 @@ function dismissReport(id){
   });
 }
 function render(){
+  renderScreenTimeWallet();
   const ds=dragonStage();
   const r=remaining();
   const bossCard=document.getElementById("bossCard");
