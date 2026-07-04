@@ -211,23 +211,22 @@ h2{margin:0 0 12px;font-family:var(--font-display);font-size:28px;color:var(--go
 .hero-stat .value{font-size:32px;font-weight:900;margin-top:4px;color:#fff8e8}
 .hero-stat.stat-level .value{color:#ffdb77}
 .screen-time-bank-card{border-color:rgba(100,180,255,.5);background:linear-gradient(180deg,rgba(60,100,180,.12),rgba(255,255,255,.04))}
-.screen-time-bank-display{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
-@media(max-width:520px){.screen-time-bank-display{grid-template-columns:1fr}}
-.screen-time-bank-amount{
-  text-align:center;padding:14px 12px;border-radius:16px;
-  background:rgba(0,0,0,.22);border:1px solid rgba(100,180,255,.35);
-}
-.screen-time-bank-amount .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}
-.screen-time-bank-amount .value{font-size:clamp(28px,6vw,38px);font-weight:900;color:#9fd0ff;margin-top:4px;line-height:1.1}
 .screen-time-reading-stat{
-  display:flex;flex-direction:column;justify-content:center;padding:12px 14px;border-radius:16px;
+  display:flex;flex-direction:column;justify-content:center;padding:12px 14px;border-radius:16px;margin-bottom:12px;
   background:rgba(255,255,255,.04);border:1px solid rgba(224,184,74,.22);font-size:13px;color:var(--muted);line-height:1.5;
 }
 .screen-time-reading-stat b{color:#ffdb77;font-weight:900}
 .screen-time-reading-stat .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800;margin-bottom:6px}
-.screen-time-spend-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
-.screen-time-spend-row input{width:80px;margin:0;padding:10px}
-.screen-time-divider{border:0;border-top:1px solid rgba(224,184,74,.2);margin:14px 0 10px}
+.screen-time-tracker{
+  padding:14px 14px 12px;border-radius:16px;
+  background:rgba(0,0,0,.22);border:1px solid rgba(100,180,255,.35);
+}
+.screen-time-tracker-head{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800;margin-bottom:6px}
+.screen-time-available{font-size:clamp(22px,5vw,32px);font-weight:900;color:#9fd0ff;line-height:1.2}
+.screen-time-blocks{font-size:12px;color:#a8c8e8;margin-top:6px;font-weight:700}
+.screen-time-controls{margin-top:12px;padding-top:10px;border-top:1px solid rgba(100,180,255,.2)}
+.screen-time-controls .small{margin:0 0 8px;color:var(--muted);font-weight:700}
+.screen-time-spend-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .quest-card{
   background:rgba(255,255,255,.06);border:2px solid rgba(224,184,74,.38);border-radius:20px;padding:16px;
   transition:transform .2s,box-shadow .2s,border-color .2s;
@@ -919,15 +918,14 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </div></div>
 <div class="card quest-books screen-time-bank-card" id="screenTimeCard">
 <h2>📖 Summer Reading</h2>
-<p class="small">Track Path of Knowledge reading here. Parents award <b>25 pages read</b> on the <b>Quest Board</b>. Screen time is banked separately below.</p>
-<div class="screen-time-bank-display">
-<div class="screen-time-reading-stat" id="readingProgressLabel"><div class="label">Path of Knowledge</div><b id="readingPointsLabel">0</b> Reading Points<br><b id="totalPagesLabel">0</b> pages read (lifetime)<br><span class="small">Books completed: <b id="dashboardBooksLabel">0</b></span></div>
-<div class="screen-time-bank-amount">
-<div class="label">Screen Time Bank</div>
-<div class="value" id="screenTimeBalance">0 min</div>
-</div>
-</div>
+<p class="small">Track reading progress here. Parents award <b>25 pages read</b> on the <b>Quest Board</b>.</p>
+<div class="screen-time-reading-stat" id="readingProgressLabel"><div class="label">Path of Knowledge</div><b id="readingPointsLabel">0</b> Reading Points · <b id="totalPagesLabel">0</b> pages read (lifetime)<br><span class="small">Books completed: <b id="dashboardBooksLabel">0</b></span></div>
+<div class="screen-time-tracker">
+<div class="screen-time-tracker-head">Available Screen Time</div>
+<div class="screen-time-available" id="screenTimeAvailable">0 minutes</div>
+<div class="screen-time-blocks" id="screenTimeBlocks">0 × 30-minute blocks</div>
 <div id="screenTimeActions"></div>
+</div>
 </div>
 <div class="kingdom-teaser" id="kingdomTeaser">
 <p class="kingdom-teaser-whisper" id="kingdomTeaserWhisper">The walls begin to remember.</p>
@@ -1171,7 +1169,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="card"><h2>📋 Quest Reports</h2><p class="small">Killian can submit quest reports from the Quest Board. Approve or dismiss them here.</p><div id="pendingReports"></div></div>
 <div class="card"><h2>Progress Ledger</h2><table><thead><tr><th>Quest</th><th>Count</th><th>Dragon Damage</th><th>Hero Points</th></tr></thead><tbody id="ledger"></tbody></table></div>
 <div class="card"><h2>📜 Main Quest Progress</h2><p class="small">Adjust each quest path: use <b>-1</b>, <b>+1</b>, or type a number and tap <b>Set</b>. Parent Code required. Summer <b>25 Pages Read</b> is on the Quest Board.</p><div id="parentMainQuests"></div><p style="margin-top:12px"><button class="action danger" onclick="resetAll()">Reset All Progress</button></p></div>
-<div class="card"><h2>📖 Screen Time Bank</h2><p class="small">Spend or reset <b>available minutes only</b>. Permanent reading progress is never changed here.</p><div id="parentScreenTime"></div></div>
+<div class="card"><h2>⏱ Screen Time Controls</h2><p class="small">Adjust the Screen Time Bank only. Available time is shown on the Dashboard. Permanent reading progress is never changed here.</p><div id="parentScreenTime"></div></div>
 <div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Correct habit ladder counts here: use -1, +1, or set an exact number. Parent Code required for each change.</p><div id="parentHabitLadders"></div></div>
 <div class="card"><h2>🃏 Habit Card Turn-In</h2><p class="small">Mark cards turned in when Killian redeems the physical card and reward. Parent Code required.</p><div id="parentHabitCards"></div></div>
 <div class="card"><details><summary>System Settings</summary><div class="grid">
@@ -1184,7 +1182,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="reading-screen-time-v1";
+const APP_BUILD="screen-time-ui-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 function checkAppBuild(){
@@ -2155,6 +2153,18 @@ function formatScreenTime(mins){
   if(r===0) return h+(h===1?" hr":" hrs");
   return h+"h "+r+"m";
 }
+function formatScreenTimeMinutesLong(mins){
+  const m=Math.max(0,Math.floor(mins));
+  if(m===0) return "0 minutes";
+  if(m===1) return "1 minute";
+  return m+" minutes";
+}
+function formatScreenTimeBlocks(mins){
+  const blocks=Math.floor(Math.max(0,Math.floor(mins))/SCREEN_MINUTES_PER_READING_POINT);
+  if(blocks===0) return "0 × 30-minute blocks";
+  if(blocks===1) return "1 × 30-minute block";
+  return blocks+" × 30-minute blocks";
+}
 function apply25PagesRead(){
   ensureScreenTimeState();
   state.readingPoints++;
@@ -2198,23 +2208,26 @@ function resetScreenTime(){
 }
 function renderScreenTimeWallet(){
   ensureScreenTimeState();
-  const bal=document.getElementById("screenTimeBalance");
+  const avail=document.getElementById("screenTimeAvailable");
+  const blocks=document.getElementById("screenTimeBlocks");
   const pts=document.getElementById("readingPointsLabel");
   const pages=document.getElementById("totalPagesLabel");
   const booksEl=document.getElementById("dashboardBooksLabel");
   const actions=document.getElementById("screenTimeActions");
-  if(!bal||!actions) return;
-  bal.textContent=formatScreenTime(state.screenTimeMinutes);
+  if(!avail||!actions) return;
+  avail.textContent=formatScreenTimeMinutesLong(state.screenTimeMinutes);
+  if(blocks) blocks.textContent=formatScreenTimeBlocks(state.screenTimeMinutes);
   if(pts) pts.textContent=state.readingPoints;
   if(pages) pages.textContent=state.totalPagesRead;
   if(booksEl) booksEl.textContent=state.books;
   if(parentUnlocked()){
     actions.innerHTML=
-      '<p class="small" style="margin:0 0 6px;font-weight:800">Screen Time Bank only — does not change reading progress</p>'+
+      '<div class="screen-time-controls">'+
+      '<p class="small">Parent controls — bank only</p>'+
       '<div class="screen-time-spend-row">'+
       '<button type="button" class="action secondary" onclick="adjustScreenTimeBank(30)">+30 Minutes</button>'+
       '<button type="button" class="action secondary" onclick="adjustScreenTimeBank(-30)">−30 Minutes</button>'+
-      '<button type="button" class="action danger" onclick="resetScreenTime()">Reset to 0</button></div>';
+      '</div></div>';
   }else{
     actions.innerHTML="";
   }
@@ -2629,16 +2642,14 @@ function renderLedger(){
   document.getElementById("ledger").innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>').join("");
 }
 function renderParentScreenTime(){
-  ensureScreenTimeState();
   const el=document.getElementById("parentScreenTime");
   if(!el) return;
   el.innerHTML=
-    '<div class="habit-parent-row"><div><div class="habit-parent-name">Screen Time Bank</div><div class="small habit-progress-text">'+formatScreenTime(state.screenTimeMinutes)+' available · '+state.readingPoints+' Reading Points · '+state.totalPagesRead+' pages (permanent)</div></div></div>'+
-    '<div class="btns" style="margin-top:8px">'+
+    '<div class="btns">'+
     '<button type="button" class="action secondary" onclick="adjustScreenTimeBank(30)">+30 Minutes</button>'+
     '<button type="button" class="action secondary" onclick="adjustScreenTimeBank(-30)">−30 Minutes</button>'+
-    '<button type="button" class="action danger" onclick="resetScreenTime()">Reset to 0</button></div>'+
-    '<p class="small" style="margin-top:8px">Award <b>25 Pages Read</b> on the Quest Board. These buttons adjust the bank only.</p>';
+    '</div>'+
+    '<p class="small" style="margin-top:8px">These buttons adjust the bank only. Check the Dashboard for available time.</p>';
 }
 function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=state.log.map(x=>'<li>'+x+'</li>').join("");renderParentQuests();renderParentScreenTime();renderParentHabits();renderParentHabitCards();updateParentCodeStatus();}
 function saveSettings(){requireParent("Save system settings",function(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();});}
