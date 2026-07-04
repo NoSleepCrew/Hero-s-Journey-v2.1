@@ -423,6 +423,17 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 .parent-lock-note{border-left:4px solid var(--gold);padding:10px 14px;background:rgba(224,184,74,.10);border-radius:10px;margin:12px 0;}
 .testing-mode-banner{border-left:4px solid #e88a3a;padding:12px 16px;background:rgba(232,138,58,.18);border-radius:10px;margin:0 0 14px;color:#ffd4a8;font-size:15px;line-height:1.45}
 .testing-mode-banner b{color:#ffe9c8}
+.testing-mode-global{
+  position:fixed;top:0;left:0;right:0;z-index:9999;
+  display:flex;align-items:center;justify-content:center;gap:10px 16px;flex-wrap:wrap;
+  padding:10px 14px;
+  background:linear-gradient(90deg,#6b2808,#c45a1a 40%,#6b2808);
+  border-bottom:3px solid #ffb347;
+  box-shadow:0 4px 22px rgba(0,0,0,.5);
+  color:#fff5e6;font-size:14px;line-height:1.35;text-align:center;
+}
+.testing-mode-global-label{font-weight:900;letter-spacing:.14em;font-size:15px;color:#ffe9c8;text-shadow:0 1px 0 rgba(0,0,0,.45)}
+body.testing-mode-active{padding-top:46px}
 .locked-parent{filter:blur(2px);pointer-events:none;opacity:.45;}
 .code-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;}
 @media(max-width:800px){.code-row{grid-template-columns:1fr}}
@@ -835,6 +846,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 </head>
 <body>
+<div class="testing-mode-global" id="testingModeGlobalBanner" hidden><span class="testing-mode-global-label">TESTING MODE</span><span>Isolated session — live progress is protected. Parent: exit in Parent controls.</span></div>
 <div class="toast" id="toast"></div>
 <div class="celebration" id="celebration" onclick="if(event.target===this)closeCelebration()">
 <div class="celebration-inner">
@@ -907,7 +919,6 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <button onclick="showScreen('parent')" id="nav-parent">⚙ Parent</button>
 </div>
 <section id="home" class="screen active">
-<div class="testing-mode-banner" id="testingModeBannerHome" hidden>🧪 <b>Testing Mode</b> — changes are temporary. Parent: exit Testing Mode to restore live data.</div>
 <div class="card boss" id="bossCard">
 <div class="boss-arena-wrap">
 <div class="boss-arena interactive idle" id="dragonArt" onclick="pokeDragon()" title="Tap the dragon" role="button" aria-label="Ancient Dragon">
@@ -1492,7 +1503,6 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <p><a href="#top">⬆ Return to Table of Contents</a></p>
 </div>
 </section><section id="parent" class="screen">
-<div class="testing-mode-banner" id="testingModeBannerParent" hidden>🧪 <b>Testing Mode active</b> — cloud sync paused. Test treasury and other edits safely; use Exit below to restore live data.</div>
 <div class="card">
 <h2>🔐 Parent Lock</h2>
 <p class="parent-lock-note">Parent controls require the shared Parent Code (stored in the cloud so any parent can unlock on their phone). Once entered, controls stay unlocked for five minutes.</p>
@@ -1501,7 +1511,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </div>
 <div class="card" id="testingModeCard">
 <h2>🧪 Parent Testing Mode</h2>
-<p class="small">Safely test Hero Treasury and other parent edits without risking live progress. Enter saves a full snapshot; exit restores it exactly and discards all test changes.</p>
+<p class="small">Application-wide isolated sandbox. Enter saves a complete snapshot of live data and loads a separate testing session. All features work normally inside testing; live progress and cloud data are never modified until you exit.</p>
 <div id="testingModeControls"></div>
 <p class="small" id="testingModeStatus"></p>
 </div>
@@ -1544,9 +1554,25 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="parent-testing-mode-v1";
+const APP_BUILD="global-testing-mode-v2";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
+const LIVE_STATE_KEY="hj_rpg_state";
+const LIVE_SETTINGS_KEY="hj_rpg_settings";
+const LIVE_MILESTONE_KEY="hj_seen_deed_milestones";
+const LIVE_ACH_KEY="hj_seen_achievements";
+const TESTING_MODE_KEY="hj_testing_mode";
+const LIVE_SNAPSHOT_KEY="hj_testing_live_snapshot";
+const TEST_SESSION_STATE_KEY="hj_testing_session_state";
+const TEST_SESSION_SETTINGS_KEY="hj_testing_session_settings";
+const TEST_SESSION_MILESTONE_KEY="hj_testing_session_milestones";
+const TEST_SESSION_ACH_KEY="hj_testing_session_achievements";
+let testingMode=localStorage.getItem(TESTING_MODE_KEY)==="1";
+window.__HJ_TESTING_MODE=testingMode;
+function activeStateKey(){return testingMode?TEST_SESSION_STATE_KEY:LIVE_STATE_KEY;}
+function activeSettingsKey(){return testingMode?TEST_SESSION_SETTINGS_KEY:LIVE_SETTINGS_KEY;}
+function activeMilestoneKey(){return testingMode?TEST_SESSION_MILESTONE_KEY:LIVE_MILESTONE_KEY;}
+function activeAchKey(){return testingMode?TEST_SESSION_ACH_KEY:LIVE_ACH_KEY;}
 function checkAppBuild(){
   const el=document.getElementById("appBuildLabel");
   if(el) el.textContent="App build: "+APP_BUILD;
@@ -1559,7 +1585,7 @@ function checkAppBuild(){
     },1500);
   }
 }
-let settings=JSON.parse(localStorage.getItem("hj_rpg_settings")||"null")||defaults;
+let settings=JSON.parse(localStorage.getItem(activeSettingsKey())||"null")||defaults;
 const HABIT_CARD_TIERS=[
   {id:"rare",min:10,label:"Rare",stipend:2,token:"Bronze",borderClass:"tier-rare"},
   {id:"epic",min:50,label:"Epic",stipend:5,token:"Silver",borderClass:"tier-epic"},
@@ -2048,7 +2074,7 @@ function normalizeUnlockedTitlesFromCloud(data){
 function normalizeEquippedTitleFromCloud(data){
   return (typeof data==="string"&&HABIT_LADDERS.some(h=>h.key===data&&h.title))?data:null;
 }
-let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:[]};
+let state=JSON.parse(localStorage.getItem(activeStateKey())||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:[]};
 if(!Array.isArray(state.pendingReports)) state.pendingReports=[];
 ensureHabitLadders();
 ensureHabitCardTurnIns();
@@ -2416,8 +2442,14 @@ function checkChronicleDefeatReveal(wasRemaining){
   }
 }
 let renderSnapshot=null;
-const ACH_SEEN_KEY="hj_seen_achievements";
-const MILESTONE_SEEN_KEY="hj_seen_deed_milestones";
+const MILESTONE_SEEN_KEY=LIVE_MILESTONE_KEY;
+const ACH_SEEN_KEY=LIVE_ACH_KEY;
+function persistAppData(){
+  localStorage.setItem(activeStateKey(),JSON.stringify(state));
+  localStorage.setItem(activeSettingsKey(),JSON.stringify(settings));
+}
+window.persistAppData=persistAppData;
+window.isTestingModeActive=function(){return testingMode;};
 const DEED_MILESTONES=[
   {deeds:5,bonus:1,total:1,name:"First Deed Reward"},
   {deeds:10,bonus:1,total:2,name:"Deed Pathfinder"},
@@ -2439,7 +2471,7 @@ const dragonTaunts={
   last:["Final stand! Give me your best shot!","You will not defeat me easily!","The endgame begins now!"],
   defeated:["You win, legend. Well fought.","The dragon falls. The hero rises.","Journey complete. I bow to you."]
 };
-function save(){localStorage.setItem("hj_rpg_state",JSON.stringify(state));localStorage.setItem("hj_rpg_settings",JSON.stringify(settings));render();}
+function save(){persistAppData();render();}
 function log(msg){state.log.unshift(new Date().toLocaleString()+" — "+msg);state.log=state.log.slice(0,60);}
 function toast(msg){const t=document.getElementById("toast");t.innerHTML=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600);}
 let parentCodeHash="";
@@ -2510,18 +2542,16 @@ async function requireParent(reason,action){
 async function requireParentAlways(reason,action){
   if(await requestParentCode(reason)) action();
 }
-const TESTING_MODE_KEY="hj_testing_mode";
-const TESTING_SNAPSHOT_KEY="hj_testing_mode_snapshot";
-let testingMode=localStorage.getItem(TESTING_MODE_KEY)==="1";
-window.__HJ_TESTING_MODE=testingMode;
 function isTestingMode(){return testingMode;}
-function buildTestingSnapshot(){
+function captureLiveSnapshot(){
+  const rawState=localStorage.getItem(LIVE_STATE_KEY);
+  const rawSettings=localStorage.getItem(LIVE_SETTINGS_KEY);
   return{
     savedAt:new Date().toISOString(),
-    state:JSON.parse(JSON.stringify(state)),
-    settings:JSON.parse(JSON.stringify(settings)),
-    milestoneSeen:localStorage.getItem(MILESTONE_SEEN_KEY),
-    achSeen:localStorage.getItem(ACH_SEEN_KEY)
+    state:rawState?JSON.parse(rawState):JSON.parse(JSON.stringify(state)),
+    settings:rawSettings?JSON.parse(rawSettings):JSON.parse(JSON.stringify(settings)),
+    milestoneSeen:localStorage.getItem(LIVE_MILESTONE_KEY),
+    achSeen:localStorage.getItem(LIVE_ACH_KEY)
   };
 }
 function restoreStateFromSnapshot(data){
@@ -2548,38 +2578,67 @@ function restoreStateFromSnapshot(data){
     heroTreasuryLedger:normalizeHeroTreasuryFromCloud(data.heroTreasuryLedger)
   };
 }
-function applyTestingSnapshot(snap){
-  state=restoreStateFromSnapshot(snap.state);
+function loadMemoryFromSnapshot(snap){
+  if(snap&&snap.state) state=restoreStateFromSnapshot(snap.state);
   ensureHabitLadders();
   ensureHabitCardTurnIns();
   ensureTitles();
   ensureChronicleState();
   ensureScreenTimeState();
   ensureHeroTreasury();
-  settings=Object.assign({},defaults,snap.settings||{});
-  if(snap.milestoneSeen!=null) localStorage.setItem(MILESTONE_SEEN_KEY,snap.milestoneSeen);
-  else localStorage.removeItem(MILESTONE_SEEN_KEY);
-  if(snap.achSeen!=null) localStorage.setItem(ACH_SEEN_KEY,snap.achSeen);
-  else localStorage.removeItem(ACH_SEEN_KEY);
+  if(snap&&snap.settings) settings=Object.assign({},defaults,snap.settings);
+  if(snap&&snap.milestoneSeen!=null) localStorage.setItem(activeMilestoneKey(),snap.milestoneSeen);
+  else localStorage.removeItem(activeMilestoneKey());
+  if(snap&&snap.achSeen!=null) localStorage.setItem(activeAchKey(),snap.achSeen);
+  else localStorage.removeItem(activeAchKey());
+}
+function loadMemoryFromActiveStorage(){
+  loadMemoryFromSnapshot({
+    state:JSON.parse(localStorage.getItem(activeStateKey())||"null"),
+    settings:JSON.parse(localStorage.getItem(activeSettingsKey())||"null"),
+    milestoneSeen:localStorage.getItem(activeMilestoneKey()),
+    achSeen:localStorage.getItem(activeAchKey())
+  });
+}
+function writeLiveStorageFromSnapshot(snap){
+  if(snap.state!=null) localStorage.setItem(LIVE_STATE_KEY,JSON.stringify(snap.state));
+  if(snap.settings!=null) localStorage.setItem(LIVE_SETTINGS_KEY,JSON.stringify(snap.settings));
+  if(snap.milestoneSeen!=null) localStorage.setItem(LIVE_MILESTONE_KEY,snap.milestoneSeen);
+  else localStorage.removeItem(LIVE_MILESTONE_KEY);
+  if(snap.achSeen!=null) localStorage.setItem(LIVE_ACH_KEY,snap.achSeen);
+  else localStorage.removeItem(LIVE_ACH_KEY);
+}
+function copySnapshotToTestingSession(snap){
+  if(snap.state!=null) localStorage.setItem(TEST_SESSION_STATE_KEY,JSON.stringify(snap.state));
+  if(snap.settings!=null) localStorage.setItem(TEST_SESSION_SETTINGS_KEY,JSON.stringify(snap.settings));
+  if(snap.milestoneSeen!=null) localStorage.setItem(TEST_SESSION_MILESTONE_KEY,snap.milestoneSeen);
+  else localStorage.removeItem(TEST_SESSION_MILESTONE_KEY);
+  if(snap.achSeen!=null) localStorage.setItem(TEST_SESSION_ACH_KEY,snap.achSeen);
+  else localStorage.removeItem(TEST_SESSION_ACH_KEY);
+}
+function clearTestingSessionStorage(){
+  localStorage.removeItem(TEST_SESSION_STATE_KEY);
+  localStorage.removeItem(TEST_SESSION_SETTINGS_KEY);
+  localStorage.removeItem(TEST_SESSION_MILESTONE_KEY);
+  localStorage.removeItem(TEST_SESSION_ACH_KEY);
 }
 function updateTestingModeUI(){
   const show=testingMode;
-  ["testingModeBannerHome","testingModeBannerParent"].forEach(function(id){
-    const el=document.getElementById(id);
-    if(el) el.hidden=!show;
-  });
+  document.body.classList.toggle("testing-mode-active",show);
+  const banner=document.getElementById("testingModeGlobalBanner");
+  if(banner) banner.hidden=!show;
   const status=document.getElementById("testingModeStatus");
   const controls=document.getElementById("testingModeControls");
   if(testingMode){
     let when="";
     try{
-      const snap=JSON.parse(localStorage.getItem(TESTING_SNAPSHOT_KEY)||"{}");
-      if(snap.savedAt) when=" Snapshot from "+new Date(snap.savedAt).toLocaleString()+".";
+      const snap=JSON.parse(localStorage.getItem(LIVE_SNAPSHOT_KEY)||"{}");
+      if(snap.savedAt) when=" Live snapshot from "+new Date(snap.savedAt).toLocaleString()+".";
     }catch(e){}
-    if(status) status.textContent="Testing Mode is ON."+when+" Cloud sync is paused; exit to restore live data.";
-    if(controls) controls.innerHTML='<button type="button" class="action danger" onclick="exitTestingMode()">Exit Testing Mode / Restore Live Data</button>';
+    if(status) status.textContent="Testing session active."+when+" All saves go to isolated test data only; live progress is untouched.";
+    if(controls) controls.innerHTML='<button type="button" class="action danger" onclick="exitTestingMode()">Exit Testing Mode</button>';
   }else{
-    if(status) status.textContent="Live data is active. Enter Testing Mode before trying treasury or other test edits.";
+    if(status) status.textContent="Live data is active. Enter Testing Mode to sandbox any feature without affecting real progress.";
     if(controls) controls.innerHTML='<button type="button" class="action good" onclick="enterTestingMode()">Enter Testing Mode</button>';
   }
   window.__HJ_TESTING_MODE=testingMode;
@@ -2587,41 +2646,47 @@ function updateTestingModeUI(){
 function enterTestingMode(){
   requireParentAlways("Enter Testing Mode",function(){
     if(testingMode){toast("Already in Testing Mode");return;}
-    if(!confirm("Enter Testing Mode?\n\nA full snapshot of current progress will be saved. You can test freely; exiting restores live data exactly and discards all test changes.")) return;
+    if(!confirm("Enter Testing Mode?\n\nLive data will be snapshotted and frozen. A separate testing session loads for all features. Exit Testing Mode discards the session and restores live data exactly.")) return;
     let snap;
     try{
-      snap=buildTestingSnapshot();
-      localStorage.setItem(TESTING_SNAPSHOT_KEY,JSON.stringify(snap));
+      snap=captureLiveSnapshot();
+      localStorage.setItem(LIVE_SNAPSHOT_KEY,JSON.stringify(snap));
+      copySnapshotToTestingSession(snap);
     }catch(e){
-      alert("Could not save testing snapshot: "+e.message);
+      alert("Could not start testing session: "+e.message);
       return;
     }
     testingMode=true;
     localStorage.setItem(TESTING_MODE_KEY,"1");
     window.__HJ_TESTING_MODE=true;
+    loadMemoryFromActiveStorage();
     renderSnapshot=null;
-    log("Testing Mode entered — live snapshot saved.");
-    save();
+    log("Testing Mode entered — isolated session loaded.");
+    persistAppData();
+    render();
     updateTestingModeUI();
-    toast("🧪 Testing Mode ON<br>Live data saved. Cloud sync paused.");
+    toast("🧪 TESTING MODE<br>Isolated session active. Live data protected.");
   });
 }
 function exitTestingMode(){
-  requireParentAlways("Exit Testing Mode and restore live data",function(){
+  requireParentAlways("Exit Testing Mode",function(){
     if(!testingMode){toast("Not in Testing Mode");return;}
-    const raw=localStorage.getItem(TESTING_SNAPSHOT_KEY);
-    if(!raw){alert("No testing snapshot found — cannot restore safely.");return;}
+    const raw=localStorage.getItem(LIVE_SNAPSHOT_KEY);
+    if(!raw){alert("No live snapshot found — cannot restore safely.");return;}
     let snap;
-    try{snap=JSON.parse(raw);}catch(e){alert("Testing snapshot could not be read.");return;}
-    if(!snap||!snap.state){alert("Testing snapshot is incomplete — cannot restore safely.");return;}
-    if(!confirm("Exit Testing Mode and restore live data?\n\nAll test changes (treasury, XP, habits, rewards, dashboard stats) will be discarded.")) return;
-    applyTestingSnapshot(snap);
+    try{snap=JSON.parse(raw);}catch(e){alert("Live snapshot could not be read.");return;}
+    if(!snap||!snap.state){alert("Live snapshot is incomplete — cannot restore safely.");return;}
+    if(!confirm("Exit Testing Mode?\n\nThe entire testing session will be discarded. Live data will be restored exactly as before testing.")) return;
+    writeLiveStorageFromSnapshot(snap);
+    clearTestingSessionStorage();
     testingMode=false;
     localStorage.removeItem(TESTING_MODE_KEY);
-    localStorage.removeItem(TESTING_SNAPSHOT_KEY);
+    localStorage.removeItem(LIVE_SNAPSHOT_KEY);
+    localStorage.removeItem("hj_testing_mode_snapshot");
     window.__HJ_TESTING_MODE=false;
+    loadMemoryFromActiveStorage();
     renderSnapshot=null;
-    log("Testing Mode exited — live data restored from snapshot.");
+    log("Testing Mode exited — live data restored.");
     save();
     updateTestingModeUI();
     toast("✅ Live data restored<br>Testing Mode off.");
@@ -2630,6 +2695,23 @@ function exitTestingMode(){
 window.enterTestingMode=enterTestingMode;
 window.exitTestingMode=exitTestingMode;
 window.isTestingMode=isTestingMode;
+(function bootstrapTestingSession(){
+  if(!testingMode) return;
+  if(!localStorage.getItem(LIVE_SNAPSHOT_KEY)){
+    const legacy=localStorage.getItem("hj_testing_mode_snapshot");
+    if(legacy) localStorage.setItem(LIVE_SNAPSHOT_KEY,legacy);
+  }
+  if(!localStorage.getItem(TEST_SESSION_STATE_KEY)){
+    const snapRaw=localStorage.getItem(LIVE_SNAPSHOT_KEY);
+    if(snapRaw){
+      try{copySnapshotToTestingSession(JSON.parse(snapRaw));}catch(e){}
+    }else{
+      testingMode=false;
+      localStorage.removeItem(TESTING_MODE_KEY);
+      window.__HJ_TESTING_MODE=false;
+    }
+  }
+})();
 async function changeParentCode(){
   if(!cloudConfigReady){alert("Still connecting to cloud. Try again in a moment.");return;}
   if(hasParentCode()){
@@ -3006,10 +3088,10 @@ function celebrate(icon,title,sub){
 function closeCelebration(){document.getElementById("celebration").classList.remove("show");}
 function checkNewMilestones(){
   const count=countableUnlocked();
-  const seen=new Set(JSON.parse(localStorage.getItem(MILESTONE_SEEN_KEY)||"[]"));
-  if(!localStorage.getItem(MILESTONE_SEEN_KEY)){
+  const seen=new Set(JSON.parse(localStorage.getItem(activeMilestoneKey())||"[]"));
+  if(!localStorage.getItem(activeMilestoneKey())){
     DEED_MILESTONES.filter(m=>count>=m.deeds).forEach(m=>seen.add(m.deeds));
-    localStorage.setItem(MILESTONE_SEEN_KEY,JSON.stringify([...seen]));
+    localStorage.setItem(activeMilestoneKey(),JSON.stringify([...seen]));
     return;
   }
   DEED_MILESTONES.forEach(m=>{
@@ -3018,15 +3100,15 @@ function checkNewMilestones(){
       celebrate("🏛",m.name,"+"+m.bonus+" Hero Point bonus! Total deed bonus: +"+m.total+" HP");
     }
   });
-  localStorage.setItem(MILESTONE_SEEN_KEY,JSON.stringify([...seen]));
+  localStorage.setItem(activeMilestoneKey(),JSON.stringify([...seen]));
 }
 function checkNewAchievements(){
   const countable=countableAchievementDefs();
   const meta=getMetaAchievementDefs();
-  const seen=new Set(JSON.parse(localStorage.getItem(ACH_SEEN_KEY)||"[]"));
-  if(!localStorage.getItem(ACH_SEEN_KEY)){
+  const seen=new Set(JSON.parse(localStorage.getItem(activeAchKey())||"[]"));
+  if(!localStorage.getItem(activeAchKey())){
     countable.concat(meta).filter(a=>a.done).forEach(a=>seen.add(a.id));
-    localStorage.setItem(ACH_SEEN_KEY,JSON.stringify([...seen]));
+    localStorage.setItem(activeAchKey(),JSON.stringify([...seen]));
     return;
   }
   countable.forEach(a=>{
@@ -3041,7 +3123,7 @@ function checkNewAchievements(){
       celebrate(a.icon,a.title+" Unlocked!",a.sub+(a.unlock?" • Unlocked: "+a.unlock.name:""));
     }
   });
-  localStorage.setItem(ACH_SEEN_KEY,JSON.stringify([...seen]));
+  localStorage.setItem(activeAchKey(),JSON.stringify([...seen]));
   checkNewMilestones();
 }
 function submitQuestReport(type){
@@ -3124,8 +3206,7 @@ function render(){
   renderBounty();renderQuests();renderLevels();renderAch();renderTitleVault();renderHeroTitle();renderHabitLadders();renderHabitCardBinder();renderKingdomSanctum();renderScreenTimeWallet();renderHeroTreasury();renderLedger();renderPendingReports();renderParent();updateTestingModeUI();
   detectProgressChanges();
   checkNewAchievements();
-  localStorage.setItem("hj_rpg_state",JSON.stringify(state));
-  localStorage.setItem("hj_rpg_settings",JSON.stringify(settings));
+  persistAppData();
 }
 function bountyItem(cls,title,msg,pct){return '<div class="quest-card bounty-card quest-'+cls+'"><div class="quest-name">'+title+'</div><div class="quest-reward">'+msg+'</div><div class="bounty-bar"><div class="bounty-fill" style="width:'+Math.min(100,Math.max(0,pct))+'%"></div></div></div>';}
 function milestonePct(current,next,prev){
@@ -3366,8 +3447,11 @@ checkAppBuild();
         localStorage.setItem("hj_rpg_state_backup", JSON.stringify(state));
       }catch(e){}
     }
-    localStorage.setItem("hj_rpg_state", JSON.stringify(state));
-    localStorage.setItem("hj_rpg_settings", JSON.stringify(settings));
+    if(window.persistAppData) window.persistAppData();
+    else{
+      localStorage.setItem("hj_rpg_state", JSON.stringify(state));
+      localStorage.setItem("hj_rpg_settings", JSON.stringify(settings));
+    }
 
     if(cloudReady && !applyingCloudUpdate && !isCloudSaveBlocked()){
       progressRef.set(cleanStateForCloud(), {merge:true}).then(() => {
@@ -3377,7 +3461,7 @@ checkAppBuild();
         console.error(error);
       });
     }else if(isCloudSaveBlocked()){
-      if(window.__HJ_TESTING_MODE) setSyncStatus("Testing Mode — cloud sync paused (local saves only).");
+      if(window.__HJ_TESTING_MODE) setSyncStatus("Testing Mode — isolated session (cloud sync paused).");
       else setSyncStatus("Cloud sync disabled (demo/local mode). Local save only.");
     }
 
@@ -3440,7 +3524,8 @@ checkAppBuild();
           ensureChronicleState();
           ensureScreenTimeState();
           ensureHeroTreasury();
-          localStorage.setItem("hj_rpg_state", JSON.stringify(state));
+          if(window.persistAppData) window.persistAppData();
+          else localStorage.setItem("hj_rpg_state", JSON.stringify(state));
           setSyncStatus("Cloud sync active. Loaded: " + new Date().toLocaleTimeString());
           render();
           if(state.pendingReports && state.pendingReports.some(r=>r.status==="pending") && parentUnlocked()){
@@ -3460,6 +3545,10 @@ checkAppBuild();
 
   window.restoreFromLocalBackup = function(){
     requireParent("Restore progress from local backup", function(){
+      if(window.__HJ_TESTING_MODE){
+        alert("Exit Testing Mode before restoring live backup.");
+        return;
+      }
       const raw = localStorage.getItem("hj_rpg_state_backup") || localStorage.getItem("hj_rpg_state_cloud_backup");
       if(!raw){
         alert("No local backup found on this device. Use Parent Controls below to re-enter Killian's counts manually.");
