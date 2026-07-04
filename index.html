@@ -1356,7 +1356,7 @@ function renderParentHabits(){
   el.innerHTML=HABIT_LADDERS.map(h=>{
     const c=state.habitLadders[h.key]||0;
     const p=getHabitProgress(c);
-    const desc=habit.requirement||habit.description?'<div class="small habit-desc">'+habitRequirement(h)+"</div>":"";
+    const desc=h.requirement||h.description?'<div class="small habit-desc">'+habitRequirement(h)+"</div>":"";
     return '<div class="habit-parent-row"><div><div class="habit-parent-name">'+h.icon+" "+h.name+'</div>'+desc+'<div class="small habit-progress-text">'+p.tierLabel+" — "+p.progressText+'</div></div><div class="habit-parent-controls"><span class="habit-parent-count">'+c+'</span><button class="action secondary" onclick="adjustHabit(\''+h.key+'\',-1)">-1</button><button class="action" onclick="adjustHabit(\''+h.key+'\',1)">+1</button><input id="habit_'+h.key+'" type="number" value="'+c+'" min="0"><button class="action good" onclick="setHabitManual(\''+h.key+'\')">Set</button></div></div>';
   }).join("");
 }
