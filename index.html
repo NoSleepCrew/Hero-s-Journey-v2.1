@@ -1557,7 +1557,7 @@ body.testing-mode-active{padding-top:46px}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="testing-mode-controls-fix-v1";
+const APP_BUILD="testing-mode-writes-fix-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 const LIVE_STATE_KEY="hj_rpg_state";
@@ -1572,10 +1572,24 @@ const TEST_SESSION_MILESTONE_KEY="hj_testing_session_milestones";
 const TEST_SESSION_ACH_KEY="hj_testing_session_achievements";
 let testingMode=localStorage.getItem(TESTING_MODE_KEY)==="1";
 window.__HJ_TESTING_MODE=testingMode;
-function activeStateKey(){return testingMode?TEST_SESSION_STATE_KEY:LIVE_STATE_KEY;}
-function activeSettingsKey(){return testingMode?TEST_SESSION_SETTINGS_KEY:LIVE_SETTINGS_KEY;}
-function activeMilestoneKey(){return testingMode?TEST_SESSION_MILESTONE_KEY:LIVE_MILESTONE_KEY;}
-function activeAchKey(){return testingMode?TEST_SESSION_ACH_KEY:LIVE_ACH_KEY;}
+function syncTestingModeFromStorage(){
+  testingMode=localStorage.getItem(TESTING_MODE_KEY)==="1";
+  window.__HJ_TESTING_MODE=testingMode;
+  return testingMode;
+}
+function isTestingModeActive(){
+  return syncTestingModeFromStorage();
+}
+function setTestingModeActive(on){
+  testingMode=!!on;
+  window.__HJ_TESTING_MODE=testingMode;
+  if(testingMode) localStorage.setItem(TESTING_MODE_KEY,"1");
+  else localStorage.removeItem(TESTING_MODE_KEY);
+}
+function activeStateKey(){return isTestingModeActive()?TEST_SESSION_STATE_KEY:LIVE_STATE_KEY;}
+function activeSettingsKey(){return isTestingModeActive()?TEST_SESSION_SETTINGS_KEY:LIVE_SETTINGS_KEY;}
+function activeMilestoneKey(){return isTestingModeActive()?TEST_SESSION_MILESTONE_KEY:LIVE_MILESTONE_KEY;}
+function activeAchKey(){return isTestingModeActive()?TEST_SESSION_ACH_KEY:LIVE_ACH_KEY;}
 function checkAppBuild(){
   const el=document.getElementById("appBuildLabel");
   if(el) el.textContent="App build: "+APP_BUILD;
@@ -2508,11 +2522,13 @@ let renderSnapshot=null;
 const MILESTONE_SEEN_KEY=LIVE_MILESTONE_KEY;
 const ACH_SEEN_KEY=LIVE_ACH_KEY;
 function persistAppData(){
+  syncTestingModeFromStorage();
   localStorage.setItem(activeStateKey(),JSON.stringify(state));
   localStorage.setItem(activeSettingsKey(),JSON.stringify(settings));
 }
 window.persistAppData=persistAppData;
-window.isTestingModeActive=function(){return testingMode;};
+window.isTestingModeActive=isTestingModeActive;
+window.syncTestingModeFromStorage=syncTestingModeFromStorage;
 const DEED_MILESTONES=[
   {deeds:5,bonus:1,total:1,name:"First Deed Reward"},
   {deeds:10,bonus:1,total:2,name:"Deed Pathfinder"},
@@ -2534,9 +2550,15 @@ const dragonTaunts={
   last:["Final stand! Give me your best shot!","You will not defeat me easily!","The endgame begins now!"],
   defeated:["You win, legend. Well fought.","The dragon falls. The hero rises.","Journey complete. I bow to you."]
 };
-function save(){
+function saveCore(){
+  syncTestingModeFromStorage();
   processAutomaticTreasuryRewards();
   persistAppData();
+}
+window.saveCore=saveCore;
+function save(){
+  saveCore();
+  if(typeof window.__hjCloudSyncAfterSave==="function") window.__hjCloudSyncAfterSave();
   render();
 }
 function log(msg){state.log.unshift(new Date().toLocaleString()+" — "+msg);state.log=state.log.slice(0,60);}
@@ -2609,7 +2631,7 @@ async function requireParent(reason,action){
 async function requireParentAlways(reason,action){
   if(await requestParentCode(reason)) action();
 }
-function isTestingMode(){return testingMode;}
+function isTestingMode(){return isTestingModeActive();}
 function captureLiveSnapshot(){
   const rawState=localStorage.getItem(LIVE_STATE_KEY);
   const rawSettings=localStorage.getItem(LIVE_SETTINGS_KEY);
@@ -2690,6 +2712,7 @@ function clearTestingSessionStorage(){
   localStorage.removeItem(TEST_SESSION_ACH_KEY);
 }
 function updateTestingModeUI(){
+  syncTestingModeFromStorage();
   const show=testingMode;
   document.body.classList.toggle("testing-mode-active",show);
   const banner=document.getElementById("testingModeGlobalBanner");
@@ -2709,7 +2732,6 @@ function updateTestingModeUI(){
   }else{
     if(status) status.textContent="Live data is active. Enter Testing Mode to sandbox any feature without affecting real progress.";
   }
-  window.__HJ_TESTING_MODE=testingMode;
 }
 function enterTestingMode(){
   requireParentAlways("Enter Testing Mode",function(){
@@ -2725,20 +2747,18 @@ function enterTestingMode(){
       return;
     }
     testingMode=true;
-    localStorage.setItem(TESTING_MODE_KEY,"1");
-    window.__HJ_TESTING_MODE=true;
+    setTestingModeActive(true);
     loadMemoryFromActiveStorage();
     renderSnapshot=null;
     log("Testing Mode entered — isolated session loaded.");
-    persistAppData();
-    render();
+    save();
     updateTestingModeUI();
     toast("🧪 TESTING MODE<br>Isolated session active. Live data protected.");
   });
 }
 function exitTestingMode(){
   requireParentAlways("Exit Testing Mode",function(){
-    if(!testingMode){toast("Not in Testing Mode");return;}
+    if(!isTestingModeActive()){toast("Not in Testing Mode");return;}
     const raw=localStorage.getItem(LIVE_SNAPSHOT_KEY);
     if(!raw){alert("No live snapshot found — cannot restore safely.");return;}
     let snap;
@@ -2747,11 +2767,9 @@ function exitTestingMode(){
     if(!confirm("Exit Testing Mode?\n\nThe entire testing session will be discarded. Live data will be restored exactly as before testing.")) return;
     writeLiveStorageFromSnapshot(snap);
     clearTestingSessionStorage();
-    testingMode=false;
-    localStorage.removeItem(TESTING_MODE_KEY);
+    setTestingModeActive(false);
     localStorage.removeItem(LIVE_SNAPSHOT_KEY);
     localStorage.removeItem("hj_testing_mode_snapshot");
-    window.__HJ_TESTING_MODE=false;
     loadMemoryFromActiveStorage();
     renderSnapshot=null;
     log("Testing Mode exited — live data restored.");
@@ -2764,7 +2782,7 @@ window.enterTestingMode=enterTestingMode;
 window.exitTestingMode=exitTestingMode;
 window.isTestingMode=isTestingMode;
 (function bootstrapTestingSession(){
-  if(!testingMode) return;
+  if(!isTestingModeActive()) return;
   if(!localStorage.getItem(LIVE_SNAPSHOT_KEY)){
     const legacy=localStorage.getItem("hj_testing_mode_snapshot");
     if(legacy) localStorage.setItem(LIVE_SNAPSHOT_KEY,legacy);
@@ -2774,9 +2792,7 @@ window.isTestingMode=isTestingMode;
     if(snapRaw){
       try{copySnapshotToTestingSession(JSON.parse(snapRaw));}catch(e){}
     }else{
-      testingMode=false;
-      localStorage.removeItem(TESTING_MODE_KEY);
-      window.__HJ_TESTING_MODE=false;
+      setTestingModeActive(false);
     }
   }
 })();
@@ -3450,10 +3466,9 @@ updateTestingModeUI();
 
   let cloudReady = false;
   let applyingCloudUpdate = false;
-  const originalSave = window.save;
 
   function isCloudSaveBlocked(){
-    if(window.__HJ_TESTING_MODE) return true;
+    if(isTestingModeActive()) return true;
     if(window.__HJ_BLOCK_CLOUD_SAVE) return true;
     if(localStorage.getItem("hj_block_cloud")==="1") return true;
     try{
@@ -3513,19 +3528,14 @@ updateTestingModeUI();
     };
   }
 
-  window.save = function(){
-    if(window.processAutomaticTreasuryRewards) window.processAutomaticTreasuryRewards();
-    if(!window.__HJ_TESTING_MODE){
-      try{
-        localStorage.setItem("hj_rpg_state_backup", JSON.stringify(state));
-      }catch(e){}
+  window.__hjCloudSyncAfterSave=function(){
+    if(isTestingModeActive()){
+      setSyncStatus("Testing Mode — sandbox active (local saves OK, cloud paused).");
+      return;
     }
-    if(window.persistAppData) window.persistAppData();
-    else{
-      localStorage.setItem("hj_rpg_state", JSON.stringify(state));
-      localStorage.setItem("hj_rpg_settings", JSON.stringify(settings));
-    }
-
+    try{
+      localStorage.setItem("hj_rpg_state_backup", JSON.stringify(state));
+    }catch(e){}
     if(cloudReady && !applyingCloudUpdate && !isCloudSaveBlocked()){
       progressRef.set(cleanStateForCloud(), {merge:true}).then(() => {
         setSyncStatus("Cloud sync active. Saved: " + new Date().toLocaleTimeString());
@@ -3534,11 +3544,8 @@ updateTestingModeUI();
         console.error(error);
       });
     }else if(isCloudSaveBlocked()){
-      if(window.__HJ_TESTING_MODE) setSyncStatus("Testing Mode — isolated session (cloud sync paused).");
-      else setSyncStatus("Cloud sync disabled (demo/local mode). Local save only.");
+      setSyncStatus("Cloud sync disabled (demo/local mode). Local save only.");
     }
-
-    render();
   };
 
   window.persistParentCodeHash = function(hash){
@@ -3577,8 +3584,8 @@ updateTestingModeUI();
 
       progressRef.onSnapshot(async (doc) => {
         applyingCloudUpdate = true;
-        if(window.__HJ_TESTING_MODE){
-          setSyncStatus("Testing Mode — cloud load paused.");
+        if(isTestingModeActive()){
+          setSyncStatus("Testing Mode — sandbox active (cloud load paused).");
           applyingCloudUpdate = false;
           return;
         }
@@ -3588,6 +3595,10 @@ updateTestingModeUI();
           }
           setSyncStatus("Cloud document created.");
         } else {
+          if(isTestingModeActive()){
+            applyingCloudUpdate = false;
+            return;
+          }
           try{
             localStorage.setItem("hj_rpg_state_cloud_backup", JSON.stringify(doc.data()));
           }catch(e){}
@@ -3598,7 +3609,6 @@ updateTestingModeUI();
           ensureScreenTimeState();
           ensureHeroTreasury();
           if(window.persistAppData) window.persistAppData();
-          else localStorage.setItem("hj_rpg_state", JSON.stringify(state));
           setSyncStatus("Cloud sync active. Loaded: " + new Date().toLocaleTimeString());
           render();
           if(state.pendingReports && state.pendingReports.some(r=>r.status==="pending") && parentUnlocked()){
@@ -3618,7 +3628,7 @@ updateTestingModeUI();
 
   window.restoreFromLocalBackup = function(){
     requireParent("Restore progress from local backup", function(){
-      if(window.__HJ_TESTING_MODE){
+      if(isTestingModeActive()){
         alert("Exit Testing Mode before restoring live backup.");
         return;
       }
