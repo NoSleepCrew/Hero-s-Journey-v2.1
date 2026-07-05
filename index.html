@@ -1557,7 +1557,7 @@ body.testing-mode-active{padding-top:46px}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="testing-mode-datalayer-v1";
+const APP_BUILD="testing-mode-parent-fix-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 const LIVE_STATE_KEY="hj_rpg_state";
@@ -1578,7 +1578,7 @@ function syncTestingModeFromStorage(){
   return testingMode;
 }
 function isTestingModeActive(){
-  return syncTestingModeFromStorage();
+  return localStorage.getItem(TESTING_MODE_KEY)==="1";
 }
 function setTestingModeActive(on){
   testingMode=!!on;
@@ -1592,18 +1592,18 @@ function activeMilestoneKey(){return ActiveAppData.sessionKeys().milestone;}
 function activeAchKey(){return ActiveAppData.sessionKeys().ach;}
 const ActiveAppData={
   sessionKeys:function(){
-    syncTestingModeFromStorage();
-    if(isTestingModeActive()){
+    const testing=localStorage.getItem(TESTING_MODE_KEY)==="1";
+    testingMode=testing;
+    window.__HJ_TESTING_MODE=testing;
+    if(testing){
       return{state:TEST_SESSION_STATE_KEY,settings:TEST_SESSION_SETTINGS_KEY,milestone:TEST_SESSION_MILESTONE_KEY,ach:TEST_SESSION_ACH_KEY};
     }
     return{state:LIVE_STATE_KEY,settings:LIVE_SETTINGS_KEY,milestone:LIVE_MILESTONE_KEY,ach:LIVE_ACH_KEY};
   },
   getActiveAppData:function(){
-    syncTestingModeFromStorage();
     return state;
   },
   getActiveSettings:function(){
-    syncTestingModeFromStorage();
     return settings;
   },
   getActiveTreasuryLedger:function(){
@@ -1615,13 +1615,11 @@ const ActiveAppData={
     this.saveFromMemory();
   },
   saveFromMemory:function(){
-    syncTestingModeFromStorage();
     const keys=this.sessionKeys();
     localStorage.setItem(keys.state,JSON.stringify(state));
     localStorage.setItem(keys.settings,JSON.stringify(settings));
   },
   loadIntoMemory:function(){
-    syncTestingModeFromStorage();
     const keys=this.sessionKeys();
     loadMemoryFromSnapshot({
       state:JSON.parse(localStorage.getItem(keys.state)||"null"),
@@ -1633,8 +1631,14 @@ const ActiveAppData={
   saveActiveAppData:function(){this.saveFromMemory();},
   saveActiveTreasuryLedger:function(){this.saveFromMemory();},
   isTesting:function(){return isTestingModeActive();},
+  shouldBlockCloudLoad:function(){
+    return isTestingModeActive();
+  },
+  shouldBlockCloudSave:function(){
+    return isTestingModeActive()||window.__hjSaveInProgress===true;
+  },
   shouldBlockCloudApply:function(){
-    return isTestingModeActive()||window.__hjTestingSessionLocked===true||window.__hjSaveInProgress===true;
+    return this.shouldBlockCloudLoad()||window.__hjSaveInProgress===true;
   }
 };
 window.ActiveAppData=ActiveAppData;
@@ -2795,9 +2799,9 @@ function enterTestingMode(){
     }
     setTestingModeActive(true);
     window.__hjTestingSessionLocked=true;
-    ActiveAppData.loadIntoMemory();
     renderSnapshot=null;
     log("Testing Mode entered — isolated session loaded.");
+    ActiveAppData.saveFromMemory();
     save();
     updateTestingModeUI();
     toast("🧪 TESTING MODE<br>Isolated session active. Live data protected.");
@@ -2836,16 +2840,17 @@ window.isTestingMode=isTestingMode;
     const legacy=localStorage.getItem("hj_testing_mode_snapshot");
     if(legacy) localStorage.setItem(LIVE_SNAPSHOT_KEY,legacy);
   }
+  let createdTestSession=false;
   if(!localStorage.getItem(TEST_SESSION_STATE_KEY)){
     const snapRaw=localStorage.getItem(LIVE_SNAPSHOT_KEY);
     if(snapRaw){
-      try{copySnapshotToTestingSession(JSON.parse(snapRaw));}catch(e){}
+      try{copySnapshotToTestingSession(JSON.parse(snapRaw));createdTestSession=true;}catch(e){}
     }else{
       setTestingModeActive(false);
       window.__hjTestingSessionLocked=false;
     }
   }
-  if(isTestingModeActive()) ActiveAppData.loadIntoMemory();
+  if(isTestingModeActive()&&createdTestSession) ActiveAppData.loadIntoMemory();
 })();
 async function changeParentCode(){
   if(!cloudConfigReady){alert("Still connecting to cloud. Try again in a moment.");return;}
@@ -3520,7 +3525,7 @@ updateTestingModeUI();
   let applyingCloudUpdate = false;
 
   function isCloudSaveBlocked(){
-    if(ActiveAppData.shouldBlockCloudApply()) return true;
+    if(ActiveAppData.shouldBlockCloudLoad()) return true;
     if(window.__HJ_BLOCK_CLOUD_SAVE) return true;
     if(localStorage.getItem("hj_block_cloud")==="1") return true;
     try{
@@ -3581,8 +3586,10 @@ updateTestingModeUI();
   }
 
   window.__hjCloudSyncAfterSave=function(){
-    if(ActiveAppData.shouldBlockCloudApply()){
-      setSyncStatus("Testing Mode — sandbox active (local saves OK, cloud paused).");
+    if(ActiveAppData.shouldBlockCloudSave()){
+      if(ActiveAppData.shouldBlockCloudLoad()){
+        setSyncStatus("Testing Mode — sandbox active (local saves OK, cloud paused).");
+      }
       return;
     }
     try{
@@ -3636,7 +3643,7 @@ updateTestingModeUI();
 
       progressRef.onSnapshot(async (doc) => {
         applyingCloudUpdate = true;
-        if(ActiveAppData.shouldBlockCloudApply()){
+        if(ActiveAppData.shouldBlockCloudLoad()){
           setSyncStatus("Testing Mode — sandbox active (cloud load paused).");
           applyingCloudUpdate = false;
           return;
@@ -3647,7 +3654,7 @@ updateTestingModeUI();
           }
           setSyncStatus("Cloud document created.");
         } else {
-          if(ActiveAppData.shouldBlockCloudApply()){
+          if(ActiveAppData.shouldBlockCloudLoad()){
             applyingCloudUpdate = false;
             return;
           }
