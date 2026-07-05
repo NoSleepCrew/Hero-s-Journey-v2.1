@@ -1512,7 +1512,10 @@ body.testing-mode-active{padding-top:46px}
 <div class="card" id="testingModeCard">
 <h2>🧪 Parent Testing Mode</h2>
 <p class="small">Application-wide isolated sandbox. Enter saves a complete snapshot of live data and loads a separate testing session. All features work normally inside testing; live progress and cloud data are never modified until you exit.</p>
-<div id="testingModeControls"></div>
+<div id="testingModeControls">
+<button type="button" class="action good" id="btnEnterTestingMode" onclick="enterTestingMode()">Enter Testing Mode</button>
+<button type="button" class="action danger" id="btnExitTestingMode" onclick="exitTestingMode()" hidden>Exit Testing Mode</button>
+</div>
 <p class="small" id="testingModeStatus"></p>
 </div>
 <div class="card"><h2>Cloud Sync</h2><p id="syncStatus">Connecting to Firebase...</p><p class="small" id="appBuildLabel">App build: —</p><p class="small parent-lock-note"><b>Accidental overwrite?</b> If progress looks wrong (dragon suddenly defeated), try restoring from a local backup before changing numbers manually.</p><p><button class="action good" onclick="restoreFromLocalBackup()">Restore from Local Backup</button></p></div>
@@ -1554,7 +1557,7 @@ body.testing-mode-active{padding-top:46px}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="hero-treasury-phase2-v1";
+const APP_BUILD="testing-mode-controls-fix-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 const LIVE_STATE_KEY="hj_rpg_state";
@@ -2691,8 +2694,11 @@ function updateTestingModeUI(){
   document.body.classList.toggle("testing-mode-active",show);
   const banner=document.getElementById("testingModeGlobalBanner");
   if(banner) banner.hidden=!show;
+  const enterBtn=document.getElementById("btnEnterTestingMode");
+  const exitBtn=document.getElementById("btnExitTestingMode");
+  if(enterBtn) enterBtn.hidden=show;
+  if(exitBtn) exitBtn.hidden=!show;
   const status=document.getElementById("testingModeStatus");
-  const controls=document.getElementById("testingModeControls");
   if(testingMode){
     let when="";
     try{
@@ -2700,10 +2706,8 @@ function updateTestingModeUI(){
       if(snap.savedAt) when=" Live snapshot from "+new Date(snap.savedAt).toLocaleString()+".";
     }catch(e){}
     if(status) status.textContent="Testing session active."+when+" All saves go to isolated test data only; live progress is untouched.";
-    if(controls) controls.innerHTML='<button type="button" class="action danger" onclick="exitTestingMode()">Exit Testing Mode</button>';
   }else{
     if(status) status.textContent="Live data is active. Enter Testing Mode to sandbox any feature without affecting real progress.";
-    if(controls) controls.innerHTML='<button type="button" class="action good" onclick="enterTestingMode()">Enter Testing Mode</button>';
   }
   window.__HJ_TESTING_MODE=testingMode;
 }
@@ -2811,6 +2815,7 @@ async function showScreen(id){
   }
   if(id==="parent"){
     renderParent();
+    updateTestingModeUI();
   }
 }
 
@@ -3229,6 +3234,7 @@ function dismissReport(id){
   });
 }
 function render(){
+  updateTestingModeUI();
   processAutomaticTreasuryRewards();
   renderScreenTimeWallet();
   const ds=dragonStage();
@@ -3417,11 +3423,12 @@ function renderParentScreenTime(){
     '</div>'+
     '<p class="small" style="margin-top:8px">These buttons adjust the bank only. Check the Dashboard for available time.</p>';
 }
-function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=(Array.isArray(state.log)?state.log:[]).map(x=>'<li>'+x+'</li>').join("");renderParentQuests();renderParentScreenTime();renderParentHabits();renderParentHabitCards();renderHeroTreasury();updateParentCodeStatus();}
+function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=(Array.isArray(state.log)?state.log:[]).map(x=>'<li>'+x+'</li>').join("");renderParentQuests();renderParentScreenTime();renderParentHabits();renderParentHabitCards();renderHeroTreasury();updateParentCodeStatus();updateTestingModeUI();}
 function saveSettings(){requireParent("Save system settings",function(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();});}
 function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:defaultHeroTreasuryLedger()};renderSnapshot=null;save();}});}
 render();
 checkAppBuild();
+updateTestingModeUI();
 </script>
 
 <script>
