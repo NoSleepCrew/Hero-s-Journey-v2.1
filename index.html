@@ -432,6 +432,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
   box-shadow:0 4px 22px rgba(0,0,0,.5);
   color:#fff5e6;font-size:14px;line-height:1.35;text-align:center;
 }
+.testing-mode-global[hidden]{display:none!important;}
 .testing-mode-global-label{font-weight:900;letter-spacing:.14em;font-size:15px;color:#ffe9c8;text-shadow:0 1px 0 rgba(0,0,0,.45)}
 body.testing-mode-active{padding-top:46px}
 .locked-parent{filter:blur(2px);pointer-events:none;opacity:.45;}
@@ -1557,7 +1558,7 @@ body.testing-mode-active{padding-top:46px}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="testing-mode-parent-fix-v1";
+const APP_BUILD="testing-mode-state-fix-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 const LIVE_STATE_KEY="hj_rpg_state";
@@ -1586,13 +1587,54 @@ function setTestingModeActive(on){
   if(testingMode) localStorage.setItem(TESTING_MODE_KEY,"1");
   else localStorage.removeItem(TESTING_MODE_KEY);
 }
+function readStoredJson(key){
+  try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):null;}catch(e){return null;}
+}
+function copySnapshotToTestingSession(snap){
+  if(snap.state!=null) localStorage.setItem(TEST_SESSION_STATE_KEY,JSON.stringify(snap.state));
+  if(snap.settings!=null) localStorage.setItem(TEST_SESSION_SETTINGS_KEY,JSON.stringify(snap.settings));
+  if(snap.milestoneSeen!=null) localStorage.setItem(TEST_SESSION_MILESTONE_KEY,snap.milestoneSeen);
+  else localStorage.removeItem(TEST_SESSION_MILESTONE_KEY);
+  if(snap.achSeen!=null) localStorage.setItem(TEST_SESSION_ACH_KEY,snap.achSeen);
+  else localStorage.removeItem(TEST_SESSION_ACH_KEY);
+}
+function clearTestingSessionStorage(){
+  localStorage.removeItem(TEST_SESSION_STATE_KEY);
+  localStorage.removeItem(TEST_SESSION_SETTINGS_KEY);
+  localStorage.removeItem(TEST_SESSION_MILESTONE_KEY);
+  localStorage.removeItem(TEST_SESSION_ACH_KEY);
+}
+function deactivateTestingMode(){
+  setTestingModeActive(false);
+  localStorage.removeItem(LIVE_SNAPSHOT_KEY);
+  localStorage.removeItem("hj_testing_mode_snapshot");
+  clearTestingSessionStorage();
+}
+function reconcileTestingModeState(){
+  if(localStorage.getItem(TESTING_MODE_KEY)!=="1"){
+    syncTestingModeFromStorage();
+    return;
+  }
+  if(!localStorage.getItem(LIVE_SNAPSHOT_KEY)){
+    const legacy=localStorage.getItem("hj_testing_mode_snapshot");
+    if(legacy) localStorage.setItem(LIVE_SNAPSHOT_KEY,legacy);
+  }
+  const snap=readStoredJson(LIVE_SNAPSHOT_KEY);
+  const testState=readStoredJson(TEST_SESSION_STATE_KEY);
+  if(!snap||!snap.state){
+    deactivateTestingMode();
+    return;
+  }
+  if(!testState) copySnapshotToTestingSession(snap);
+  syncTestingModeFromStorage();
+}
 function activeStateKey(){return ActiveAppData.sessionKeys().state;}
 function activeSettingsKey(){return ActiveAppData.sessionKeys().settings;}
 function activeMilestoneKey(){return ActiveAppData.sessionKeys().milestone;}
 function activeAchKey(){return ActiveAppData.sessionKeys().ach;}
 const ActiveAppData={
   sessionKeys:function(){
-    const testing=localStorage.getItem(TESTING_MODE_KEY)==="1";
+    const testing=isTestingModeActive();
     testingMode=testing;
     window.__HJ_TESTING_MODE=testing;
     if(testing){
@@ -1642,8 +1684,8 @@ const ActiveAppData={
   }
 };
 window.ActiveAppData=ActiveAppData;
-window.__hjTestingSessionLocked=window.__hjTestingSessionLocked||false;
 window.__hjSaveInProgress=false;
+reconcileTestingModeState();
 function checkAppBuild(){
   const el=document.getElementById("appBuildLabel");
   if(el) el.textContent="App build: "+APP_BUILD;
@@ -2748,23 +2790,10 @@ function writeLiveStorageFromSnapshot(snap){
   if(snap.achSeen!=null) localStorage.setItem(LIVE_ACH_KEY,snap.achSeen);
   else localStorage.removeItem(LIVE_ACH_KEY);
 }
-function copySnapshotToTestingSession(snap){
-  if(snap.state!=null) localStorage.setItem(TEST_SESSION_STATE_KEY,JSON.stringify(snap.state));
-  if(snap.settings!=null) localStorage.setItem(TEST_SESSION_SETTINGS_KEY,JSON.stringify(snap.settings));
-  if(snap.milestoneSeen!=null) localStorage.setItem(TEST_SESSION_MILESTONE_KEY,snap.milestoneSeen);
-  else localStorage.removeItem(TEST_SESSION_MILESTONE_KEY);
-  if(snap.achSeen!=null) localStorage.setItem(TEST_SESSION_ACH_KEY,snap.achSeen);
-  else localStorage.removeItem(TEST_SESSION_ACH_KEY);
-}
-function clearTestingSessionStorage(){
-  localStorage.removeItem(TEST_SESSION_STATE_KEY);
-  localStorage.removeItem(TEST_SESSION_SETTINGS_KEY);
-  localStorage.removeItem(TEST_SESSION_MILESTONE_KEY);
-  localStorage.removeItem(TEST_SESSION_ACH_KEY);
-}
 function updateTestingModeUI(){
-  syncTestingModeFromStorage();
-  const show=testingMode;
+  const show=isTestingModeActive();
+  testingMode=show;
+  window.__HJ_TESTING_MODE=show;
   document.body.classList.toggle("testing-mode-active",show);
   const banner=document.getElementById("testingModeGlobalBanner");
   if(banner) banner.hidden=!show;
@@ -2773,7 +2802,7 @@ function updateTestingModeUI(){
   if(enterBtn) enterBtn.hidden=show;
   if(exitBtn) exitBtn.hidden=!show;
   const status=document.getElementById("testingModeStatus");
-  if(testingMode){
+  if(show){
     let when="";
     try{
       const snap=JSON.parse(localStorage.getItem(LIVE_SNAPSHOT_KEY)||"{}");
@@ -2786,7 +2815,7 @@ function updateTestingModeUI(){
 }
 function enterTestingMode(){
   requireParentAlways("Enter Testing Mode",function(){
-    if(testingMode){toast("Already in Testing Mode");return;}
+    if(isTestingModeActive()){toast("Already in Testing Mode");return;}
     if(!confirm("Enter Testing Mode?\n\nLive data will be snapshotted and frozen. A separate testing session loads for all features. Exit Testing Mode discards the session and restores live data exactly.")) return;
     let snap;
     try{
@@ -2798,7 +2827,6 @@ function enterTestingMode(){
       return;
     }
     setTestingModeActive(true);
-    window.__hjTestingSessionLocked=true;
     renderSnapshot=null;
     log("Testing Mode entered — isolated session loaded.");
     ActiveAppData.saveFromMemory();
@@ -2810,18 +2838,12 @@ function enterTestingMode(){
 function exitTestingMode(){
   requireParentAlways("Exit Testing Mode",function(){
     if(!isTestingModeActive()){toast("Not in Testing Mode");return;}
-    const raw=localStorage.getItem(LIVE_SNAPSHOT_KEY);
-    if(!raw){alert("No live snapshot found — cannot restore safely.");return;}
-    let snap;
-    try{snap=JSON.parse(raw);}catch(e){alert("Live snapshot could not be read.");return;}
-    if(!snap||!snap.state){alert("Live snapshot is incomplete — cannot restore safely.");return;}
-    if(!confirm("Exit Testing Mode?\n\nThe entire testing session will be discarded. Live data will be restored exactly as before testing.")) return;
-    writeLiveStorageFromSnapshot(snap);
-    clearTestingSessionStorage();
-    setTestingModeActive(false);
-    window.__hjTestingSessionLocked=false;
-    localStorage.removeItem(LIVE_SNAPSHOT_KEY);
-    localStorage.removeItem("hj_testing_mode_snapshot");
+    const snap=readStoredJson(LIVE_SNAPSHOT_KEY);
+    if(snap&&snap.state){
+      if(!confirm("Exit Testing Mode?\n\nThe entire testing session will be discarded. Live data will be restored exactly as before testing.")) return;
+      writeLiveStorageFromSnapshot(snap);
+    }else if(!confirm("Exit Testing Mode?\n\nNo live snapshot was found. The test session will be discarded and current live storage will be kept.")) return;
+    deactivateTestingMode();
     ActiveAppData.loadIntoMemory();
     renderSnapshot=null;
     log("Testing Mode exited — live data restored.");
@@ -2833,25 +2855,6 @@ function exitTestingMode(){
 window.enterTestingMode=enterTestingMode;
 window.exitTestingMode=exitTestingMode;
 window.isTestingMode=isTestingMode;
-(function bootstrapTestingSession(){
-  if(!isTestingModeActive()) return;
-  window.__hjTestingSessionLocked=true;
-  if(!localStorage.getItem(LIVE_SNAPSHOT_KEY)){
-    const legacy=localStorage.getItem("hj_testing_mode_snapshot");
-    if(legacy) localStorage.setItem(LIVE_SNAPSHOT_KEY,legacy);
-  }
-  let createdTestSession=false;
-  if(!localStorage.getItem(TEST_SESSION_STATE_KEY)){
-    const snapRaw=localStorage.getItem(LIVE_SNAPSHOT_KEY);
-    if(snapRaw){
-      try{copySnapshotToTestingSession(JSON.parse(snapRaw));createdTestSession=true;}catch(e){}
-    }else{
-      setTestingModeActive(false);
-      window.__hjTestingSessionLocked=false;
-    }
-  }
-  if(isTestingModeActive()&&createdTestSession) ActiveAppData.loadIntoMemory();
-})();
 async function changeParentCode(){
   if(!cloudConfigReady){alert("Still connecting to cloud. Try again in a moment.");return;}
   if(hasParentCode()){
