@@ -425,14 +425,15 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 .testing-mode-banner b{color:#ffe9c8}
 .testing-mode-global{
   position:fixed;top:0;left:0;right:0;z-index:9999;
-  display:flex;align-items:center;justify-content:center;gap:10px 16px;flex-wrap:wrap;
+  display:none;pointer-events:none;
+  align-items:center;justify-content:center;gap:10px 16px;flex-wrap:wrap;
   padding:10px 14px;
   background:linear-gradient(90deg,#6b2808,#c45a1a 40%,#6b2808);
   border-bottom:3px solid #ffb347;
   box-shadow:0 4px 22px rgba(0,0,0,.5);
   color:#fff5e6;font-size:14px;line-height:1.35;text-align:center;
 }
-.testing-mode-global[hidden]{display:none!important;}
+.testing-mode-global.is-visible{display:flex;}
 .testing-mode-global-label{font-weight:900;letter-spacing:.14em;font-size:15px;color:#ffe9c8;text-shadow:0 1px 0 rgba(0,0,0,.45)}
 body.testing-mode-active{padding-top:46px}
 .locked-parent{filter:blur(2px);pointer-events:none;opacity:.45;}
@@ -847,7 +848,7 @@ body.testing-mode-active{padding-top:46px}
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 </head>
 <body>
-<div class="testing-mode-global" id="testingModeGlobalBanner" hidden><span class="testing-mode-global-label">TESTING MODE</span><span>Isolated session — live progress is protected. Parent: exit in Parent controls.</span></div>
+<div class="testing-mode-global" id="testingModeGlobalBanner" hidden aria-hidden="true"><span class="testing-mode-global-label">TESTING MODE</span><span>Isolated session — live progress is protected. Parent: exit in Parent controls.</span></div>
 <div class="toast" id="toast"></div>
 <div class="celebration" id="celebration" onclick="if(event.target===this)closeCelebration()">
 <div class="celebration-inner">
@@ -1558,7 +1559,7 @@ body.testing-mode-active{padding-top:46px}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="testing-mode-state-fix-v1";
+const APP_BUILD="testing-mode-banner-fix-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 const LIVE_STATE_KEY="hj_rpg_state";
@@ -1571,15 +1572,15 @@ const TEST_SESSION_STATE_KEY="hj_testing_session_state";
 const TEST_SESSION_SETTINGS_KEY="hj_testing_session_settings";
 const TEST_SESSION_MILESTONE_KEY="hj_testing_session_milestones";
 const TEST_SESSION_ACH_KEY="hj_testing_session_achievements";
-let testingMode=localStorage.getItem(TESTING_MODE_KEY)==="1";
-window.__HJ_TESTING_MODE=testingMode;
+let testingMode=false;
+window.__HJ_TESTING_MODE=false;
 function syncTestingModeFromStorage(){
   testingMode=localStorage.getItem(TESTING_MODE_KEY)==="1";
   window.__HJ_TESTING_MODE=testingMode;
   return testingMode;
 }
 function isTestingModeActive(){
-  return localStorage.getItem(TESTING_MODE_KEY)==="1";
+  return testingMode===true;
 }
 function setTestingModeActive(on){
   testingMode=!!on;
@@ -1589,6 +1590,12 @@ function setTestingModeActive(on){
 }
 function readStoredJson(key){
   try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):null;}catch(e){return null;}
+}
+function isValidTestingSession(){
+  if(localStorage.getItem(TESTING_MODE_KEY)!=="1") return false;
+  const snap=readStoredJson(LIVE_SNAPSHOT_KEY);
+  const testState=readStoredJson(TEST_SESSION_STATE_KEY);
+  return !!(snap&&snap.state&&snap.savedAt&&testState);
 }
 function copySnapshotToTestingSession(snap){
   if(snap.state!=null) localStorage.setItem(TEST_SESSION_STATE_KEY,JSON.stringify(snap.state));
@@ -1605,28 +1612,37 @@ function clearTestingSessionStorage(){
   localStorage.removeItem(TEST_SESSION_ACH_KEY);
 }
 function deactivateTestingMode(){
-  setTestingModeActive(false);
+  localStorage.removeItem(TESTING_MODE_KEY);
   localStorage.removeItem(LIVE_SNAPSHOT_KEY);
   localStorage.removeItem("hj_testing_mode_snapshot");
   clearTestingSessionStorage();
+  testingMode=false;
+  window.__HJ_TESTING_MODE=false;
 }
 function reconcileTestingModeState(){
-  if(localStorage.getItem(TESTING_MODE_KEY)!=="1"){
-    syncTestingModeFromStorage();
-    return;
-  }
   if(!localStorage.getItem(LIVE_SNAPSHOT_KEY)){
     const legacy=localStorage.getItem("hj_testing_mode_snapshot");
-    if(legacy) localStorage.setItem(LIVE_SNAPSHOT_KEY,legacy);
+    if(legacy){
+      try{
+        const legacySnap=JSON.parse(legacy);
+        if(legacySnap&&legacySnap.state) localStorage.setItem(LIVE_SNAPSHOT_KEY,legacy);
+      }catch(e){}
+    }
   }
   const snap=readStoredJson(LIVE_SNAPSHOT_KEY);
-  const testState=readStoredJson(TEST_SESSION_STATE_KEY);
-  if(!snap||!snap.state){
+  if(localStorage.getItem(TESTING_MODE_KEY)==="1"&&snap&&snap.state&&snap.savedAt){
+    if(!readStoredJson(TEST_SESSION_STATE_KEY)) copySnapshotToTestingSession(snap);
+    if(isValidTestingSession()){
+      syncTestingModeFromStorage();
+      return;
+    }
+  }
+  if(localStorage.getItem(TESTING_MODE_KEY)||localStorage.getItem(LIVE_SNAPSHOT_KEY)||localStorage.getItem(TEST_SESSION_STATE_KEY)){
     deactivateTestingMode();
     return;
   }
-  if(!testState) copySnapshotToTestingSession(snap);
-  syncTestingModeFromStorage();
+  testingMode=false;
+  window.__HJ_TESTING_MODE=false;
 }
 function activeStateKey(){return ActiveAppData.sessionKeys().state;}
 function activeSettingsKey(){return ActiveAppData.sessionKeys().settings;}
@@ -1634,10 +1650,7 @@ function activeMilestoneKey(){return ActiveAppData.sessionKeys().milestone;}
 function activeAchKey(){return ActiveAppData.sessionKeys().ach;}
 const ActiveAppData={
   sessionKeys:function(){
-    const testing=isTestingModeActive();
-    testingMode=testing;
-    window.__HJ_TESTING_MODE=testing;
-    if(testing){
+    if(isTestingModeActive()){
       return{state:TEST_SESSION_STATE_KEY,settings:TEST_SESSION_SETTINGS_KEY,milestone:TEST_SESSION_MILESTONE_KEY,ach:TEST_SESSION_ACH_KEY};
     }
     return{state:LIVE_STATE_KEY,settings:LIVE_SETTINGS_KEY,milestone:LIVE_MILESTONE_KEY,ach:LIVE_ACH_KEY};
@@ -1686,6 +1699,7 @@ const ActiveAppData={
 window.ActiveAppData=ActiveAppData;
 window.__hjSaveInProgress=false;
 reconcileTestingModeState();
+updateTestingModeUI();
 function checkAppBuild(){
   const el=document.getElementById("appBuildLabel");
   if(el) el.textContent="App build: "+APP_BUILD;
@@ -2792,11 +2806,13 @@ function writeLiveStorageFromSnapshot(snap){
 }
 function updateTestingModeUI(){
   const show=isTestingModeActive();
-  testingMode=show;
-  window.__HJ_TESTING_MODE=show;
   document.body.classList.toggle("testing-mode-active",show);
   const banner=document.getElementById("testingModeGlobalBanner");
-  if(banner) banner.hidden=!show;
+  if(banner){
+    banner.hidden=!show;
+    banner.classList.toggle("is-visible",show);
+    banner.setAttribute("aria-hidden",show?"false":"true");
+  }
   const enterBtn=document.getElementById("btnEnterTestingMode");
   const exitBtn=document.getElementById("btnExitTestingMode");
   if(enterBtn) enterBtn.hidden=show;
