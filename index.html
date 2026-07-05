@@ -421,21 +421,6 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 
 
 .parent-lock-note{border-left:4px solid var(--gold);padding:10px 14px;background:rgba(224,184,74,.10);border-radius:10px;margin:12px 0;}
-.testing-mode-banner{border-left:4px solid #e88a3a;padding:12px 16px;background:rgba(232,138,58,.18);border-radius:10px;margin:0 0 14px;color:#ffd4a8;font-size:15px;line-height:1.45}
-.testing-mode-banner b{color:#ffe9c8}
-.testing-mode-global{
-  position:fixed;top:0;left:0;right:0;z-index:9999;
-  display:none;pointer-events:none;
-  align-items:center;justify-content:center;gap:10px 16px;flex-wrap:wrap;
-  padding:10px 14px;
-  background:linear-gradient(90deg,#6b2808,#c45a1a 40%,#6b2808);
-  border-bottom:3px solid #ffb347;
-  box-shadow:0 4px 22px rgba(0,0,0,.5);
-  color:#fff5e6;font-size:14px;line-height:1.35;text-align:center;
-}
-.testing-mode-global.is-visible{display:flex;}
-.testing-mode-global-label{font-weight:900;letter-spacing:.14em;font-size:15px;color:#ffe9c8;text-shadow:0 1px 0 rgba(0,0,0,.45)}
-body.testing-mode-active{padding-top:46px}
 .locked-parent{filter:blur(2px);pointer-events:none;opacity:.45;}
 .code-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;}
 @media(max-width:800px){.code-row{grid-template-columns:1fr}}
@@ -848,7 +833,6 @@ body.testing-mode-active{padding-top:46px}
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 </head>
 <body>
-<div class="testing-mode-global" id="testingModeGlobalBanner" hidden aria-hidden="true"><span class="testing-mode-global-label">TESTING MODE</span><span>Isolated session — live progress is protected. Parent: exit in Parent controls.</span></div>
 <div class="toast" id="toast"></div>
 <div class="celebration" id="celebration" onclick="if(event.target===this)closeCelebration()">
 <div class="celebration-inner">
@@ -963,7 +947,7 @@ body.testing-mode-active{padding-top:46px}
 <h2>💰 Hero Treasury</h2>
 <p class="small">Money saved from hero rewards and adventures.</p>
 <div class="hero-treasury-balance" id="heroTreasuryBalance">$0.00</div>
-<p class="hero-treasury-note">Hero Level rewards are added automatically. Parents record other payouts here.</p>
+<p class="hero-treasury-note">Parents update the treasury when rewards are Paid.</p>
 </div>
 <div class="card quest-books screen-time-bank-card" id="screenTimeCard">
 <h2>📖 Summer Reading</h2>
@@ -1511,15 +1495,6 @@ body.testing-mode-active{padding-top:46px}
 <p class="small" id="parentCodeStatus">Parent code: connecting to cloud...</p>
 <p><button class="action good" onclick="changeParentCode()">Set / Change Parent Code</button> <button class="action secondary" onclick="lockParentSession()">Lock Now</button></p>
 </div>
-<div class="card" id="testingModeCard">
-<h2>🧪 Parent Testing Mode</h2>
-<p class="small">Application-wide isolated sandbox. Enter saves a complete snapshot of live data and loads a separate testing session. All features work normally inside testing; live progress and cloud data are never modified until you exit.</p>
-<div id="testingModeControls">
-<button type="button" class="action good" id="btnEnterTestingMode" onclick="enterTestingMode()">Enter Testing Mode</button>
-<button type="button" class="action danger" id="btnExitTestingMode" onclick="exitTestingMode()" hidden>Exit Testing Mode</button>
-</div>
-<p class="small" id="testingModeStatus"></p>
-</div>
 <div class="card"><h2>Cloud Sync</h2><p id="syncStatus">Connecting to Firebase...</p><p class="small" id="appBuildLabel">App build: —</p><p class="small parent-lock-note"><b>Accidental overwrite?</b> If progress looks wrong (dragon suddenly defeated), try restoring from a local backup before changing numbers manually.</p><p><button class="action good" onclick="restoreFromLocalBackup()">Restore from Local Backup</button></p></div>
 <div class="card"><h2>📋 Quest Reports</h2><p class="small">Killian can submit quest reports from the Quest Board. Approve or dismiss them here.</p><div id="pendingReports"></div></div>
 <div class="card"><h2>Progress Ledger</h2><table><thead><tr><th>Quest</th><th>Count</th><th>Dragon Damage</th><th>Hero Points</th></tr></thead><tbody id="ledger"></tbody></table></div>
@@ -1527,7 +1502,7 @@ body.testing-mode-active{padding-top:46px}
 <div class="card"><h2>⏱ Screen Time Controls</h2><p class="small">Adjust the Screen Time Bank only. Available time is shown on the Dashboard. Permanent reading progress is never changed here.</p><div id="parentScreenTime"></div></div>
 <div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Correct habit ladder counts here: use -1, +1, or set an exact number. Parent Code required for each change.</p><div id="parentHabitLadders"></div></div>
 <div class="card"><h2>🃏 Habit Card Turn-In</h2><p class="small">Mark cards turned in when Killian redeems the physical card and reward. Parent Code required.</p><div id="parentHabitCards"></div></div>
-<div class="card"><h2>💰 Hero Treasury Ledger</h2><p class="small"><b>Phase 2 — Hero Level rewards are automatic.</b> Other Rulebook payouts remain manual for now. Hero Treasury Balance = all money added − all money subtracted (ledger only).</p>
+<div class="card"><h2>💰 Hero Treasury Ledger</h2><p class="small"><b>Phase 1 — Manual tracking only.</b> Hero Treasury Balance = all money added − all money subtracted. Automatic Rulebook payouts will come in a later phase.</p>
 <p><b>Current balance:</b> <span id="parentTreasuryBalance">$0.00</span></p>
 <div class="treasury-parent-forms">
 <div class="treasury-form-panel">
@@ -1559,147 +1534,9 @@ body.testing-mode-active{padding-top:46px}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="testing-mode-banner-fix-v1";
+const APP_BUILD="hero-treasury-phase1-v2";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
-const LIVE_STATE_KEY="hj_rpg_state";
-const LIVE_SETTINGS_KEY="hj_rpg_settings";
-const LIVE_MILESTONE_KEY="hj_seen_deed_milestones";
-const LIVE_ACH_KEY="hj_seen_achievements";
-const TESTING_MODE_KEY="hj_testing_mode";
-const LIVE_SNAPSHOT_KEY="hj_testing_live_snapshot";
-const TEST_SESSION_STATE_KEY="hj_testing_session_state";
-const TEST_SESSION_SETTINGS_KEY="hj_testing_session_settings";
-const TEST_SESSION_MILESTONE_KEY="hj_testing_session_milestones";
-const TEST_SESSION_ACH_KEY="hj_testing_session_achievements";
-let testingMode=false;
-window.__HJ_TESTING_MODE=false;
-function syncTestingModeFromStorage(){
-  testingMode=localStorage.getItem(TESTING_MODE_KEY)==="1";
-  window.__HJ_TESTING_MODE=testingMode;
-  return testingMode;
-}
-function isTestingModeActive(){
-  return testingMode===true;
-}
-function setTestingModeActive(on){
-  testingMode=!!on;
-  window.__HJ_TESTING_MODE=testingMode;
-  if(testingMode) localStorage.setItem(TESTING_MODE_KEY,"1");
-  else localStorage.removeItem(TESTING_MODE_KEY);
-}
-function readStoredJson(key){
-  try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):null;}catch(e){return null;}
-}
-function isValidTestingSession(){
-  if(localStorage.getItem(TESTING_MODE_KEY)!=="1") return false;
-  const snap=readStoredJson(LIVE_SNAPSHOT_KEY);
-  const testState=readStoredJson(TEST_SESSION_STATE_KEY);
-  return !!(snap&&snap.state&&snap.savedAt&&testState);
-}
-function copySnapshotToTestingSession(snap){
-  if(snap.state!=null) localStorage.setItem(TEST_SESSION_STATE_KEY,JSON.stringify(snap.state));
-  if(snap.settings!=null) localStorage.setItem(TEST_SESSION_SETTINGS_KEY,JSON.stringify(snap.settings));
-  if(snap.milestoneSeen!=null) localStorage.setItem(TEST_SESSION_MILESTONE_KEY,snap.milestoneSeen);
-  else localStorage.removeItem(TEST_SESSION_MILESTONE_KEY);
-  if(snap.achSeen!=null) localStorage.setItem(TEST_SESSION_ACH_KEY,snap.achSeen);
-  else localStorage.removeItem(TEST_SESSION_ACH_KEY);
-}
-function clearTestingSessionStorage(){
-  localStorage.removeItem(TEST_SESSION_STATE_KEY);
-  localStorage.removeItem(TEST_SESSION_SETTINGS_KEY);
-  localStorage.removeItem(TEST_SESSION_MILESTONE_KEY);
-  localStorage.removeItem(TEST_SESSION_ACH_KEY);
-}
-function deactivateTestingMode(){
-  localStorage.removeItem(TESTING_MODE_KEY);
-  localStorage.removeItem(LIVE_SNAPSHOT_KEY);
-  localStorage.removeItem("hj_testing_mode_snapshot");
-  clearTestingSessionStorage();
-  testingMode=false;
-  window.__HJ_TESTING_MODE=false;
-}
-function reconcileTestingModeState(){
-  if(!localStorage.getItem(LIVE_SNAPSHOT_KEY)){
-    const legacy=localStorage.getItem("hj_testing_mode_snapshot");
-    if(legacy){
-      try{
-        const legacySnap=JSON.parse(legacy);
-        if(legacySnap&&legacySnap.state) localStorage.setItem(LIVE_SNAPSHOT_KEY,legacy);
-      }catch(e){}
-    }
-  }
-  const snap=readStoredJson(LIVE_SNAPSHOT_KEY);
-  if(localStorage.getItem(TESTING_MODE_KEY)==="1"&&snap&&snap.state&&snap.savedAt){
-    if(!readStoredJson(TEST_SESSION_STATE_KEY)) copySnapshotToTestingSession(snap);
-    if(isValidTestingSession()){
-      syncTestingModeFromStorage();
-      return;
-    }
-  }
-  if(localStorage.getItem(TESTING_MODE_KEY)||localStorage.getItem(LIVE_SNAPSHOT_KEY)||localStorage.getItem(TEST_SESSION_STATE_KEY)){
-    deactivateTestingMode();
-    return;
-  }
-  testingMode=false;
-  window.__HJ_TESTING_MODE=false;
-}
-function activeStateKey(){return ActiveAppData.sessionKeys().state;}
-function activeSettingsKey(){return ActiveAppData.sessionKeys().settings;}
-function activeMilestoneKey(){return ActiveAppData.sessionKeys().milestone;}
-function activeAchKey(){return ActiveAppData.sessionKeys().ach;}
-const ActiveAppData={
-  sessionKeys:function(){
-    if(isTestingModeActive()){
-      return{state:TEST_SESSION_STATE_KEY,settings:TEST_SESSION_SETTINGS_KEY,milestone:TEST_SESSION_MILESTONE_KEY,ach:TEST_SESSION_ACH_KEY};
-    }
-    return{state:LIVE_STATE_KEY,settings:LIVE_SETTINGS_KEY,milestone:LIVE_MILESTONE_KEY,ach:LIVE_ACH_KEY};
-  },
-  getActiveAppData:function(){
-    return state;
-  },
-  getActiveSettings:function(){
-    return settings;
-  },
-  getActiveTreasuryLedger:function(){
-    ensureHeroTreasury();
-    return state.heroTreasuryLedger;
-  },
-  setActiveAppData:function(newState){
-    state=newState;
-    this.saveFromMemory();
-  },
-  saveFromMemory:function(){
-    const keys=this.sessionKeys();
-    localStorage.setItem(keys.state,JSON.stringify(state));
-    localStorage.setItem(keys.settings,JSON.stringify(settings));
-  },
-  loadIntoMemory:function(){
-    const keys=this.sessionKeys();
-    loadMemoryFromSnapshot({
-      state:JSON.parse(localStorage.getItem(keys.state)||"null"),
-      settings:JSON.parse(localStorage.getItem(keys.settings)||"null"),
-      milestoneSeen:localStorage.getItem(keys.milestone),
-      achSeen:localStorage.getItem(keys.ach)
-    });
-  },
-  saveActiveAppData:function(){this.saveFromMemory();},
-  saveActiveTreasuryLedger:function(){this.saveFromMemory();},
-  isTesting:function(){return isTestingModeActive();},
-  shouldBlockCloudLoad:function(){
-    return isTestingModeActive();
-  },
-  shouldBlockCloudSave:function(){
-    return isTestingModeActive()||window.__hjSaveInProgress===true;
-  },
-  shouldBlockCloudApply:function(){
-    return this.shouldBlockCloudLoad()||window.__hjSaveInProgress===true;
-  }
-};
-window.ActiveAppData=ActiveAppData;
-window.__hjSaveInProgress=false;
-reconcileTestingModeState();
-updateTestingModeUI();
 function checkAppBuild(){
   const el=document.getElementById("appBuildLabel");
   if(el) el.textContent="App build: "+APP_BUILD;
@@ -1712,7 +1549,7 @@ function checkAppBuild(){
     },1500);
   }
 }
-let settings=JSON.parse(localStorage.getItem(activeSettingsKey())||"null")||defaults;
+let settings=JSON.parse(localStorage.getItem("hj_rpg_settings")||"null")||defaults;
 const HABIT_CARD_TIERS=[
   {id:"rare",min:10,label:"Rare",stipend:2,token:"Bronze",borderClass:"tier-rare"},
   {id:"epic",min:50,label:"Epic",stipend:5,token:"Silver",borderClass:"tier-epic"},
@@ -2201,7 +2038,7 @@ function normalizeUnlockedTitlesFromCloud(data){
 function normalizeEquippedTitleFromCloud(data){
   return (typeof data==="string"&&HABIT_LADDERS.some(h=>h.key===data&&h.title))?data:null;
 }
-let state=JSON.parse(localStorage.getItem(activeStateKey())||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:[]};
+let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:[]};
 if(!Array.isArray(state.pendingReports)) state.pendingReports=[];
 ensureHabitLadders();
 ensureHabitCardTurnIns();
@@ -2224,12 +2061,11 @@ function ensureChronicleState(){
 }
 ensureChronicleState();
 function defaultHeroTreasuryLedger(){return [];}
-/* Hero Treasury ledger entry schema (Phase 1 + Phase 2):
-   { id, date, type:"added"|"subtracted", amount, reason, source, awardKey?, rewardKey?, meta? }
-   - source: "manual" | "hero_level" | "habit_card" | "rulebook"
-   - awardKey / rewardKey: unique idempotency key for automatic awards (e.g. heroLevel:killian:Apprentice)
-   - meta: optional object e.g. { level, heroId, hpRequired } for audit/display
-   - Balance is always derived from the ledger; never stored separately
+/* Hero Treasury ledger entry schema (Phase 1 + Phase 2 ready):
+   { id, date, type:"added"|"subtracted", amount, reason, source, awardKey?, meta? }
+   - source: "manual" (Phase 1) | "hero_level" | "habit_card" | "rulebook" (Phase 2)
+   - awardKey: unique idempotency key for automatic awards; prevents duplicate payouts
+   - meta: optional object e.g. { level:"Apprentice", habitKey, tierId } for audit/display
 */
 const TREASURY_SOURCE={MANUAL:"manual",HERO_LEVEL:"hero_level",HABIT_CARD:"habit_card",RULEBOOK:"rulebook"};
 const TREASURY_SOURCE_LABELS={manual:"Manual",hero_level:"Hero Level",habit_card:"Habit Card",rulebook:"Rulebook"};
@@ -2243,14 +2079,7 @@ function buildTreasuryAwardKey(kind,ref){
 function treasuryHasAwardKey(key){
   if(!key) return false;
   ensureHeroTreasury();
-  return state.heroTreasuryLedger.some(function(e){
-    return e.awardKey===key||(e.rewardKey&&e.rewardKey===key);
-  });
-}
-function treasuryHasRewardKey(key){return treasuryHasAwardKey(key);}
-function parseLevelRewardAmount(rewardStr){
-  const m=String(rewardStr||"").match(/\$?\s*([\d]+(?:\.\d{1,2})?)/);
-  return m?normalizeTreasuryAmount(parseFloat(m[1])):0;
+  return state.heroTreasuryLedger.some(e=>e.awardKey===key);
 }
 function normalizeTreasuryAmount(n){
   const v=Math.round(Number(n)*100)/100;
@@ -2265,10 +2094,9 @@ function normalizeHeroTreasuryEntry(raw){
   const date=(typeof raw.date==="string"&&raw.date)?raw.date:new Date().toISOString();
   const id=(typeof raw.id==="string"&&raw.id)?raw.id:(date+"-"+Math.random().toString(36).slice(2,9));
   const source=normalizeTreasurySource(raw.source);
-  const awardKey=(typeof raw.awardKey==="string"&&raw.awardKey.trim())?raw.awardKey.trim()
-    :((typeof raw.rewardKey==="string"&&raw.rewardKey.trim())?raw.rewardKey.trim():null);
+  const awardKey=(typeof raw.awardKey==="string"&&raw.awardKey.trim())?raw.awardKey.trim():null;
   const meta=(raw.meta&&typeof raw.meta==="object"&&!Array.isArray(raw.meta))?raw.meta:null;
-  return {id,type,amount,reason,date,source,awardKey,rewardKey:awardKey,meta};
+  return {id,type,amount,reason,date,source,awardKey,meta};
 }
 function normalizeHeroTreasuryFromCloud(data){
   const raw=Array.isArray(data)?data:(Array.isArray(data&&data.heroTreasuryLedger)?data.heroTreasuryLedger:[]);
@@ -2284,7 +2112,7 @@ function heroTreasuryLedgerForCloud(){
   ensureHeroTreasury();
   return state.heroTreasuryLedger.map(e=>({
     id:e.id,date:e.date,type:e.type,amount:e.amount,reason:e.reason,source:e.source,
-    awardKey:e.awardKey||null,rewardKey:e.awardKey||e.rewardKey||null,meta:e.meta||null
+    awardKey:e.awardKey||null,meta:e.meta||null
   }));
 }
 function heroTreasuryBalance(){
@@ -2323,57 +2151,6 @@ function appendHeroTreasuryEntry(type,amount,reason,opts){
   state.heroTreasuryLedger.unshift(entry);
   return entry;
 }
-const HERO_ID="killian";
-const RewardEngine={
-  hasRewardKey:treasuryHasRewardKey,
-  buildHeroLevelRewardKey:function(levelName){
-    return "heroLevel:"+HERO_ID+":"+String(levelName);
-  },
-  attemptReward:function(spec){
-    spec=spec||{};
-    const amount=normalizeTreasuryAmount(spec.amount);
-    const reason=String(spec.reason||"").trim();
-    const rewardKey=(typeof spec.rewardKey==="string"&&spec.rewardKey.trim())?spec.rewardKey.trim():null;
-    if(!amount||!reason||!rewardKey) return null;
-    if(this.hasRewardKey(rewardKey)) return null;
-    const entry=appendHeroTreasuryEntry("added",amount,reason,{
-      source:spec.source||TREASURY_SOURCE.HERO_LEVEL,
-      awardKey:rewardKey,
-      meta:spec.meta||null
-    });
-    if(entry){
-      log("Treasury auto-reward: +"+formatTreasuryMoney(amount)+" — "+reason);
-    }
-    return entry;
-  },
-  processHeroLevelRewards:function(){
-    const currentHP=hp();
-    let created=0;
-    settings.levels.forEach(function(row){
-      const levelName=row[0],hpRequired=row[1],rewardStr=row[2];
-      if(currentHP<hpRequired) return;
-      const amount=parseLevelRewardAmount(rewardStr);
-      if(!amount) return;
-      const entry=this.attemptReward({
-        amount:amount,
-        reason:levelName+" Level Reward",
-        source:TREASURY_SOURCE.HERO_LEVEL,
-        rewardKey:this.buildHeroLevelRewardKey(levelName),
-        meta:{heroId:HERO_ID,level:levelName,hpRequired:hpRequired}
-      });
-      if(entry) created++;
-    });
-    return created;
-  },
-  processAll:function(){
-    return this.processHeroLevelRewards();
-  }
-};
-window.RewardEngine=RewardEngine;
-function processAutomaticTreasuryRewards(){
-  return RewardEngine.processAll();
-}
-window.processAutomaticTreasuryRewards=processAutomaticTreasuryRewards;
 function submitTreasuryAdd(){
   requireParent("Add money to Hero Treasury",function(){
     const amount=normalizeTreasuryAmount(document.getElementById("treasuryAddAmount").value);
@@ -2629,16 +2406,8 @@ function checkChronicleDefeatReveal(wasRemaining){
   }
 }
 let renderSnapshot=null;
-const MILESTONE_SEEN_KEY=LIVE_MILESTONE_KEY;
-const ACH_SEEN_KEY=LIVE_ACH_KEY;
-function persistAppData(){ActiveAppData.saveFromMemory();}
-window.persistAppData=persistAppData;
-window.isTestingModeActive=isTestingModeActive;
-window.syncTestingModeFromStorage=syncTestingModeFromStorage;
-window.getActiveAppData=function(){return ActiveAppData.getActiveAppData();};
-window.saveActiveAppData=function(){ActiveAppData.saveActiveAppData();};
-window.getActiveTreasuryLedger=function(){return ActiveAppData.getActiveTreasuryLedger();};
-window.saveActiveTreasuryLedger=function(){ActiveAppData.saveActiveTreasuryLedger();};
+const ACH_SEEN_KEY="hj_seen_achievements";
+const MILESTONE_SEEN_KEY="hj_seen_deed_milestones";
 const DEED_MILESTONES=[
   {deeds:5,bonus:1,total:1,name:"First Deed Reward"},
   {deeds:10,bonus:1,total:2,name:"Deed Pathfinder"},
@@ -2660,23 +2429,7 @@ const dragonTaunts={
   last:["Final stand! Give me your best shot!","You will not defeat me easily!","The endgame begins now!"],
   defeated:["You win, legend. Well fought.","The dragon falls. The hero rises.","Journey complete. I bow to you."]
 };
-function saveCore(){
-  syncTestingModeFromStorage();
-  processAutomaticTreasuryRewards();
-  ActiveAppData.saveFromMemory();
-}
-window.saveCore=saveCore;
-function save(){
-  window.__hjSaveInProgress=true;
-  try{
-    saveCore();
-    if(typeof window.__hjCloudSyncAfterSave==="function") window.__hjCloudSyncAfterSave();
-    render();
-  }finally{
-    window.__hjSaveInProgress=false;
-  }
-}
-window.save=save;
+function save(){localStorage.setItem("hj_rpg_state",JSON.stringify(state));localStorage.setItem("hj_rpg_settings",JSON.stringify(settings));render();}
 function log(msg){state.log.unshift(new Date().toLocaleString()+" — "+msg);state.log=state.log.slice(0,60);}
 function toast(msg){const t=document.getElementById("toast");t.innerHTML=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600);}
 let parentCodeHash="";
@@ -2747,130 +2500,6 @@ async function requireParent(reason,action){
 async function requireParentAlways(reason,action){
   if(await requestParentCode(reason)) action();
 }
-function isTestingMode(){return isTestingModeActive();}
-function captureLiveSnapshot(){
-  return{
-    savedAt:new Date().toISOString(),
-    state:JSON.parse(JSON.stringify(state)),
-    settings:JSON.parse(JSON.stringify(settings)),
-    milestoneSeen:localStorage.getItem(LIVE_MILESTONE_KEY),
-    achSeen:localStorage.getItem(LIVE_ACH_KEY)
-  };
-}
-function restoreStateFromSnapshot(data){
-  const localHabits=state.habitLadders;
-  const readingPoints=Math.max(0,Number(data.readingPoints!=null?data.readingPoints:data.readingPageCredits)||0);
-  const totalPagesRead=Math.max(readingPoints*PAGES_PER_READING_POINT,Number(data.totalPagesRead)||0);
-  return{
-    books:Number(data.books||0),
-    meals:Number(data.meals||0),
-    language:Number(data.language||0),
-    coop:Number(data.coop||0),
-    spent:Number(data.spent||0),
-    legend:Boolean(data.legend||false),
-    log:Array.isArray(data.log)?data.log.slice(0,60):[],
-    pendingReports:Array.isArray(data.pendingReports)?data.pendingReports.slice(0,20):[],
-    habitLadders:normalizeHabitLaddersFromCloud(data.habitLadders,localHabits),
-    habitCardTurnIns:normalizeHabitCardTurnInsFromCloud(data.habitCardTurnIns),
-    unlockedTitles:normalizeUnlockedTitlesFromCloud(data.unlockedTitles),
-    equippedTitleId:normalizeEquippedTitleFromCloud(data.equippedTitleId),
-    chronicleLegendRevealed:Boolean(data.chronicleLegendRevealed||false),
-    screenTimeMinutes:Math.max(0,Number(data.screenTimeMinutes||0)),
-    readingPoints:readingPoints,
-    totalPagesRead:totalPagesRead,
-    heroTreasuryLedger:normalizeHeroTreasuryFromCloud(data.heroTreasuryLedger)
-  };
-}
-function loadMemoryFromSnapshot(snap){
-  if(snap&&snap.state) state=restoreStateFromSnapshot(snap.state);
-  ensureHabitLadders();
-  ensureHabitCardTurnIns();
-  ensureTitles();
-  ensureChronicleState();
-  ensureScreenTimeState();
-  ensureHeroTreasury();
-  if(snap&&snap.settings) settings=Object.assign({},defaults,snap.settings);
-  if(snap&&snap.milestoneSeen!=null) localStorage.setItem(activeMilestoneKey(),snap.milestoneSeen);
-  else localStorage.removeItem(activeMilestoneKey());
-  if(snap&&snap.achSeen!=null) localStorage.setItem(activeAchKey(),snap.achSeen);
-  else localStorage.removeItem(activeAchKey());
-}
-function loadMemoryFromActiveStorage(){ActiveAppData.loadIntoMemory();}
-function writeLiveStorageFromSnapshot(snap){
-  if(snap.state!=null) localStorage.setItem(LIVE_STATE_KEY,JSON.stringify(snap.state));
-  if(snap.settings!=null) localStorage.setItem(LIVE_SETTINGS_KEY,JSON.stringify(snap.settings));
-  if(snap.milestoneSeen!=null) localStorage.setItem(LIVE_MILESTONE_KEY,snap.milestoneSeen);
-  else localStorage.removeItem(LIVE_MILESTONE_KEY);
-  if(snap.achSeen!=null) localStorage.setItem(LIVE_ACH_KEY,snap.achSeen);
-  else localStorage.removeItem(LIVE_ACH_KEY);
-}
-function updateTestingModeUI(){
-  const show=isTestingModeActive();
-  document.body.classList.toggle("testing-mode-active",show);
-  const banner=document.getElementById("testingModeGlobalBanner");
-  if(banner){
-    banner.hidden=!show;
-    banner.classList.toggle("is-visible",show);
-    banner.setAttribute("aria-hidden",show?"false":"true");
-  }
-  const enterBtn=document.getElementById("btnEnterTestingMode");
-  const exitBtn=document.getElementById("btnExitTestingMode");
-  if(enterBtn) enterBtn.hidden=show;
-  if(exitBtn) exitBtn.hidden=!show;
-  const status=document.getElementById("testingModeStatus");
-  if(show){
-    let when="";
-    try{
-      const snap=JSON.parse(localStorage.getItem(LIVE_SNAPSHOT_KEY)||"{}");
-      if(snap.savedAt) when=" Live snapshot from "+new Date(snap.savedAt).toLocaleString()+".";
-    }catch(e){}
-    if(status) status.textContent="Testing session active."+when+" All saves go to isolated test data only; live progress is untouched.";
-  }else{
-    if(status) status.textContent="Live data is active. Enter Testing Mode to sandbox any feature without affecting real progress.";
-  }
-}
-function enterTestingMode(){
-  requireParentAlways("Enter Testing Mode",function(){
-    if(isTestingModeActive()){toast("Already in Testing Mode");return;}
-    if(!confirm("Enter Testing Mode?\n\nLive data will be snapshotted and frozen. A separate testing session loads for all features. Exit Testing Mode discards the session and restores live data exactly.")) return;
-    let snap;
-    try{
-      snap=captureLiveSnapshot();
-      localStorage.setItem(LIVE_SNAPSHOT_KEY,JSON.stringify(snap));
-      copySnapshotToTestingSession(snap);
-    }catch(e){
-      alert("Could not start testing session: "+e.message);
-      return;
-    }
-    setTestingModeActive(true);
-    renderSnapshot=null;
-    log("Testing Mode entered — isolated session loaded.");
-    ActiveAppData.saveFromMemory();
-    save();
-    updateTestingModeUI();
-    toast("🧪 TESTING MODE<br>Isolated session active. Live data protected.");
-  });
-}
-function exitTestingMode(){
-  requireParentAlways("Exit Testing Mode",function(){
-    if(!isTestingModeActive()){toast("Not in Testing Mode");return;}
-    const snap=readStoredJson(LIVE_SNAPSHOT_KEY);
-    if(snap&&snap.state){
-      if(!confirm("Exit Testing Mode?\n\nThe entire testing session will be discarded. Live data will be restored exactly as before testing.")) return;
-      writeLiveStorageFromSnapshot(snap);
-    }else if(!confirm("Exit Testing Mode?\n\nNo live snapshot was found. The test session will be discarded and current live storage will be kept.")) return;
-    deactivateTestingMode();
-    ActiveAppData.loadIntoMemory();
-    renderSnapshot=null;
-    log("Testing Mode exited — live data restored.");
-    save();
-    updateTestingModeUI();
-    toast("✅ Live data restored<br>Testing Mode off.");
-  });
-}
-window.enterTestingMode=enterTestingMode;
-window.exitTestingMode=exitTestingMode;
-window.isTestingMode=isTestingMode;
 async function changeParentCode(){
   if(!cloudConfigReady){alert("Still connecting to cloud. Try again in a moment.");return;}
   if(hasParentCode()){
@@ -2906,7 +2535,6 @@ async function showScreen(id){
   }
   if(id==="parent"){
     renderParent();
-    updateTestingModeUI();
   }
 }
 
@@ -3248,10 +2876,10 @@ function celebrate(icon,title,sub){
 function closeCelebration(){document.getElementById("celebration").classList.remove("show");}
 function checkNewMilestones(){
   const count=countableUnlocked();
-  const seen=new Set(JSON.parse(localStorage.getItem(activeMilestoneKey())||"[]"));
-  if(!localStorage.getItem(activeMilestoneKey())){
+  const seen=new Set(JSON.parse(localStorage.getItem(MILESTONE_SEEN_KEY)||"[]"));
+  if(!localStorage.getItem(MILESTONE_SEEN_KEY)){
     DEED_MILESTONES.filter(m=>count>=m.deeds).forEach(m=>seen.add(m.deeds));
-    localStorage.setItem(activeMilestoneKey(),JSON.stringify([...seen]));
+    localStorage.setItem(MILESTONE_SEEN_KEY,JSON.stringify([...seen]));
     return;
   }
   DEED_MILESTONES.forEach(m=>{
@@ -3260,15 +2888,15 @@ function checkNewMilestones(){
       celebrate("🏛",m.name,"+"+m.bonus+" Hero Point bonus! Total deed bonus: +"+m.total+" HP");
     }
   });
-  localStorage.setItem(activeMilestoneKey(),JSON.stringify([...seen]));
+  localStorage.setItem(MILESTONE_SEEN_KEY,JSON.stringify([...seen]));
 }
 function checkNewAchievements(){
   const countable=countableAchievementDefs();
   const meta=getMetaAchievementDefs();
-  const seen=new Set(JSON.parse(localStorage.getItem(activeAchKey())||"[]"));
-  if(!localStorage.getItem(activeAchKey())){
+  const seen=new Set(JSON.parse(localStorage.getItem(ACH_SEEN_KEY)||"[]"));
+  if(!localStorage.getItem(ACH_SEEN_KEY)){
     countable.concat(meta).filter(a=>a.done).forEach(a=>seen.add(a.id));
-    localStorage.setItem(activeAchKey(),JSON.stringify([...seen]));
+    localStorage.setItem(ACH_SEEN_KEY,JSON.stringify([...seen]));
     return;
   }
   countable.forEach(a=>{
@@ -3283,7 +2911,7 @@ function checkNewAchievements(){
       celebrate(a.icon,a.title+" Unlocked!",a.sub+(a.unlock?" • Unlocked: "+a.unlock.name:""));
     }
   });
-  localStorage.setItem(activeAchKey(),JSON.stringify([...seen]));
+  localStorage.setItem(ACH_SEEN_KEY,JSON.stringify([...seen]));
   checkNewMilestones();
 }
 function submitQuestReport(type){
@@ -3325,9 +2953,6 @@ function dismissReport(id){
   });
 }
 function render(){
-  syncTestingModeFromStorage();
-  updateTestingModeUI();
-  processAutomaticTreasuryRewards();
   renderScreenTimeWallet();
   const ds=dragonStage();
   const r=remaining();
@@ -3366,10 +2991,11 @@ function render(){
     strikeBtn.disabled=!ready;
     strikeBtn.textContent=state.legend?"Legendary Strike Applied":(ready?"Apply Legendary Strike":"Reach 50 Quest HP to Unlock");
   }
-  renderBounty();renderQuests();renderLevels();renderAch();renderTitleVault();renderHeroTitle();renderHabitLadders();renderHabitCardBinder();renderKingdomSanctum();renderScreenTimeWallet();renderHeroTreasury();renderLedger();renderPendingReports();renderParent();updateTestingModeUI();
+  renderBounty();renderQuests();renderLevels();renderAch();renderTitleVault();renderHeroTitle();renderHabitLadders();renderHabitCardBinder();renderKingdomSanctum();renderScreenTimeWallet();renderHeroTreasury();renderLedger();renderPendingReports();renderParent();
   detectProgressChanges();
   checkNewAchievements();
-  ActiveAppData.saveFromMemory();
+  localStorage.setItem("hj_rpg_state",JSON.stringify(state));
+  localStorage.setItem("hj_rpg_settings",JSON.stringify(settings));
 }
 function bountyItem(cls,title,msg,pct){return '<div class="quest-card bounty-card quest-'+cls+'"><div class="quest-name">'+title+'</div><div class="quest-reward">'+msg+'</div><div class="bounty-bar"><div class="bounty-fill" style="width:'+Math.min(100,Math.max(0,pct))+'%"></div></div></div>';}
 function milestonePct(current,next,prev){
@@ -3515,12 +3141,11 @@ function renderParentScreenTime(){
     '</div>'+
     '<p class="small" style="margin-top:8px">These buttons adjust the bank only. Check the Dashboard for available time.</p>';
 }
-function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=(Array.isArray(state.log)?state.log:[]).map(x=>'<li>'+x+'</li>').join("");renderParentQuests();renderParentScreenTime();renderParentHabits();renderParentHabitCards();renderHeroTreasury();updateParentCodeStatus();updateTestingModeUI();}
+function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=(Array.isArray(state.log)?state.log:[]).map(x=>'<li>'+x+'</li>').join("");renderParentQuests();renderParentScreenTime();renderParentHabits();renderParentHabitCards();renderHeroTreasury();updateParentCodeStatus();}
 function saveSettings(){requireParent("Save system settings",function(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();});}
 function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:defaultHeroTreasuryLedger()};renderSnapshot=null;save();}});}
 render();
 checkAppBuild();
-updateTestingModeUI();
 </script>
 
 <script>
@@ -3542,9 +3167,9 @@ updateTestingModeUI();
 
   let cloudReady = false;
   let applyingCloudUpdate = false;
+  const originalSave = window.save;
 
   function isCloudSaveBlocked(){
-    if(ActiveAppData.shouldBlockCloudLoad()) return true;
     if(window.__HJ_BLOCK_CLOUD_SAVE) return true;
     if(localStorage.getItem("hj_block_cloud")==="1") return true;
     try{
@@ -3604,16 +3229,13 @@ updateTestingModeUI();
     };
   }
 
-  window.__hjCloudSyncAfterSave=function(){
-    if(ActiveAppData.shouldBlockCloudSave()){
-      if(ActiveAppData.shouldBlockCloudLoad()){
-        setSyncStatus("Testing Mode — sandbox active (local saves OK, cloud paused).");
-      }
-      return;
-    }
+  window.save = function(){
     try{
       localStorage.setItem("hj_rpg_state_backup", JSON.stringify(state));
     }catch(e){}
+    localStorage.setItem("hj_rpg_state", JSON.stringify(state));
+    localStorage.setItem("hj_rpg_settings", JSON.stringify(settings));
+
     if(cloudReady && !applyingCloudUpdate && !isCloudSaveBlocked()){
       progressRef.set(cleanStateForCloud(), {merge:true}).then(() => {
         setSyncStatus("Cloud sync active. Saved: " + new Date().toLocaleTimeString());
@@ -3624,6 +3246,8 @@ updateTestingModeUI();
     }else if(isCloudSaveBlocked()){
       setSyncStatus("Cloud sync disabled (demo/local mode). Local save only.");
     }
+
+    render();
   };
 
   window.persistParentCodeHash = function(hash){
@@ -3662,21 +3286,12 @@ updateTestingModeUI();
 
       progressRef.onSnapshot(async (doc) => {
         applyingCloudUpdate = true;
-        if(ActiveAppData.shouldBlockCloudLoad()){
-          setSyncStatus("Testing Mode — sandbox active (cloud load paused).");
-          applyingCloudUpdate = false;
-          return;
-        }
         if(!doc.exists){
           if(!isCloudSaveBlocked()){
             await progressRef.set(cleanStateForCloud(), {merge:true});
           }
           setSyncStatus("Cloud document created.");
         } else {
-          if(ActiveAppData.shouldBlockCloudLoad()){
-            applyingCloudUpdate = false;
-            return;
-          }
           try{
             localStorage.setItem("hj_rpg_state_cloud_backup", JSON.stringify(doc.data()));
           }catch(e){}
@@ -3686,7 +3301,7 @@ updateTestingModeUI();
           ensureChronicleState();
           ensureScreenTimeState();
           ensureHeroTreasury();
-          if(window.persistAppData) window.persistAppData();
+          localStorage.setItem("hj_rpg_state", JSON.stringify(state));
           setSyncStatus("Cloud sync active. Loaded: " + new Date().toLocaleTimeString());
           render();
           if(state.pendingReports && state.pendingReports.some(r=>r.status==="pending") && parentUnlocked()){
@@ -3706,10 +3321,6 @@ updateTestingModeUI();
 
   window.restoreFromLocalBackup = function(){
     requireParent("Restore progress from local backup", function(){
-      if(isTestingModeActive()){
-        alert("Exit Testing Mode before restoring live backup.");
-        return;
-      }
       const raw = localStorage.getItem("hj_rpg_state_backup") || localStorage.getItem("hj_rpg_state_cloud_backup");
       if(!raw){
         alert("No local backup found on this device. Use Parent Controls below to re-enter Killian's counts manually.");
