@@ -961,7 +961,7 @@ body.testing-mode-active{padding-top:46px}
 <h2>💰 Hero Treasury</h2>
 <p class="small">Money saved from hero rewards and adventures.</p>
 <div class="hero-treasury-balance" id="heroTreasuryBalance">$0.00</div>
-<p class="hero-treasury-note">Parents update the treasury when rewards are Paid.</p>
+<p class="hero-treasury-note">Hero Level rewards are added automatically. Parents record other payouts here.</p>
 </div>
 <div class="card quest-books screen-time-bank-card" id="screenTimeCard">
 <h2>📖 Summer Reading</h2>
@@ -1522,7 +1522,7 @@ body.testing-mode-active{padding-top:46px}
 <div class="card"><h2>⏱ Screen Time Controls</h2><p class="small">Adjust the Screen Time Bank only. Available time is shown on the Dashboard. Permanent reading progress is never changed here.</p><div id="parentScreenTime"></div></div>
 <div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Correct habit ladder counts here: use -1, +1, or set an exact number. Parent Code required for each change.</p><div id="parentHabitLadders"></div></div>
 <div class="card"><h2>🃏 Habit Card Turn-In</h2><p class="small">Mark cards turned in when Killian redeems the physical card and reward. Parent Code required.</p><div id="parentHabitCards"></div></div>
-<div class="card"><h2>💰 Hero Treasury Ledger</h2><p class="small"><b>Phase 1 — Manual tracking only.</b> Hero Treasury Balance = all money added − all money subtracted. Automatic Rulebook payouts will come in a later phase.</p>
+<div class="card"><h2>💰 Hero Treasury Ledger</h2><p class="small"><b>Phase 2 — Hero Level rewards are automatic.</b> Other Rulebook payouts remain manual for now. Hero Treasury Balance = all money added − all money subtracted (ledger only).</p>
 <p><b>Current balance:</b> <span id="parentTreasuryBalance">$0.00</span></p>
 <div class="treasury-parent-forms">
 <div class="treasury-form-panel">
@@ -1554,7 +1554,7 @@ body.testing-mode-active{padding-top:46px}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="global-testing-mode-v2";
+const APP_BUILD="hero-treasury-phase2-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 const LIVE_STATE_KEY="hj_rpg_state";
@@ -2097,11 +2097,12 @@ function ensureChronicleState(){
 }
 ensureChronicleState();
 function defaultHeroTreasuryLedger(){return [];}
-/* Hero Treasury ledger entry schema (Phase 1 + Phase 2 ready):
-   { id, date, type:"added"|"subtracted", amount, reason, source, awardKey?, meta? }
-   - source: "manual" (Phase 1) | "hero_level" | "habit_card" | "rulebook" (Phase 2)
-   - awardKey: unique idempotency key for automatic awards; prevents duplicate payouts
-   - meta: optional object e.g. { level:"Apprentice", habitKey, tierId } for audit/display
+/* Hero Treasury ledger entry schema (Phase 1 + Phase 2):
+   { id, date, type:"added"|"subtracted", amount, reason, source, awardKey?, rewardKey?, meta? }
+   - source: "manual" | "hero_level" | "habit_card" | "rulebook"
+   - awardKey / rewardKey: unique idempotency key for automatic awards (e.g. heroLevel:killian:Apprentice)
+   - meta: optional object e.g. { level, heroId, hpRequired } for audit/display
+   - Balance is always derived from the ledger; never stored separately
 */
 const TREASURY_SOURCE={MANUAL:"manual",HERO_LEVEL:"hero_level",HABIT_CARD:"habit_card",RULEBOOK:"rulebook"};
 const TREASURY_SOURCE_LABELS={manual:"Manual",hero_level:"Hero Level",habit_card:"Habit Card",rulebook:"Rulebook"};
@@ -2115,7 +2116,14 @@ function buildTreasuryAwardKey(kind,ref){
 function treasuryHasAwardKey(key){
   if(!key) return false;
   ensureHeroTreasury();
-  return state.heroTreasuryLedger.some(e=>e.awardKey===key);
+  return state.heroTreasuryLedger.some(function(e){
+    return e.awardKey===key||(e.rewardKey&&e.rewardKey===key);
+  });
+}
+function treasuryHasRewardKey(key){return treasuryHasAwardKey(key);}
+function parseLevelRewardAmount(rewardStr){
+  const m=String(rewardStr||"").match(/\$?\s*([\d]+(?:\.\d{1,2})?)/);
+  return m?normalizeTreasuryAmount(parseFloat(m[1])):0;
 }
 function normalizeTreasuryAmount(n){
   const v=Math.round(Number(n)*100)/100;
@@ -2130,9 +2138,10 @@ function normalizeHeroTreasuryEntry(raw){
   const date=(typeof raw.date==="string"&&raw.date)?raw.date:new Date().toISOString();
   const id=(typeof raw.id==="string"&&raw.id)?raw.id:(date+"-"+Math.random().toString(36).slice(2,9));
   const source=normalizeTreasurySource(raw.source);
-  const awardKey=(typeof raw.awardKey==="string"&&raw.awardKey.trim())?raw.awardKey.trim():null;
+  const awardKey=(typeof raw.awardKey==="string"&&raw.awardKey.trim())?raw.awardKey.trim()
+    :((typeof raw.rewardKey==="string"&&raw.rewardKey.trim())?raw.rewardKey.trim():null);
   const meta=(raw.meta&&typeof raw.meta==="object"&&!Array.isArray(raw.meta))?raw.meta:null;
-  return {id,type,amount,reason,date,source,awardKey,meta};
+  return {id,type,amount,reason,date,source,awardKey,rewardKey:awardKey,meta};
 }
 function normalizeHeroTreasuryFromCloud(data){
   const raw=Array.isArray(data)?data:(Array.isArray(data&&data.heroTreasuryLedger)?data.heroTreasuryLedger:[]);
@@ -2148,7 +2157,7 @@ function heroTreasuryLedgerForCloud(){
   ensureHeroTreasury();
   return state.heroTreasuryLedger.map(e=>({
     id:e.id,date:e.date,type:e.type,amount:e.amount,reason:e.reason,source:e.source,
-    awardKey:e.awardKey||null,meta:e.meta||null
+    awardKey:e.awardKey||null,rewardKey:e.awardKey||e.rewardKey||null,meta:e.meta||null
   }));
 }
 function heroTreasuryBalance(){
@@ -2187,6 +2196,57 @@ function appendHeroTreasuryEntry(type,amount,reason,opts){
   state.heroTreasuryLedger.unshift(entry);
   return entry;
 }
+const HERO_ID="killian";
+const RewardEngine={
+  hasRewardKey:treasuryHasRewardKey,
+  buildHeroLevelRewardKey:function(levelName){
+    return "heroLevel:"+HERO_ID+":"+String(levelName);
+  },
+  attemptReward:function(spec){
+    spec=spec||{};
+    const amount=normalizeTreasuryAmount(spec.amount);
+    const reason=String(spec.reason||"").trim();
+    const rewardKey=(typeof spec.rewardKey==="string"&&spec.rewardKey.trim())?spec.rewardKey.trim():null;
+    if(!amount||!reason||!rewardKey) return null;
+    if(this.hasRewardKey(rewardKey)) return null;
+    const entry=appendHeroTreasuryEntry("added",amount,reason,{
+      source:spec.source||TREASURY_SOURCE.HERO_LEVEL,
+      awardKey:rewardKey,
+      meta:spec.meta||null
+    });
+    if(entry){
+      log("Treasury auto-reward: +"+formatTreasuryMoney(amount)+" — "+reason);
+    }
+    return entry;
+  },
+  processHeroLevelRewards:function(){
+    const currentHP=hp();
+    let created=0;
+    settings.levels.forEach(function(row){
+      const levelName=row[0],hpRequired=row[1],rewardStr=row[2];
+      if(currentHP<hpRequired) return;
+      const amount=parseLevelRewardAmount(rewardStr);
+      if(!amount) return;
+      const entry=this.attemptReward({
+        amount:amount,
+        reason:levelName+" Level Reward",
+        source:TREASURY_SOURCE.HERO_LEVEL,
+        rewardKey:this.buildHeroLevelRewardKey(levelName),
+        meta:{heroId:HERO_ID,level:levelName,hpRequired:hpRequired}
+      });
+      if(entry) created++;
+    });
+    return created;
+  },
+  processAll:function(){
+    return this.processHeroLevelRewards();
+  }
+};
+window.RewardEngine=RewardEngine;
+function processAutomaticTreasuryRewards(){
+  return RewardEngine.processAll();
+}
+window.processAutomaticTreasuryRewards=processAutomaticTreasuryRewards;
 function submitTreasuryAdd(){
   requireParent("Add money to Hero Treasury",function(){
     const amount=normalizeTreasuryAmount(document.getElementById("treasuryAddAmount").value);
@@ -2471,7 +2531,11 @@ const dragonTaunts={
   last:["Final stand! Give me your best shot!","You will not defeat me easily!","The endgame begins now!"],
   defeated:["You win, legend. Well fought.","The dragon falls. The hero rises.","Journey complete. I bow to you."]
 };
-function save(){persistAppData();render();}
+function save(){
+  processAutomaticTreasuryRewards();
+  persistAppData();
+  render();
+}
 function log(msg){state.log.unshift(new Date().toLocaleString()+" — "+msg);state.log=state.log.slice(0,60);}
 function toast(msg){const t=document.getElementById("toast");t.innerHTML=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600);}
 let parentCodeHash="";
@@ -3165,6 +3229,7 @@ function dismissReport(id){
   });
 }
 function render(){
+  processAutomaticTreasuryRewards();
   renderScreenTimeWallet();
   const ds=dragonStage();
   const r=remaining();
@@ -3442,6 +3507,7 @@ checkAppBuild();
   }
 
   window.save = function(){
+    if(window.processAutomaticTreasuryRewards) window.processAutomaticTreasuryRewards();
     if(!window.__HJ_TESTING_MODE){
       try{
         localStorage.setItem("hj_rpg_state_backup", JSON.stringify(state));
