@@ -982,9 +982,9 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </div></div>
 <div class="card hero-treasury-card">
 <h2>💰 Hero Treasury</h2>
-<p class="small">Manual ledger only — Parents record money <b>Paid</b> or spent. Rulebook rewards (Hero Levels, Habit Cards) are listed in the Rulebook; reaching a milestone does not auto-add money here.</p>
+<p class="small">Earned Hero Level and Habit Card rewards appear in the <b>✅ Awards</b> checklist as <b>Ready to Award</b>. Parents review accomplishments with Killian, then approve payouts — money is added here only after <b>Award Selected</b>.</p>
 <div class="hero-treasury-balance" id="heroTreasuryBalance">$0.00</div>
-<p class="hero-treasury-note">Earned Hero Level and Habit Card stipends credit automatically. Parents still record spending and manual adjustments.</p>
+<p class="hero-treasury-note">Parents record spending and manual adjustments in the ledger. Already-awarded rewards stay in history.</p>
 </div>
 <div class="card quest-books screen-time-bank-card" id="screenTimeCard">
 <h2>📖 Summer Reading</h2>
@@ -1087,11 +1087,11 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <section id="awards" class="screen">
 <div class="card">
 <h2>✅ Award Checklist</h2>
-<p class="small">Review everything Killian has earned in one place. Treasury rewards can be awarded by parents after discussion. Heroic Deeds and bonuses unlock automatically in Hero Hall.</p>
+<p class="small">Review everything Killian has earned in one place. Earned Treasury rewards show as <b>Ready to Award</b> until a parent approves them here. Heroic Deeds and bonuses unlock automatically in Hero Hall.</p>
 <div id="awardChecklistStats" class="award-checklist-stats"></div>
 <div id="awardChecklistBody"></div>
-<p class="small parent-lock-note" style="margin-top:14px">Check earned Treasury items below, then tap <b>Award Checked Items</b>. Parent Code required. Already-paid rewards are skipped automatically.</p>
-<p><button type="button" class="action good" onclick="awardCheckedChecklistItems()">Award Checked Items</button></p>
+<p class="small parent-lock-note" style="margin-top:14px">Select earned Treasury items below, review with Killian, then tap <b>Award Selected</b>. Parent Code required. Already-awarded rewards are skipped automatically.</p>
+<p><button type="button" class="action good" onclick="awardCheckedChecklistItems()">Award Selected</button></p>
 </div>
 </section>
 <section id="rulebook" class="screen">
@@ -1319,7 +1319,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <p class="rulebook-note"><b>What this section means:</b> Hero Levels are permanent achievements. Spending Hero Points does not erase a level that has already been earned.</p>
 <p>Hero Levels recognize major milestones across the Hero's entire journey. Reaching a new Hero Level celebrates long-term growth and may include family-defined rewards.</p>
 <table class="rule-table"><tr><th>Level</th><th>Lifetime Hero Points Required</th><th>Reward</th></tr><tr><td>Apprentice</td><td>10</td><td>$10</td></tr><tr><td>Adventurer</td><td>20</td><td>$20</td></tr><tr><td>Scholar</td><td>30</td><td>$40</td></tr><tr><td>Champion</td><td>40</td><td>$80</td></tr><tr><td>Legend</td><td>50</td><td>$100</td></tr></table>
-<p class="rulebook-note">Lifetime Hero Points include Quest Hero Points and any Heroic Deed bonus from Hero Hall. Dollar rewards are Rulebook reference amounts; Parents record <b>Paid</b> payouts in the Hero Treasury (Article XV).</p>
+<p class="rulebook-note">Lifetime Hero Points include Quest Hero Points and any Heroic Deed bonus from Hero Hall. Dollar rewards are Rulebook reference amounts; earned levels appear as <b>Ready to Award</b> in the <b>✅ Awards</b> checklist until Parents approve them with <b>Award Selected</b> (Article XV).</p>
 <h3>Level Rules</h3><ol><li>Hero Levels are based upon Lifetime Hero Points Earned and not upon your current Hero Point balance.</li><li>Each Hero Level may be <b>Earned</b> only once.</li><li>Monetary rewards associated with a Hero Level may be <b>Claimed</b> upon the first instance of achieving that Hero Level and are <b>Paid</b> when Parents deliver the reward.</li><li>Reaching a previously achieved Hero Level a second time does not entitle you to an additional Hero Level Reward.</li><li>Spending Hero Points does not reduce previously earned Hero Levels.</li><li>Once achieved, a Hero Level remains achieved. A Hero who has become an Adventurer never becomes less than an Adventurer.</li></ol>
 <h3>Guiding Principle</h3><p>A Hero Level represents an achievement, not a balance. Once earned, a Hero Level becomes a permanent part of your journey and may only be earned once.</p><p><a href="#top">⬆ Return to Table of Contents</a></p>
 </div>
@@ -1452,7 +1452,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <p>Once <b>Earned</b>, a Habit Card remains part of the Hero's permanent collection. Redeeming or turning in a card does not remove it from the collection.</p>
 <h3>Physical Cards and Real-World Rewards</h3>
 <p>Habit Cards may represent real privileges, experiences, or monetary rewards agreed upon by the family. The app shows what each card unlocks; Parents decide when and how the reward is delivered.</p>
-<p><b>Important:</b> Dollar amounts shown on cards are <b>planned reward descriptions</b> in the Rulebook. Stipends are <b>Earned</b> when the card unlocks, <b>Claimed</b> when Killian asks to redeem them, and <b>Paid</b> when Parents deliver the money or purchase. Parents record <b>Paid</b> amounts in the Hero Treasury Ledger (Article XV); the app does not auto-credit card stipends.</p>
+<p><b>Important:</b> Dollar amounts shown on cards are <b>planned reward descriptions</b> in the Rulebook. Stipends are <b>Earned</b> when the card unlocks, appear as <b>Ready to Award</b> in the <b>✅ Awards</b> checklist, and are <b>Paid</b> when Parents approve them with <b>Award Selected</b> and deliver the money or purchase. The app detects earned card stipends automatically but does not add money to the Treasury until Parents approve.</p>
 <h3>Guiding Principle</h3>
 <p>The card is a promise kept — first earned through effort, then honored through trust between Hero and Parents.</p>
 <p><a href="#top">⬆ Return to Table of Contents</a></p>
@@ -1482,22 +1482,22 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </div>
 <div class="card" id="article15">
 <h2>ARTICLE XV – HERO TREASURY &amp; MONETARY AWARDS</h2>
-<p class="rulebook-note"><b>Phase 1 — Manual Hero Treasury:</b> The app tracks a Hero Treasury balance from Parent entries only. <b>Phase 2 — Automatic Rulebook payouts</b> (Hero Level, Habit Cards) remain planned and are not active yet.</p>
+<p class="rulebook-note"><b>Parent-awarded Treasury:</b> The app detects earned Rulebook rewards automatically, but money is added to the Hero Treasury only when Parents approve payouts in the <b>✅ Awards</b> checklist.</p>
 <h3>Purpose</h3>
 <p>Many rewards in this journey — Hero Level payouts, Habit Card stipends, and other prizes — involve money or monetary value. Families need a clear, honest record of what was promised, <b>Earned</b>, <b>Claimed</b>, and <b>Paid</b>.</p>
-<h3>What Exists Today (Phase 1)</h3>
+<h3>How Treasury Payouts Work</h3>
 <ul>
 <li>Reward amounts are listed in this Rulebook (for example, Hero Level rewards in Article VIII; Habit Card stipends in Article XIII).</li>
-<li>The <b>Hero Treasury</b> on the Dashboard shows balance from Parents' manual add/subtract entries only.</li>
-<li>Parents record money in the <b>Hero Treasury Ledger</b> (Parent section). Each entry includes amount, reason, and date.</li>
-<li>Reaching a Hero Level or earning a Habit Card in the app does <b>not</b> automatically add money to the Treasury.</li>
-<li>Parents track <b>Claimed</b>, <b>Paid</b>, and <b>Turned In</b> rewards in conversation and in the ledger when money moves.</li>
+<li>When Killian earns a Hero Level or Habit Card milestone, the app marks it <b>Earned</b> and shows it as <b>Ready to Award</b> in the <b>✅ Awards</b> checklist.</li>
+<li>Parents review accomplishments with Killian, select the items to pay, and tap <b>Award Selected</b>. Parent Code is required.</li>
+<li>Only then does the Reward Engine create a Hero Treasury ledger entry. The checklist status becomes <b>Already Awarded</b>.</li>
+<li>The <b>Hero Treasury</b> on the Dashboard shows the ledger balance. Parents may also add or subtract money manually for spending and adjustments.</li>
+<li>Each ledger entry includes amount, reason, source, and date. Duplicate payouts for the same earned reward are blocked automatically.</li>
 </ul>
-<h3>What Is Planned (Phase 2)</h3>
-<p>Automatic Rulebook payouts may credit the Hero Treasury when milestones are reached (for example, Hero Level rewards). Until that system is approved and activated:</p>
+<h3>What Earning Does <b>Not</b> Do</h3>
 <ul>
-<li>No automatic ledger entries are created for Hero Levels or Habit Cards.</li>
-<li>Parents remain the official record for when money or purchases are actually delivered.</li>
+<li>Reaching a Hero Level or earning a Habit Card does <b>not</b> immediately add money to the Treasury.</li>
+<li>Data corrections fix displayed progress only — they do not award Treasury money.</li>
 </ul>
 <h3>Guiding Principles</h3>
 <p>The journey is about growth first. When money is part of a reward, it should be clear, fair, and remembered — whether tracked in the Hero Treasury Ledger, on paper, or in conversation.</p>
@@ -1563,9 +1563,9 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="card"><h2>⏱ Screen Time Controls</h2><p class="small">Adjust the Screen Time Bank only. Available time is shown on the Dashboard. Permanent reading progress is never changed here.</p><div id="parentScreenTime"></div></div>
 <div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Correct habit ladder counts here: use -1, +1, or set an exact number. Parent Code required for each change.</p><div id="parentHabitLadders"></div></div>
 <div class="card"><h2>🃏 Habit Card Turn-In</h2><p class="small">Mark cards turned in when Killian redeems the physical card and reward. Parent Code required.</p><div id="parentHabitCards"></div></div>
-<div class="card"><h2>💰 Hero Treasury Ledger</h2><p class="small"><b>Reward Engine active.</b> Hero Level and Habit Card stipends credit automatically when earned. Manual add/subtract remains available. Run backfill once for rewards earned before automation.</p>
+<div class="card"><h2>💰 Hero Treasury Ledger</h2><p class="small"><b>Parent-awarded payouts.</b> Hero Level and Habit Card stipends are detected automatically but credited only when you award them in the <b>✅ Awards</b> checklist. Manual add/subtract remains available.</p>
 <p><b>Current balance:</b> <span id="parentTreasuryBalance">$0.00</span></p>
-<p><button type="button" class="action good" onclick="backfillEarnedTreasuryRewards()">Backfill Earned Treasury Rewards</button></p>
+<p><button type="button" class="action good" onclick="backfillEarnedTreasuryRewards()">Scan Ready to Award</button></p>
 <div class="treasury-parent-forms">
 <div class="treasury-form-panel">
 <h3>Add Money</h3>
@@ -1596,7 +1596,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="award-checklist-v1";
+const APP_BUILD="treasury-parent-awarded-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 ["hj_testing_mode","hj_testing_session_state","hj_testing_session_settings","hj_testing_live_snapshot"].forEach(function(k){
@@ -2339,66 +2339,41 @@ function listEarnedRulebookRewards(){
 function listAllEarnedTreasuryRewardCandidates(){
   return listEarnedHeroLevelRewards().concat(listEarnedHabitCardRewards(),listEarnedRulebookRewards());
 }
-function processAutomaticTreasuryRewards(){
-  const summary={added:[],skipped:[],total:0};
+function scanEarnedTreasuryRewardStatus(){
+  const summary={ready:[],alreadyAwarded:[]};
   listAllEarnedTreasuryRewardCandidates().forEach(function(c){
-    const result=awardTreasuryReward({
-      amount:c.amount,
-      reason:c.reason,
-      source:c.source,
-      rewardKey:c.rewardKey,
-      meta:c.meta
-    });
-    if(result.ok){
-      summary.added.push(c);
-      summary.total=Math.round((summary.total+c.amount)*100)/100;
-    }else if(result.reason==="duplicate"){
-      summary.skipped.push(c);
-    }
+    if(treasuryRewardKeyExists(c.rewardKey)) summary.alreadyAwarded.push(c);
+    else summary.ready.push(c);
   });
-  return summary;
-}
-function applyAutomaticTreasuryRewards(){
-  const summary=processAutomaticTreasuryRewards();
-  if(summary.added.length){
-    summary.added.forEach(function(r){log("Treasury auto-credit: "+r.reason);});
-  }
   return summary;
 }
 function progressSave(){
   save();
-  const summary=applyAutomaticTreasuryRewards();
-  if(summary.added.length){
-    save();
-    toast("💰 TREASURY CREDIT<br>+"+formatTreasuryMoney(summary.total)+" from "+summary.added.length+" reward(s)");
-  }
-  return summary;
 }
 function showTreasuryBackfillSummary(summary){
-  let msg="Backfill complete.\n\n";
-  msg+="Rewards added: "+summary.added.length+"\n";
-  msg+="Skipped (already paid): "+summary.skipped.length+"\n";
-  msg+="Total money added: "+formatTreasuryMoney(summary.total);
-  if(summary.added.length){
-    msg+="\n\nAdded:\n"+summary.added.map(function(a){return "• "+a.reason;}).join("\n");
+  let msg="Scan complete.\n\n";
+  msg+="Ready to Award: "+summary.ready.length+"\n";
+  msg+="Already Awarded: "+summary.alreadyAwarded.length;
+  if(summary.ready.length){
+    msg+="\n\nReady to Award:\n"+summary.ready.map(function(a){return "• "+a.reason;}).join("\n");
+    msg+="\n\nOpen the ✅ Awards tab, select items, and tap Award Selected to credit the Treasury.";
   }
-  if(summary.skipped.length&&!summary.added.length){
-    msg+="\n\nAll earned rewards were already in the ledger.";
+  if(!summary.ready.length&&summary.alreadyAwarded.length){
+    msg+="\n\nAll earned rewards are already in the ledger.";
+  }
+  if(!summary.ready.length&&!summary.alreadyAwarded.length){
+    msg+="\n\nNo earned Hero Level or Habit Card treasury rewards found yet.";
   }
   alert(msg);
-  if(summary.added.length){
-    toast("💰 BACKFILL<br>+"+formatTreasuryMoney(summary.total)+" across "+summary.added.length+" reward(s)");
+  if(summary.ready.length){
+    toast("✅ "+summary.ready.length+" reward(s) ready to award<br>Open Awards to approve payouts");
   }
 }
 function backfillEarnedTreasuryRewards(){
-  requireParent("Backfill Earned Treasury Rewards",function(){
-    if(!confirm("Scan current progress and add any earned Hero Level or Habit Card stipends missing from the treasury ledger?\n\nAlready-paid rewards (same reward key) will be skipped.")) return;
-    const summary=processAutomaticTreasuryRewards();
-    if(summary.added.length){
-      summary.added.forEach(function(r){log("Treasury backfill: "+r.reason);});
-      save();
-    }
+  requireParent("Scan Ready to Award",function(){
+    const summary=scanEarnedTreasuryRewardStatus();
     showTreasuryBackfillSummary(summary);
+    renderAwardChecklist();
   });
 }
 const AWARD_CHECKLIST_CATEGORIES=["Hero Level","Habit Card","Book/Reading","Rulebook Award","Quest/Path","Bonus/Manual"];
@@ -2594,12 +2569,12 @@ function closeAwardSummaryPop(){
   document.getElementById("awardSummaryPop").classList.remove("show");
 }
 function awardCheckedChecklistItems(){
-  requireParent("Award checked checklist items",function(){
+  requireParent("Award selected checklist items",function(){
     const items=buildAwardChecklistItems();
     const checkedIds=getCheckedAwardChecklistIds();
     const summary={treasuryAdded:[],skipped:[],achievements:[],total:0};
     if(!checkedIds.length){
-      alert("Check one or more earned Treasury items that are ready to award.");
+      alert("Select one or more earned Treasury items that are ready to award.");
       return;
     }
     checkedIds.forEach(function(id){
