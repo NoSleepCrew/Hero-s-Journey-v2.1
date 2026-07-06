@@ -1596,7 +1596,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="treasury-parent-awarded-v1";
+const APP_BUILD="treasury-habit-card-award-fix-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 ["hj_testing_mode","hj_testing_session_state","hj_testing_session_settings","hj_testing_live_snapshot"].forEach(function(k){
@@ -1632,6 +1632,38 @@ const HABIT_CARD_TIERS=[
   {id:"epic",min:50,label:"Epic",stipend:5,token:"Silver",borderClass:"tier-epic"},
   {id:"legendary",min:150,label:"Legendary",stipend:10,token:"Gold",borderClass:"tier-legendary"}
 ];
+function habitCardTreasuryRewardKey(habitKey,tierId){
+  return "habitCard:"+HERO_ID+":"+habitKey+":"+tierId;
+}
+function habitCardAwardLabel(tier){
+  if(tier&&tier.id==="rare") return "Common";
+  return tier?tier.label:"";
+}
+function habitCardStipendReason(habit,tier){
+  return "Habit Card stipend: "+habit.name+" "+habitCardAwardLabel(tier)+" ("+formatTreasuryMoney(tier.stipend)+")";
+}
+function habitCardChecklistItem(habit,tier,count){
+  const earned=count>=tier.min;
+  const rewardKey=habitCardTreasuryRewardKey(habit.key,tier.id);
+  const paid=treasuryRewardKeyExists(rewardKey);
+  const amount=Number(tier.stipend)||0;
+  const awardLabel=habitCardAwardLabel(tier);
+  return {
+    id:rewardKey,
+    name:habit.icon+" "+habit.name+" — "+awardLabel+" Card",
+    category:"Habit Card",
+    requirement:tier.min+" habit completions",
+    progress:count+" / "+tier.min,
+    reward:formatTreasuryMoney(amount)+" + 1 "+tier.token+" Token",
+    status:paid?"awarded":(earned?"ready":"not_earned"),
+    treasuryItem:true,
+    amount:amount,
+    source:TREASURY_SOURCE.HABIT_CARD,
+    reason:habitCardStipendReason(habit,tier),
+    rewardKey:rewardKey,
+    meta:{habitKey:habit.key,tierId:tier.id,tierLabel:awardLabel}
+  };
+}
 const HABIT_LADDERS=[
   {key:"firstChapter",name:"First Chapter",icon:"📖",requirement:"Complete your agreed reading for the day — a book session, chapter, or reading block that Mom or Dad confirms.",title:"Guardian of the Library",legendaryPrize:"Bookstore trip or pick one new book"},
   {key:"cozyReader",name:"Cozy Reader",icon:"🛋",requirement:"Read quietly in your cozy spot (couch, nook, or bed) for the agreed time without complaints or distractions.",title:"Lord of the Quiet Realm",legendaryPrize:"Reading nook upgrade (blanket, pillow, or lamp)"},
@@ -2155,8 +2187,10 @@ function treasuryUuid(){
   });
 }
 function normalizeTreasurySource(s){
-  const v=String(s||"").toLowerCase();
-  return TREASURY_SOURCE_LABELS[v]?v:TREASURY_SOURCE.MANUAL;
+  const v=String(s||"").toLowerCase().replace(/\s+/g,"_");
+  const allowed=Object.values(TREASURY_SOURCE);
+  if(allowed.indexOf(v)>=0) return v;
+  return TREASURY_SOURCE.MANUAL;
 }
 function treasuryRewardKeyExists(key){
   if(!key) return false;
@@ -2317,16 +2351,17 @@ function listEarnedHabitCardRewards(){
     const count=Math.max(0,Math.floor(state.habitLadders[habit.key]||0));
     HABIT_CARD_TIERS.forEach(function(tier){
       if(count>=tier.min){
+        const amount=Number(tier.stipend)||0;
         out.push({
           habitKey:habit.key,
           habitName:habit.name,
           tierId:tier.id,
-          tierLabel:tier.label,
-          amount:tier.stipend,
-          rewardKey:"habitCard:"+HERO_ID+":"+habit.key+":"+tier.id,
+          tierLabel:habitCardAwardLabel(tier),
+          amount:amount,
+          rewardKey:habitCardTreasuryRewardKey(habit.key,tier.id),
           source:TREASURY_SOURCE.HABIT_CARD,
-          reason:"Habit Card stipend: "+habit.name+" — "+tier.label+" ("+formatTreasuryMoney(tier.stipend)+")",
-          meta:{habitKey:habit.key,tierId:tier.id,tierLabel:tier.label}
+          reason:habitCardStipendReason(habit,tier),
+          meta:{habitKey:habit.key,tierId:tier.id,tierLabel:habitCardAwardLabel(tier)}
         });
       }
     });
@@ -2433,24 +2468,7 @@ function buildAwardChecklistItems(){
   HABIT_LADDERS.forEach(function(habit){
     const count=Math.max(0,Math.floor(state.habitLadders[habit.key]||0));
     HABIT_CARD_TIERS.forEach(function(tier){
-      const earned=count>=tier.min;
-      const rewardKey="habitCard:"+HERO_ID+":"+habit.key+":"+tier.id;
-      const paid=treasuryRewardKeyExists(rewardKey);
-      items.push({
-        id:rewardKey,
-        name:habit.icon+" "+habit.name+" — "+tier.label+" Card",
-        category:"Habit Card",
-        requirement:tier.min+" habit completions",
-        progress:count+" / "+tier.min,
-        reward:formatTreasuryMoney(tier.stipend)+" + 1 "+tier.token+" Token",
-        status:paid?"awarded":(earned?"ready":"not_earned"),
-        treasuryItem:true,
-        amount:tier.stipend,
-        source:TREASURY_SOURCE.HABIT_CARD,
-        reason:"Habit Card stipend: "+habit.name+" — "+tier.label+" ("+formatTreasuryMoney(tier.stipend)+")",
-        rewardKey:rewardKey,
-        meta:{habitKey:habit.key,tierId:tier.id}
-      });
+      items.push(habitCardChecklistItem(habit,tier,count));
     });
   });
   listEarnedRulebookRewards().forEach(function(r){
@@ -2554,6 +2572,12 @@ function showAwardChecklistSummaryPopup(summary){
     html+='<ul class="award-summary-list">'+summary.skipped.map(function(i){return "<li>"+escapeTreasuryHtml(i.name)+"</li>";}).join("")+"</ul>";
   }else html+='<p class="small">None</p>';
   html+="</div>";
+  if(summary.failed&&summary.failed.length){
+    html+='<div class="award-summary-section"><h4>Could not award</h4><ul class="award-summary-list">'+summary.failed.map(function(f){
+      const name=f.item?f.item.name:(f.id||"Unknown item");
+      return "<li>"+escapeTreasuryHtml(name)+" — "+escapeTreasuryHtml(f.reason||"error")+"</li>";
+    }).join("")+"</ul></div>";
+  }
   html+='<div class="award-summary-section"><h4>Achievements earned (discussion)</h4>';
   if(summary.achievements.length){
     html+='<ul class="award-summary-list">'+summary.achievements.slice(0,12).map(function(i){return "<li>"+escapeTreasuryHtml(i.name)+"</li>";}).join("")+"</ul>";
@@ -2569,37 +2593,46 @@ function closeAwardSummaryPop(){
   document.getElementById("awardSummaryPop").classList.remove("show");
 }
 function awardCheckedChecklistItems(){
+  const checkedIds=getCheckedAwardChecklistIds().map(function(id){return String(id||"").trim();}).filter(Boolean);
+  if(!checkedIds.length){
+    alert("Select one or more earned Treasury items that are ready to award.");
+    return;
+  }
   requireParent("Award selected checklist items",function(){
     const items=buildAwardChecklistItems();
-    const checkedIds=getCheckedAwardChecklistIds();
-    const summary={treasuryAdded:[],skipped:[],achievements:[],total:0};
-    if(!checkedIds.length){
-      alert("Select one or more earned Treasury items that are ready to award.");
-      return;
-    }
+    const summary={treasuryAdded:[],skipped:[],failed:[],achievements:[],total:0};
     checkedIds.forEach(function(id){
-      const item=items.find(function(i){return i.id===id;});
+      const item=items.find(function(i){return i.id===id||i.rewardKey===id;});
       if(!item||!item.treasuryItem){
         if(item&&!item.treasuryItem) summary.achievements.push(item);
+        else summary.failed.push({id:id,reason:"item_not_found"});
         return;
       }
       if(item.status!=="ready"){
         if(item.status==="awarded") summary.skipped.push(item);
+        else summary.failed.push({item:item,reason:"not_ready"});
+        return;
+      }
+      const amount=Number(item.amount)||0;
+      if(!amount||!item.reason){
+        summary.failed.push({item:item,reason:"invalid_amount_or_reason"});
         return;
       }
       const result=awardTreasuryReward({
-        amount:item.amount,
+        amount:amount,
         reason:item.reason,
         source:item.source,
-        rewardKey:item.rewardKey,
+        rewardKey:item.rewardKey||item.id,
         meta:item.meta
       });
       if(result.ok){
         summary.treasuryAdded.push(item);
-        summary.total=Math.round((summary.total+item.amount)*100)/100;
+        summary.total=Math.round((summary.total+amount)*100)/100;
         log("Award checklist: "+item.reason);
       }else if(result.reason==="duplicate"){
         summary.skipped.push(item);
+      }else{
+        summary.failed.push({item:item,reason:result.reason||"unknown"});
       }
     });
     summary.achievements=items.filter(function(i){return !i.treasuryItem&&i.status==="awarded";});
