@@ -405,7 +405,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
   .level{min-width:45%;margin-bottom:12px}
   .level::after{display:none}
   .nav{grid-template-columns:repeat(2,1fr)}
-  .nav.nav-seven{grid-template-columns:repeat(4,1fr)}
+  .nav.nav-eight{grid-template-columns:repeat(4,1fr)}
   .hp-big{font-size:46px}
   header::before,header::after{display:none}
 }
@@ -549,9 +549,21 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 .strike-button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;transform:none}
 
 /* ── The Sanctum of Remembrance (Chronicle) ── */
-.nav.nav-seven{grid-template-columns:repeat(4,1fr)}
-@media(min-width:900px){.nav.nav-seven{grid-template-columns:repeat(7,1fr)}}
-@media(max-width:899px){.nav.nav-seven .nav-short{display:none}}
+.nav.nav-eight{grid-template-columns:repeat(4,1fr)}
+@media(min-width:1000px){.nav.nav-eight{grid-template-columns:repeat(8,1fr)}}
+@media(max-width:999px){.nav.nav-eight .nav-short{display:none}}
+.award-checklist-stats{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
+.award-checklist-stats span{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(224,184,74,.25);font-weight:800;font-size:12px}
+.award-checklist-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.award-checklist-table th,.award-checklist-table td{padding:8px 10px;text-align:left;border-bottom:1px solid rgba(224,184,74,.15);vertical-align:top}
+.award-checklist-table th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.award-status-not{color:var(--muted);font-weight:700}
+.award-status-ready{color:#7dffb0;font-weight:800}
+.award-status-awarded{color:#ffdb77;font-weight:800}
+.award-check-cell{width:36px;text-align:center}
+.award-summary-section{margin:12px 0}
+.award-summary-section h4{margin:0 0 6px;font-size:14px;color:#ffdb77}
+.award-summary-list{margin:0;padding-left:18px;line-height:1.5}
 .kingdom-teaser{
   text-align:center;padding:16px 14px;border-radius:18px;margin:14px 0;
   background:linear-gradient(180deg,rgba(20,14,28,.92),rgba(8,6,14,.95));
@@ -894,6 +906,13 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <button class="action" onclick="closeHabitCardPop()">Got it!</button>
 </div>
 </div>
+<div class="collectible-pop" id="awardSummaryPop" onclick="if(event.target===this)closeAwardSummaryPop()">
+<div class="collectible-pop-card" style="text-align:left;max-width:520px">
+<div class="collectible-pop-title" id="awardSummaryTitle">Award Summary</div>
+<div class="collectible-pop-body" id="awardSummaryBody"></div>
+<button type="button" class="action" onclick="closeAwardSummaryPop()">Done</button>
+</div>
+</div>
 <header>
 <h1>THE HERO'S JOURNEY</h1>
 <p class="header-hero-name">Killian</p>
@@ -902,12 +921,13 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <p class="header-callout">⚔️ Tap the Dragon • Report Quests • Become Legend ⚔️</p>
 </header>
 <main>
-<div class="nav nav-seven">
+<div class="nav nav-eight">
 <button onclick="showScreen('home')" id="nav-home" class="active">🐉 Dragon</button>
 <button onclick="showScreen('quests')" id="nav-quests">📜 Quests</button>
 <button onclick="showScreen('kingdom')" id="nav-kingdom">🏰 <span class="nav-short">Kingdom</span></button>
 <button onclick="showScreen('hall')" id="nav-hall">🏆 Hero Hall</button>
 <button onclick="showScreen('cards')" id="nav-cards">🃏 Cards</button>
+<button onclick="showScreen('awards')" id="nav-awards">✅ <span class="nav-short">Awards</span></button>
 <button onclick="showScreen('rulebook')" id="nav-rulebook">📖 Rulebook</button>
 <button onclick="showScreen('parent')" id="nav-parent">⚙ Parent</button>
 </div>
@@ -1042,6 +1062,16 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <section id="quests" class="screen"><div class="card"><h2>Quest Board</h2><div class="grid" id="questCards"></div></div></section>
 <section id="hall" class="screen"><div class="card kingdom-teaser" style="margin-top:0"><p class="kingdom-teaser-whisper" id="hallKingdomWhisper">The walls begin to remember.</p><div class="kingdom-teaser-bar"><div class="fill" id="hallKingdomBar" style="width:0%"></div></div><button type="button" class="kingdom-enter-btn" onclick="showScreen('kingdom')">🏰 View the Restored Kingdom</button></div><div class="card"><h2>Hero Level Road</h2><div class="level-road" id="levelRoad"></div></div><div class="card"><h2>👑 Title Vault</h2><p class="small">Legendary habit titles unlock at <b>150</b> completions on each habit ladder — the same moment as the Legendary card. Each card shows the <b>title</b>, what earns +1, and the <b>Legendary prize</b>. Tap a card for full details; equip unlocked titles under your name.</p><div id="titleVault"></div></div><div class="card hall-card"><h2 id="hallTitle">Hero Hall</h2><div class="hall-overall"><div class="hall-overall-label"><span>Overall Progress</span><span id="hallPctLabel">0%</span></div><div class="hall-overall-bar"><div class="fill" id="hallOverallBar" style="width:0%"></div></div></div><p class="ach-summary" id="achSummary"></p><div class="collectible-showcase" id="collectibleShowcase"></div><div id="raritySections"></div><h3 class="hall-meta-title">Journey Honors</h3><div class="achievements" id="metaAchievements"></div></div></section>
 <section id="cards" class="screen"><div class="card"><h2>🃏 Habit Card Collection</h2><p class="small">Cards unlock at Rare (10), Epic (50), and Legendary (150) on each habit ladder. Earn them here, craft or print the real card at home, then parents mark it turned in when the reward is given.</p><div class="habit-card-binder" id="habitCardBinder"></div></div></section>
+<section id="awards" class="screen">
+<div class="card">
+<h2>✅ Award Checklist</h2>
+<p class="small">Review everything Killian has earned in one place. Treasury rewards can be awarded by parents after discussion. Heroic Deeds and bonuses unlock automatically in Hero Hall.</p>
+<div id="awardChecklistStats" class="award-checklist-stats"></div>
+<div id="awardChecklistBody"></div>
+<p class="small parent-lock-note" style="margin-top:14px">Check earned Treasury items below, then tap <b>Award Checked Items</b>. Parent Code required. Already-paid rewards are skipped automatically.</p>
+<p><button type="button" class="action good" onclick="awardCheckedChecklistItems()">Award Checked Items</button></p>
+</div>
+</section>
 <section id="rulebook" class="screen">
 <div class="card" id="prologue">
 <h2>📖 The Hero's Journey</h2>
@@ -1544,7 +1574,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="data-corrections-v1";
+const APP_BUILD="award-checklist-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 ["hj_testing_mode","hj_testing_session_state","hj_testing_session_settings","hj_testing_live_snapshot"].forEach(function(k){
@@ -2349,6 +2379,244 @@ function backfillEarnedTreasuryRewards(){
     showTreasuryBackfillSummary(summary);
   });
 }
+const AWARD_CHECKLIST_CATEGORIES=["Hero Level","Habit Card","Book/Reading","Rulebook Award","Quest/Path","Bonus/Manual"];
+function awardChecklistStatusLabel(status){
+  if(status==="ready") return "Earned / Ready to Award";
+  if(status==="awarded") return "Already Awarded";
+  return "Not Earned";
+}
+function awardChecklistStatusClass(status){
+  if(status==="ready") return "award-status-ready";
+  if(status==="awarded") return "award-status-awarded";
+  return "award-status-not";
+}
+function achievementChecklistCategory(id){
+  if(/^book/.test(id)) return "Book/Reading";
+  if(/^trophy/.test(id)) return "Bonus/Manual";
+  return "Quest/Path";
+}
+function achievementChecklistProgress(a){
+  if(/^book/.test(a.id)) return state.books+" book(s)";
+  if(/^meal/.test(a.id)) return state.meals+" meal point(s)";
+  if(/^lang/.test(a.id)) return state.language+" merit day(s)";
+  if(/^coop/.test(a.id)) return state.coop+" credit(s)";
+  if(/^dmg/.test(a.id)) return damage()+" dragon damage";
+  if(/^pct/.test(a.id)) return journeyPctNum()+"% journey";
+  if(/^rem/.test(a.id)) return remaining()+" days remaining";
+  if(/^report/.test(a.id)) return approvedReportCount()+" approved report(s)";
+  if(a.id==="questlegend") return questHP()+" / 50 quest HP";
+  if(a.id==="strike") return state.legend?"Applied":"Not applied";
+  if(/^allpaths|^wellround|^triple/.test(a.id)) return "Books "+state.books+", Meals "+state.meals+", Lang "+state.language+", Coop "+state.coop;
+  return a.done?"Complete":"In progress";
+}
+function buildAwardChecklistItems(){
+  const items=[];
+  settings.levels.forEach(function(row){
+    const levelName=row[0],hpReq=row[1],amount=parseDollarAmount(row[2]);
+    const earned=hp()>=hpReq;
+    const rewardKey="heroLevel:"+HERO_ID+":"+levelName;
+    const paid=treasuryRewardKeyExists(rewardKey);
+    items.push({
+      id:rewardKey,
+      name:levelName+" Hero Level",
+      category:"Hero Level",
+      requirement:hpReq+" Lifetime Hero Points",
+      progress:hp()+" / "+hpReq+" HP",
+      reward:amount>0?formatTreasuryMoney(amount):"—",
+      status:paid?"awarded":(earned?"ready":"not_earned"),
+      treasuryItem:true,
+      amount:amount,
+      source:TREASURY_SOURCE.HERO_LEVEL,
+      reason:"Hero Level reward: "+levelName+" ("+formatTreasuryMoney(amount)+")",
+      rewardKey:rewardKey,
+      meta:{level:levelName}
+    });
+  });
+  ensureHabitLadders();
+  HABIT_LADDERS.forEach(function(habit){
+    const count=Math.max(0,Math.floor(state.habitLadders[habit.key]||0));
+    HABIT_CARD_TIERS.forEach(function(tier){
+      const earned=count>=tier.min;
+      const rewardKey="habitCard:"+HERO_ID+":"+habit.key+":"+tier.id;
+      const paid=treasuryRewardKeyExists(rewardKey);
+      items.push({
+        id:rewardKey,
+        name:habit.icon+" "+habit.name+" — "+tier.label+" Card",
+        category:"Habit Card",
+        requirement:tier.min+" habit completions",
+        progress:count+" / "+tier.min,
+        reward:formatTreasuryMoney(tier.stipend)+" + 1 "+tier.token+" Token",
+        status:paid?"awarded":(earned?"ready":"not_earned"),
+        treasuryItem:true,
+        amount:tier.stipend,
+        source:TREASURY_SOURCE.HABIT_CARD,
+        reason:"Habit Card stipend: "+habit.name+" — "+tier.label+" ("+formatTreasuryMoney(tier.stipend)+")",
+        rewardKey:rewardKey,
+        meta:{habitKey:habit.key,tierId:tier.id}
+      });
+    });
+  });
+  listEarnedRulebookRewards().forEach(function(r){
+    const paid=treasuryRewardKeyExists(r.rewardKey);
+    items.push({
+      id:r.rewardKey,
+      name:r.name||r.reason,
+      category:"Rulebook Award",
+      requirement:r.requirement||"Rulebook milestone",
+      progress:r.progress||"Earned",
+      reward:formatTreasuryMoney(r.amount),
+      status:paid?"awarded":"ready",
+      treasuryItem:true,
+      amount:r.amount,
+      source:r.source||TREASURY_SOURCE.RULEBOOK,
+      reason:r.reason,
+      rewardKey:r.rewardKey,
+      meta:r.meta||null
+    });
+  });
+  getAchievementDefs().forEach(function(a){
+    items.push({
+      id:"achievement:"+a.id,
+      name:a.icon+" "+a.title,
+      category:achievementChecklistCategory(a.id),
+      requirement:a.sub,
+      progress:achievementChecklistProgress(a),
+      reward:a.unlock?(a.unlock.icon+" "+a.unlock.name):"Heroic Deed recognition",
+      status:a.done?"awarded":"not_earned",
+      treasuryItem:false
+    });
+  });
+  const deedCount=countableUnlocked();
+  DEED_MILESTONES.forEach(function(m){
+    items.push({
+      id:"deed-milestone:"+m.deeds,
+      name:m.name,
+      category:"Bonus/Manual",
+      requirement:m.deeds+" heroic deeds completed",
+      progress:deedCount+" / "+m.deeds+" deeds",
+      reward:"+"+m.bonus+" Hero Point bonus",
+      status:deedCount>=m.deeds?"awarded":"not_earned",
+      treasuryItem:false
+    });
+  });
+  return items;
+}
+function renderAwardChecklistRow(item){
+  const checkCell=(item.treasuryItem&&item.status==="ready")
+    ?'<td class="award-check-cell"><input type="checkbox" class="award-check" value="'+escapeTreasuryHtml(item.id)+'" aria-label="Award '+escapeTreasuryHtml(item.name)+'"></td>'
+    :'<td class="award-check-cell">—</td>';
+  return "<tr>"+checkCell+
+    "<td>"+escapeTreasuryHtml(item.name)+"</td>"+
+    "<td>"+escapeTreasuryHtml(item.category)+"</td>"+
+    "<td>"+escapeTreasuryHtml(item.requirement)+"</td>"+
+    "<td>"+escapeTreasuryHtml(item.progress)+"</td>"+
+    "<td>"+escapeTreasuryHtml(item.reward)+"</td>"+
+    '<td class="'+awardChecklistStatusClass(item.status)+'">'+escapeTreasuryHtml(awardChecklistStatusLabel(item.status))+"</td>"+
+    "</tr>";
+}
+function renderAwardChecklist(){
+  const statsEl=document.getElementById("awardChecklistStats");
+  const bodyEl=document.getElementById("awardChecklistBody");
+  if(!statsEl||!bodyEl) return;
+  const items=buildAwardChecklistItems();
+  const ready=items.filter(function(i){return i.status==="ready";}).length;
+  const awarded=items.filter(function(i){return i.status==="awarded";}).length;
+  const earnedTreasury=items.filter(function(i){return i.treasuryItem&&i.status!=="not_earned";}).length;
+  const achievements=items.filter(function(i){return !i.treasuryItem&&i.status==="awarded";}).length;
+  statsEl.innerHTML=
+    '<span>'+ready+" ready to award</span>"+
+    '<span>'+awarded+" already awarded</span>"+
+    '<span>'+earnedTreasury+" treasury items earned</span>"+
+    '<span>'+achievements+" achievements earned</span>";
+  let html="";
+  AWARD_CHECKLIST_CATEGORIES.forEach(function(cat){
+    const group=items.filter(function(i){return i.category===cat;});
+    if(!group.length) return;
+    html+='<h3 style="margin:16px 0 8px;font-size:16px;color:#ffdb77">'+escapeTreasuryHtml(cat)+'</h3>';
+    html+='<table class="award-checklist-table"><thead><tr><th></th><th>Item</th><th>Source</th><th>Requirement</th><th>Progress</th><th>Reward</th><th>Status</th></tr></thead><tbody>';
+    html+=group.map(renderAwardChecklistRow).join("");
+    html+="</tbody></table>";
+  });
+  bodyEl.innerHTML=html||'<p class="small">No checklist items found.</p>';
+}
+function getCheckedAwardChecklistIds(){
+  return Array.from(document.querySelectorAll("#awardChecklistBody input.award-check:checked")).map(function(el){return el.value;});
+}
+function showAwardChecklistSummaryPopup(summary){
+  const titleEl=document.getElementById("awardSummaryTitle");
+  const bodyEl=document.getElementById("awardSummaryBody");
+  if(!bodyEl) return;
+  let html="";
+  html+='<div class="award-summary-section"><h4>Treasury rewards added</h4>';
+  if(summary.treasuryAdded.length){
+    html+='<ul class="award-summary-list">'+summary.treasuryAdded.map(function(i){return "<li>"+escapeTreasuryHtml(i.name)+" — "+escapeTreasuryHtml(formatTreasuryMoney(i.amount))+"</li>";}).join("")+"</ul>";
+  }else html+='<p class="small">None</p>';
+  html+="</div>";
+  html+='<div class="award-summary-section"><h4>Skipped (already awarded)</h4>';
+  if(summary.skipped.length){
+    html+='<ul class="award-summary-list">'+summary.skipped.map(function(i){return "<li>"+escapeTreasuryHtml(i.name)+"</li>";}).join("")+"</ul>";
+  }else html+='<p class="small">None</p>';
+  html+="</div>";
+  html+='<div class="award-summary-section"><h4>Achievements earned (discussion)</h4>';
+  if(summary.achievements.length){
+    html+='<ul class="award-summary-list">'+summary.achievements.slice(0,12).map(function(i){return "<li>"+escapeTreasuryHtml(i.name)+"</li>";}).join("")+"</ul>";
+    if(summary.achievements.length>12) html+='<p class="small">+'+(summary.achievements.length-12)+" more in the checklist.</p>";
+  }else html+='<p class="small">None newly noted.</p>';
+  html+="</div>";
+  html+='<p style="margin:12px 0 0"><b>Total money added:</b> '+escapeTreasuryHtml(formatTreasuryMoney(summary.total))+"</p>";
+  bodyEl.innerHTML=html;
+  if(titleEl) titleEl.textContent=summary.treasuryAdded.length?"Award Summary":"Award Checklist Summary";
+  document.getElementById("awardSummaryPop").classList.add("show");
+}
+function closeAwardSummaryPop(){
+  document.getElementById("awardSummaryPop").classList.remove("show");
+}
+function awardCheckedChecklistItems(){
+  requireParent("Award checked checklist items",function(){
+    const items=buildAwardChecklistItems();
+    const checkedIds=getCheckedAwardChecklistIds();
+    const summary={treasuryAdded:[],skipped:[],achievements:[],total:0};
+    if(!checkedIds.length){
+      alert("Check one or more earned Treasury items that are ready to award.");
+      return;
+    }
+    checkedIds.forEach(function(id){
+      const item=items.find(function(i){return i.id===id;});
+      if(!item||!item.treasuryItem){
+        if(item&&!item.treasuryItem) summary.achievements.push(item);
+        return;
+      }
+      if(item.status!=="ready"){
+        if(item.status==="awarded") summary.skipped.push(item);
+        return;
+      }
+      const result=awardTreasuryReward({
+        amount:item.amount,
+        reason:item.reason,
+        source:item.source,
+        rewardKey:item.rewardKey,
+        meta:item.meta
+      });
+      if(result.ok){
+        summary.treasuryAdded.push(item);
+        summary.total=Math.round((summary.total+item.amount)*100)/100;
+        log("Award checklist: "+item.reason);
+      }else if(result.reason==="duplicate"){
+        summary.skipped.push(item);
+      }
+    });
+    summary.achievements=items.filter(function(i){return !i.treasuryItem&&i.status==="awarded";});
+    if(summary.treasuryAdded.length){
+      touchStateModified();
+      save();
+    }
+    showAwardChecklistSummaryPopup(summary);
+    renderAwardChecklist();
+    if(summary.treasuryAdded.length){
+      toast("💰 AWARDS ADDED<br>+"+formatTreasuryMoney(summary.total)+" to Treasury");
+    }
+  });
+}
 function submitTreasuryAdd(){
   requireParent("Add money to Hero Treasury",function(){
     const amount=normalizeTreasuryAmount(document.getElementById("treasuryAddAmount").value);
@@ -2733,6 +3001,9 @@ async function showScreen(id){
   }
   if(id==="parent"){
     renderParent();
+  }
+  if(id==="awards"){
+    renderAwardChecklist();
   }
 }
 
