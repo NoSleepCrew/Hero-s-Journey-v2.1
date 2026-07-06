@@ -1538,6 +1538,20 @@ const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprent
 const APP_BUILD="revised-ruleset-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
+["hj_testing_mode","hj_testing_session_state","hj_testing_session_settings","hj_testing_live_snapshot"].forEach(function(k){
+  try{localStorage.removeItem(k);}catch(e){}
+});
+function ensureSettings(){
+  const loaded=settings&&typeof settings==="object"?settings:{};
+  settings={...defaults};
+  Object.keys(defaults).forEach(function(k){
+    if(loaded[k]!=null) settings[k]=loaded[k];
+  });
+  if(!Array.isArray(settings.levels)||!settings.levels.length) settings.levels=defaults.levels.slice();
+  if(!Array.isArray(settings.readingMs)) settings.readingMs=defaults.readingMs.slice();
+  if(!Array.isArray(settings.mealMs)) settings.mealMs=defaults.mealMs.slice();
+  if(!Array.isArray(settings.coopMs)) settings.coopMs=defaults.coopMs.slice();
+}
 function checkAppBuild(){
   const el=document.getElementById("appBuildLabel");
   if(el) el.textContent="App build: "+APP_BUILD;
@@ -1551,6 +1565,7 @@ function checkAppBuild(){
   }
 }
 let settings=JSON.parse(localStorage.getItem("hj_rpg_settings")||"null")||defaults;
+ensureSettings();
 const HABIT_CARD_TIERS=[
   {id:"rare",min:10,label:"Rare",stipend:2,token:"Bronze",borderClass:"tier-rare"},
   {id:"epic",min:50,label:"Epic",stipend:5,token:"Silver",borderClass:"tier-epic"},
@@ -2109,6 +2124,7 @@ function ensureHeroTreasury(){
   if(!Array.isArray(state.heroTreasuryLedger)) state.heroTreasuryLedger=defaultHeroTreasuryLedger();
   state.heroTreasuryLedger=state.heroTreasuryLedger.map(normalizeHeroTreasuryEntry).filter(Boolean);
 }
+ensureHeroTreasury();
 function heroTreasuryLedgerForCloud(){
   ensureHeroTreasury();
   return state.heroTreasuryLedger.map(e=>({
@@ -2875,6 +2891,13 @@ function celebrate(icon,title,sub){
   launchConfetti();
 }
 function closeCelebration(){document.getElementById("celebration").classList.remove("show");}
+function reconcileSeenKeysWithState(){
+  const countable=countableAchievementDefs();
+  const meta=getMetaAchievementDefs();
+  localStorage.setItem(ACH_SEEN_KEY,JSON.stringify(countable.concat(meta).filter(a=>a.done).map(a=>a.id)));
+  const count=countableUnlocked();
+  localStorage.setItem(MILESTONE_SEEN_KEY,JSON.stringify(DEED_MILESTONES.filter(m=>count>=m.deeds).map(m=>m.deeds)));
+}
 function checkNewMilestones(){
   const count=countableUnlocked();
   const seen=new Set(JSON.parse(localStorage.getItem(MILESTONE_SEEN_KEY)||"[]"));
@@ -2993,8 +3016,12 @@ function render(){
     strikeBtn.textContent=state.legend?"Legendary Strike Applied":(ready?"Apply Legendary Strike":"Reach 50 Quest HP to Unlock");
   }
   renderBounty();renderQuests();renderLevels();renderAch();renderTitleVault();renderHeroTitle();renderHabitLadders();renderHabitCardBinder();renderKingdomSanctum();renderScreenTimeWallet();renderHeroTreasury();renderLedger();renderPendingReports();renderParent();
-  detectProgressChanges();
-  checkNewAchievements();
+  if(!window.__HJ_SUPPRESS_CELEBRATIONS){
+    detectProgressChanges();
+    checkNewAchievements();
+  }else{
+    renderSnapshot=progressSnapshot();
+  }
   localStorage.setItem("hj_rpg_state",JSON.stringify(state));
   localStorage.setItem("hj_rpg_settings",JSON.stringify(settings));
 }
@@ -3168,7 +3195,8 @@ checkAppBuild();
 
   let cloudReady = false;
   let applyingCloudUpdate = false;
-  const originalSave = window.save;
+  let localSavePending = false;
+  let suppressCloudUntil = 0;
 
   function isCloudSaveBlocked(){
     if(window.__HJ_BLOCK_CLOUD_SAVE) return true;
@@ -3230,7 +3258,30 @@ checkAppBuild();
     };
   }
 
+  function mergeTreasuryLedgers(cloudEntries, localEntries){
+    const map=new Map();
+    (Array.isArray(localEntries)?localEntries:[]).forEach(function(e){if(e&&e.id) map.set(e.id,e);});
+    (Array.isArray(cloudEntries)?cloudEntries:[]).forEach(function(e){if(e&&e.id) map.set(e.id,e);});
+    return [...map.values()].sort(function(a,b){return String(b.date).localeCompare(String(a.date));});
+  }
+
+  function mergeProgressStateFromCloud(data, localState){
+    const local=localState||{};
+    const out=normalizeCloudState(data,local.habitLadders);
+    ["books","meals","language","coop","spent","readingPoints","totalPagesRead","screenTimeMinutes"].forEach(function(k){
+      out[k]=Math.max(Number(out[k]||0),Number(local[k]||0));
+    });
+    if(local.legend) out.legend=true;
+    if(local.chronicleLegendRevealed) out.chronicleLegendRevealed=true;
+    out.heroTreasuryLedger=mergeTreasuryLedgers(out.heroTreasuryLedger,local.heroTreasuryLedger);
+    if(Array.isArray(local.log)&&local.log.length>(out.log||[]).length) out.log=local.log.slice(0,60);
+    if(Array.isArray(local.pendingReports)&&local.pendingReports.length>(out.pendingReports||[]).length) out.pendingReports=local.pendingReports.slice(0,20);
+    return out;
+  }
+
   window.save = function(){
+    localSavePending = true;
+    suppressCloudUntil = Date.now() + 2500;
     try{
       localStorage.setItem("hj_rpg_state_backup", JSON.stringify(state));
     }catch(e){}
@@ -3243,9 +3294,14 @@ checkAppBuild();
       }).catch((error) => {
         setSyncStatus("Cloud save failed: " + error.message);
         console.error(error);
+      }).finally(() => {
+        localSavePending = false;
       });
-    }else if(isCloudSaveBlocked()){
-      setSyncStatus("Cloud sync disabled (demo/local mode). Local save only.");
+    }else{
+      localSavePending = false;
+      if(isCloudSaveBlocked()){
+        setSyncStatus("Cloud sync disabled (demo/local mode). Local save only.");
+      }
     }
 
     render();
@@ -3287,6 +3343,10 @@ checkAppBuild();
 
       progressRef.onSnapshot(async (doc) => {
         applyingCloudUpdate = true;
+        if(localSavePending || Date.now() < suppressCloudUntil || (doc.metadata && doc.metadata.hasPendingWrites)){
+          applyingCloudUpdate = false;
+          return;
+        }
         if(!doc.exists){
           if(!isCloudSaveBlocked()){
             await progressRef.set(cleanStateForCloud(), {merge:true});
@@ -3297,14 +3357,27 @@ checkAppBuild();
             localStorage.setItem("hj_rpg_state_cloud_backup", JSON.stringify(doc.data()));
           }catch(e){}
           const localHabits=state.habitLadders;
-          state = normalizeCloudState(doc.data(),localHabits);
+          const cloudOnly=normalizeCloudState(doc.data(),localHabits);
+          state=mergeProgressStateFromCloud(doc.data(),state);
+          const localNewer=["books","meals","language","coop","spent","readingPoints","totalPagesRead","screenTimeMinutes"].some(function(k){
+            return Number(state[k]||0)>Number(cloudOnly[k]||0);
+          })||Boolean(state.legend&&!cloudOnly.legend)||Boolean(state.chronicleLegendRevealed&&!cloudOnly.chronicleLegendRevealed);
+          if(localNewer&&!isCloudSaveBlocked()){
+            progressRef.set(cleanStateForCloud(),{merge:true}).catch(function(err){console.error(err);});
+          }
           ensureTitles();
           ensureChronicleState();
           ensureScreenTimeState();
           ensureHeroTreasury();
           localStorage.setItem("hj_rpg_state", JSON.stringify(state));
           setSyncStatus("Cloud sync active. Loaded: " + new Date().toLocaleTimeString());
+          window.__HJ_SUPPRESS_CELEBRATIONS = true;
           render();
+          window.__HJ_SUPPRESS_CELEBRATIONS = false;
+          reconcileSeenKeysWithState();
+          renderSnapshot = progressSnapshot();
+          const celebrationEl = document.getElementById("celebration");
+          if(celebrationEl) celebrationEl.classList.remove("show");
           if(state.pendingReports && state.pendingReports.some(r=>r.status==="pending") && parentUnlocked()){
             toast("📋 NEW QUEST REPORT<br>Waiting for review.");
           }
