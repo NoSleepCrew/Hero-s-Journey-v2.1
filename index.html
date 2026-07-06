@@ -3904,8 +3904,10 @@ checkAppBuild();
     const preferLocal=localTs>=cloudTs;
     const progressKeys=["books","meals","language","coop","spent","readingPoints","totalPagesRead","screenTimeMinutes"];
     progressKeys.forEach(function(k){
-      if(preferLocal) out[k]=Math.max(0,Number(local[k]||0));
-      else out[k]=Math.max(Number(out[k]||0),Number(local[k]||0));
+      const localVal=Math.max(0,Number(local[k]||0));
+      const cloudVal=Math.max(0,Number(out[k]||0));
+      if(preferLocal) out[k]=localVal;
+      else out[k]=cloudVal;
     });
     if(preferLocal&&local.habitLadders){
       out.habitLadders=normalizeHabitLaddersFromCloud(local.habitLadders,local.habitLadders);
@@ -3999,11 +4001,18 @@ checkAppBuild();
             localStorage.setItem("hj_rpg_state_cloud_backup", JSON.stringify(doc.data()));
           }catch(e){}
           const localHabits=state.habitLadders;
+          const localTsBeforeMerge=Number(state.lastModified||0);
+          const cloudTs=Number((doc.data()||{}).lastModified||0);
           const cloudOnly=normalizeCloudState(doc.data(),localHabits);
+          const progressKeys=["books","meals","language","coop","spent","readingPoints","totalPagesRead","screenTimeMinutes"];
           state=mergeProgressStateFromCloud(doc.data(),state);
-          const localNewer=["books","meals","language","coop","spent","readingPoints","totalPagesRead","screenTimeMinutes"].some(function(k){
+          const localProgressDiffers=localTsBeforeMerge>=cloudTs&&progressKeys.some(function(k){
+            return Number(state[k]||0)!==Number(cloudOnly[k]||0);
+          });
+          const localProgressUp=progressKeys.some(function(k){
             return Number(state[k]||0)>Number(cloudOnly[k]||0);
-          })||Boolean(state.legend&&!cloudOnly.legend)||Boolean(state.chronicleLegendRevealed&&!cloudOnly.chronicleLegendRevealed);
+          });
+          const localNewer=localProgressDiffers||localProgressUp||Boolean(state.legend&&!cloudOnly.legend)||Boolean(state.chronicleLegendRevealed&&!cloudOnly.chronicleLegendRevealed);
           if(localNewer&&!isCloudSaveBlocked()){
             progressRef.set(cleanStateForCloud(),{merge:true}).catch(function(err){console.error(err);});
           }
