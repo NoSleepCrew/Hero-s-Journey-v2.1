@@ -947,7 +947,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <h2>💰 Hero Treasury</h2>
 <p class="small">Manual ledger only — Parents record money <b>Paid</b> or spent. Rulebook rewards (Hero Levels, Habit Cards) are listed in the Rulebook; reaching a milestone does not auto-add money here.</p>
 <div class="hero-treasury-balance" id="heroTreasuryBalance">$0.00</div>
-<p class="hero-treasury-note">Parents update the treasury when rewards are Paid.</p>
+<p class="hero-treasury-note">Earned Hero Level and Habit Card stipends credit automatically. Parents still record spending and manual adjustments.</p>
 </div>
 <div class="card quest-books screen-time-bank-card" id="screenTimeCard">
 <h2>📖 Summer Reading</h2>
@@ -1503,8 +1503,9 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <div class="card"><h2>⏱ Screen Time Controls</h2><p class="small">Adjust the Screen Time Bank only. Available time is shown on the Dashboard. Permanent reading progress is never changed here.</p><div id="parentScreenTime"></div></div>
 <div class="card"><h2>🪜 Hero Habit Ladders</h2><p class="small">Correct habit ladder counts here: use -1, +1, or set an exact number. Parent Code required for each change.</p><div id="parentHabitLadders"></div></div>
 <div class="card"><h2>🃏 Habit Card Turn-In</h2><p class="small">Mark cards turned in when Killian redeems the physical card and reward. Parent Code required.</p><div id="parentHabitCards"></div></div>
-<div class="card"><h2>💰 Hero Treasury Ledger</h2><p class="small"><b>Phase 1 — Manual tracking only.</b> Hero Treasury Balance = all money added − all money subtracted. Automatic Rulebook payouts will come in a later phase.</p>
+<div class="card"><h2>💰 Hero Treasury Ledger</h2><p class="small"><b>Reward Engine active.</b> Hero Level and Habit Card stipends credit automatically when earned. Manual add/subtract remains available. Run backfill once for rewards earned before automation.</p>
 <p><b>Current balance:</b> <span id="parentTreasuryBalance">$0.00</span></p>
+<p><button type="button" class="action good" onclick="backfillEarnedTreasuryRewards()">Backfill Earned Treasury Rewards</button></p>
 <div class="treasury-parent-forms">
 <div class="treasury-form-panel">
 <h3>Add Money</h3>
@@ -1535,7 +1536,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="revised-ruleset-v1";
+const APP_BUILD="reward-engine-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 ["hj_testing_mode","hj_testing_session_state","hj_testing_session_settings","hj_testing_live_snapshot"].forEach(function(k){
@@ -1678,7 +1679,7 @@ function adjustHabit(key,delta){
       checkHabitTierToasts(key,oldCount,newCount);
       ensureTitles();
     }
-    save();
+    progressSave();
   });
 }
 function setHabitManual(key){
@@ -1696,7 +1697,7 @@ function setHabitManual(key){
       checkHabitTierToasts(key,oldCount,newCount);
       ensureTitles();
     }else if(newCount!==oldCount) ensureTitles();
-    save();
+    progressSave();
   });
 }
 function renderHabitLadders(){
@@ -2077,25 +2078,32 @@ function ensureChronicleState(){
 }
 ensureChronicleState();
 function defaultHeroTreasuryLedger(){return [];}
-/* Hero Treasury ledger entry schema (Phase 1 + Phase 2 ready):
-   { id, date, type:"added"|"subtracted", amount, reason, source, awardKey?, meta? }
-   - source: "manual" (Phase 1) | "hero_level" | "habit_card" | "rulebook" (Phase 2)
-   - awardKey: unique idempotency key for automatic awards; prevents duplicate payouts
-   - meta: optional object e.g. { level:"Apprentice", habitKey, tierId } for audit/display
+/* Hero Treasury ledger entry schema:
+   { id, timestamp, date, type:"added"|"subtracted", amount, reason, source, rewardKey?, awardKey?, meta? }
 */
+const HERO_ID="killian";
 const TREASURY_SOURCE={MANUAL:"manual",HERO_LEVEL:"hero_level",HABIT_CARD:"habit_card",RULEBOOK:"rulebook"};
 const TREASURY_SOURCE_LABELS={manual:"Manual",hero_level:"Hero Level",habit_card:"Habit Card",rulebook:"Rulebook"};
+function treasuryUuid(){
+  if(typeof crypto!=="undefined"&&crypto.randomUUID) return crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){
+    const r=Math.random()*16|0;
+    return (c==="x"?r:(r&0x3|0x8)).toString(16);
+  });
+}
 function normalizeTreasurySource(s){
   const v=String(s||"").toLowerCase();
   return TREASURY_SOURCE_LABELS[v]?v:TREASURY_SOURCE.MANUAL;
 }
-function buildTreasuryAwardKey(kind,ref){
-  return "treasury:"+kind+":"+String(ref);
-}
-function treasuryHasAwardKey(key){
+function treasuryRewardKeyExists(key){
   if(!key) return false;
   ensureHeroTreasury();
-  return state.heroTreasuryLedger.some(e=>e.awardKey===key);
+  return state.heroTreasuryLedger.some(function(e){return e.rewardKey===key||e.awardKey===key;});
+}
+function parseDollarAmount(str){
+  if(typeof str==="number") return normalizeTreasuryAmount(str);
+  const m=String(str||"").match(/\$?\s*([0-9]+(?:\.[0-9]{1,2})?)/);
+  return m?normalizeTreasuryAmount(m[1]):0;
 }
 function normalizeTreasuryAmount(n){
   const v=Math.round(Number(n)*100)/100;
@@ -2103,34 +2111,48 @@ function normalizeTreasuryAmount(n){
 }
 function normalizeHeroTreasuryEntry(raw){
   if(!raw||typeof raw!=="object") return null;
-  const type=raw.type==="subtracted"?"subtracted":(raw.type==="added"?"added":null);
+  const type=raw.type==="subtracted"?"subtracted":(raw.type==="added"||raw.type==="Added"?"added":null);
   const amount=normalizeTreasuryAmount(raw.amount);
   const reason=String(raw.reason||"").trim();
   if(!type||!amount||!reason) return null;
-  const date=(typeof raw.date==="string"&&raw.date)?raw.date:new Date().toISOString();
-  const id=(typeof raw.id==="string"&&raw.id)?raw.id:(date+"-"+Math.random().toString(36).slice(2,9));
+  const timestamp=(typeof raw.timestamp==="string"&&raw.timestamp)?raw.timestamp:((typeof raw.date==="string"&&raw.date)?raw.date:new Date().toISOString());
+  const date=timestamp;
+  const id=(typeof raw.id==="string"&&raw.id)?raw.id:treasuryUuid();
   const source=normalizeTreasurySource(raw.source);
-  const awardKey=(typeof raw.awardKey==="string"&&raw.awardKey.trim())?raw.awardKey.trim():null;
+  const rewardKey=(typeof raw.rewardKey==="string"&&raw.rewardKey.trim())?raw.rewardKey.trim():((typeof raw.awardKey==="string"&&raw.awardKey.trim())?raw.awardKey.trim():null);
   const meta=(raw.meta&&typeof raw.meta==="object"&&!Array.isArray(raw.meta))?raw.meta:null;
-  return {id,type,amount,reason,date,source,awardKey,meta};
+  return {id,timestamp,date,type,amount,reason,source,rewardKey,awardKey:rewardKey,meta};
+}
+function dedupeTreasuryByRewardKey(){
+  const seen=new Set();
+  state.heroTreasuryLedger=state.heroTreasuryLedger.filter(function(e){
+    const k=e.rewardKey||e.awardKey;
+    if(!k) return true;
+    if(seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
 }
 function normalizeHeroTreasuryFromCloud(data){
   const raw=Array.isArray(data)?data:(Array.isArray(data&&data.heroTreasuryLedger)?data.heroTreasuryLedger:[]);
   const out=[];
-  raw.forEach(entry=>{const n=normalizeHeroTreasuryEntry(entry);if(n) out.push(n);});
+  raw.forEach(function(entry){const n=normalizeHeroTreasuryEntry(entry);if(n) out.push(n);});
   return out;
 }
 function ensureHeroTreasury(){
   if(!Array.isArray(state.heroTreasuryLedger)) state.heroTreasuryLedger=defaultHeroTreasuryLedger();
   state.heroTreasuryLedger=state.heroTreasuryLedger.map(normalizeHeroTreasuryEntry).filter(Boolean);
+  dedupeTreasuryByRewardKey();
 }
 ensureHeroTreasury();
 function heroTreasuryLedgerForCloud(){
   ensureHeroTreasury();
-  return state.heroTreasuryLedger.map(e=>({
-    id:e.id,date:e.date,type:e.type,amount:e.amount,reason:e.reason,source:e.source,
-    awardKey:e.awardKey||null,meta:e.meta||null
-  }));
+  return state.heroTreasuryLedger.map(function(e){
+    return {
+      id:e.id,timestamp:e.timestamp||e.date,date:e.date,type:e.type,amount:e.amount,reason:e.reason,source:e.source,
+      rewardKey:e.rewardKey||null,awardKey:e.rewardKey||e.awardKey||null,meta:e.meta||null
+    };
+  });
 }
 function heroTreasuryBalance(){
   ensureHeroTreasury();
@@ -2153,20 +2175,168 @@ function formatTreasuryDate(iso){
 function escapeTreasuryHtml(s){
   return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
+function awardTreasuryReward(opts){
+  opts=opts||{};
+  const amount=normalizeTreasuryAmount(opts.amount);
+  const reason=String(opts.reason||"").trim();
+  const source=normalizeTreasurySource(opts.source||TREASURY_SOURCE.RULEBOOK);
+  const rewardKey=String(opts.rewardKey||opts.awardKey||"").trim();
+  const isAutomatic=source!==TREASURY_SOURCE.MANUAL;
+  if(!amount||!reason) return {ok:false,reason:"invalid"};
+  if(isAutomatic&&!rewardKey) return {ok:false,reason:"missing_reward_key"};
+  if(rewardKey&&treasuryRewardKeyExists(rewardKey)) return {ok:false,reason:"duplicate",rewardKey:rewardKey};
+  const now=new Date();
+  const entry={
+    id:treasuryUuid(),
+    timestamp:now.toISOString(),
+    date:now.toISOString(),
+    type:"added",
+    amount:amount,
+    reason:reason,
+    source:source,
+    rewardKey:rewardKey||null,
+    awardKey:rewardKey||null,
+    meta:(opts.meta&&typeof opts.meta==="object"&&!Array.isArray(opts.meta))?opts.meta:null
+  };
+  ensureHeroTreasury();
+  state.heroTreasuryLedger.unshift(entry);
+  return {ok:true,entry:entry};
+}
 function appendHeroTreasuryEntry(type,amount,reason,opts){
   opts=opts||{};
+  if(type==="added"){
+    const result=awardTreasuryReward({
+      amount:amount,
+      reason:reason,
+      source:opts.source||TREASURY_SOURCE.MANUAL,
+      rewardKey:opts.rewardKey||opts.awardKey||null,
+      meta:opts.meta
+    });
+    return result.ok?result.entry:null;
+  }
   ensureHeroTreasury();
-  const source=normalizeTreasurySource(opts.source||TREASURY_SOURCE.MANUAL);
-  const awardKey=(typeof opts.awardKey==="string"&&opts.awardKey.trim())?opts.awardKey.trim():null;
-  if(awardKey&&treasuryHasAwardKey(awardKey)) return null;
+  const now=new Date();
   const entry={
-    id:Date.now()+"-"+Math.random().toString(36).slice(2,9),
-    date:new Date().toISOString(),type,amount,reason,source,
-    awardKey:awardKey,
+    id:treasuryUuid(),
+    timestamp:now.toISOString(),
+    date:now.toISOString(),
+    type:"subtracted",
+    amount:amount,
+    reason:reason,
+    source:TREASURY_SOURCE.MANUAL,
+    rewardKey:null,
+    awardKey:null,
     meta:(opts.meta&&typeof opts.meta==="object"&&!Array.isArray(opts.meta))?opts.meta:null
   };
   state.heroTreasuryLedger.unshift(entry);
   return entry;
+}
+function listEarnedHeroLevelRewards(){
+  const currentHp=hp();
+  return settings.levels.filter(function(row){return currentHp>=row[1];}).map(function(row){
+    const levelName=row[0];
+    const amount=parseDollarAmount(row[2]);
+    return {
+      levelName:levelName,
+      hpRequired:row[1],
+      amount:amount,
+      rewardKey:"heroLevel:"+HERO_ID+":"+levelName,
+      source:TREASURY_SOURCE.HERO_LEVEL,
+      reason:"Hero Level reward: "+levelName+" ("+formatTreasuryMoney(amount)+")",
+      meta:{level:levelName,hpRequired:row[1]}
+    };
+  }).filter(function(r){return r.amount>0;});
+}
+function listEarnedHabitCardRewards(){
+  ensureHabitLadders();
+  const out=[];
+  HABIT_LADDERS.forEach(function(habit){
+    const count=Math.max(0,Math.floor(state.habitLadders[habit.key]||0));
+    HABIT_CARD_TIERS.forEach(function(tier){
+      if(count>=tier.min){
+        out.push({
+          habitKey:habit.key,
+          habitName:habit.name,
+          tierId:tier.id,
+          tierLabel:tier.label,
+          amount:tier.stipend,
+          rewardKey:"habitCard:"+HERO_ID+":"+habit.key+":"+tier.id,
+          source:TREASURY_SOURCE.HABIT_CARD,
+          reason:"Habit Card stipend: "+habit.name+" — "+tier.label+" ("+formatTreasuryMoney(tier.stipend)+")",
+          meta:{habitKey:habit.key,tierId:tier.id,tierLabel:tier.label}
+        });
+      }
+    });
+  });
+  return out.filter(function(r){return r.amount>0;});
+}
+function listEarnedRulebookRewards(){
+  return [];
+}
+function listAllEarnedTreasuryRewardCandidates(){
+  return listEarnedHeroLevelRewards().concat(listEarnedHabitCardRewards(),listEarnedRulebookRewards());
+}
+function processAutomaticTreasuryRewards(){
+  const summary={added:[],skipped:[],total:0};
+  listAllEarnedTreasuryRewardCandidates().forEach(function(c){
+    const result=awardTreasuryReward({
+      amount:c.amount,
+      reason:c.reason,
+      source:c.source,
+      rewardKey:c.rewardKey,
+      meta:c.meta
+    });
+    if(result.ok){
+      summary.added.push(c);
+      summary.total=Math.round((summary.total+c.amount)*100)/100;
+    }else if(result.reason==="duplicate"){
+      summary.skipped.push(c);
+    }
+  });
+  return summary;
+}
+function applyAutomaticTreasuryRewards(){
+  const summary=processAutomaticTreasuryRewards();
+  if(summary.added.length){
+    summary.added.forEach(function(r){log("Treasury auto-credit: "+r.reason);});
+  }
+  return summary;
+}
+function progressSave(){
+  save();
+  const summary=applyAutomaticTreasuryRewards();
+  if(summary.added.length){
+    save();
+    toast("💰 TREASURY CREDIT<br>+"+formatTreasuryMoney(summary.total)+" from "+summary.added.length+" reward(s)");
+  }
+  return summary;
+}
+function showTreasuryBackfillSummary(summary){
+  let msg="Backfill complete.\n\n";
+  msg+="Rewards added: "+summary.added.length+"\n";
+  msg+="Skipped (already paid): "+summary.skipped.length+"\n";
+  msg+="Total money added: "+formatTreasuryMoney(summary.total);
+  if(summary.added.length){
+    msg+="\n\nAdded:\n"+summary.added.map(function(a){return "• "+a.reason;}).join("\n");
+  }
+  if(summary.skipped.length&&!summary.added.length){
+    msg+="\n\nAll earned rewards were already in the ledger.";
+  }
+  alert(msg);
+  if(summary.added.length){
+    toast("💰 BACKFILL<br>+"+formatTreasuryMoney(summary.total)+" across "+summary.added.length+" reward(s)");
+  }
+}
+function backfillEarnedTreasuryRewards(){
+  requireParent("Backfill Earned Treasury Rewards",function(){
+    if(!confirm("Scan current progress and add any earned Hero Level or Habit Card stipends missing from the treasury ledger?\n\nAlready-paid rewards (same reward key) will be skipped.")) return;
+    const summary=processAutomaticTreasuryRewards();
+    if(summary.added.length){
+      summary.added.forEach(function(r){log("Treasury backfill: "+r.reason);});
+      save();
+    }
+    showTreasuryBackfillSummary(summary);
+  });
 }
 function submitTreasuryAdd(){
   requireParent("Add money to Hero Treasury",function(){
@@ -2214,7 +2384,7 @@ function renderHeroTreasury(){
     const sign=e.type==="added"?"+":"−";
     const typeLabel=e.type==="added"?"Added":"Subtracted";
     const sourceLabel=TREASURY_SOURCE_LABELS[e.source]||"Manual";
-    return "<tr><td>"+escapeTreasuryHtml(formatTreasuryDate(e.date))+"</td><td class=\""+cls+"\">"+typeLabel+"</td><td class=\""+cls+"\">"+sign+formatTreasuryMoney(e.amount)+"</td><td>"+escapeTreasuryHtml(sourceLabel)+"</td><td>"+escapeTreasuryHtml(e.reason)+"</td></tr>";
+    return "<tr><td>"+escapeTreasuryHtml(formatTreasuryDate(e.timestamp||e.date))+"</td><td class=\""+cls+"\">"+typeLabel+"</td><td class=\""+cls+"\">"+sign+formatTreasuryMoney(e.amount)+"</td><td>"+escapeTreasuryHtml(sourceLabel)+"</td><td>"+escapeTreasuryHtml(e.reason)+"</td></tr>";
   }).join("");
   wrap.innerHTML='<table class="treasury-ledger-table"><thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Source</th><th>Reason</th></tr></thead><tbody>'+rows+"</tbody></table>";
 }
@@ -2781,7 +2951,7 @@ function setQuestManual(key){
     state[key]=newCount;
     const q=MAIN_QUEST_DEFS.find(x=>x.key===key);
     log("Quest count set: "+(q?q.name:key)+" = "+newCount+".");
-    save();
+    progressSave();
     questChangeToasts(beforeHP,beforeLevel,beforeRemain);
   });
 }
@@ -2806,7 +2976,7 @@ function setSpentManual(){
     save();
   });
 }
-function add(type){requireParent("Add progress",function(){const beforeHP=hp(),beforeLevel=level(),beforeRemain=remaining();state[type]++;if(type==="books")log("+1 completed book. Dragon takes 5 damage.");if(type==="meals")log("+1 Meal Merit Point. Dragon takes 1 damage.");if(type==="language")log("+1 Language Merit Day. Dragon takes 1 damage.");if(type==="coop")log("+1 Cooperation Credit. Dragon takes 3 damage.");save();questChangeToasts(beforeHP,beforeLevel,beforeRemain);});}
+function add(type){requireParent("Add progress",function(){const beforeHP=hp(),beforeLevel=level(),beforeRemain=remaining();state[type]++;if(type==="books")log("+1 completed book. Dragon takes 5 damage.");if(type==="meals")log("+1 Meal Merit Point. Dragon takes 1 damage.");if(type==="language")log("+1 Language Merit Day. Dragon takes 1 damage.");if(type==="coop")log("+1 Cooperation Credit. Dragon takes 3 damage.");progressSave();questChangeToasts(beforeHP,beforeLevel,beforeRemain);});}
 function removeQuest(type){
   if(type==="books"){alert("Reading progress is permanent. Use screen time controls to spend minutes only.");return;}
   requireParent("Remove progress",function(){state[type]=Math.max(0,state[type]-1);log("-1 "+type);save();});
@@ -2959,7 +3129,7 @@ function approveReport(id){
     if(r.type==="language") log("Approved language report. Dragon takes 1 damage.");
     if(r.type==="coop") log("Approved cooperation report. Dragon takes 3 damage.");
     if(r.note) log("Report note: "+r.note);
-    save();
+    progressSave();
     const afterHP=hp(),afterLevel=level();
     if(afterHP>beforeHP) toast("🏆 HERO POINT EARNED<br>+"+(afterHP-beforeHP)+" HP");
     if(afterLevel!==beforeLevel) toast("⚔ LEVEL UP<br>"+afterLevel+" achieved!");
@@ -3259,10 +3429,26 @@ checkAppBuild();
   }
 
   function mergeTreasuryLedgers(cloudEntries, localEntries){
-    const map=new Map();
-    (Array.isArray(localEntries)?localEntries:[]).forEach(function(e){if(e&&e.id) map.set(e.id,e);});
-    (Array.isArray(cloudEntries)?cloudEntries:[]).forEach(function(e){if(e&&e.id) map.set(e.id,e);});
-    return [...map.values()].sort(function(a,b){return String(b.date).localeCompare(String(a.date));});
+    const byId=new Map();
+    const byRewardKey=new Map();
+    function addEntry(e){
+      if(!e) return;
+      const normalized=normalizeHeroTreasuryEntry(e);
+      if(!normalized) return;
+      const rk=normalized.rewardKey||normalized.awardKey;
+      if(rk){
+        if(byRewardKey.has(rk)) return;
+        byRewardKey.set(rk,normalized);
+      }
+      if(normalized.id&&!byId.has(normalized.id)) byId.set(normalized.id,normalized);
+    }
+    (Array.isArray(localEntries)?localEntries:[]).forEach(addEntry);
+    (Array.isArray(cloudEntries)?cloudEntries:[]).forEach(addEntry);
+    const merged=new Map(byId);
+    byRewardKey.forEach(function(e,k){
+      if(!Array.from(merged.values()).some(function(x){return (x.rewardKey||x.awardKey)===k;})) merged.set(e.id,e);
+    });
+    return [...merged.values()].sort(function(a,b){return String(b.date||b.timestamp).localeCompare(String(a.date||a.timestamp));});
   }
 
   function mergeProgressStateFromCloud(data, localState){
