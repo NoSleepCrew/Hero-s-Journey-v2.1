@@ -480,6 +480,13 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
   box-shadow:0 5px 0 #3e3a38,0 8px 20px rgba(0,0,0,.2)!important;color:#111!important;
 }
 .habit-ladder-card .habit-tap-hint{font-size:11px;color:#a8e6cf;font-weight:800;margin:0 0 8px;text-align:center}
+.correction-row{margin:12px 0;padding:12px;border-radius:12px;border:1px solid rgba(224,184,74,.2);background:rgba(0,0,0,.15)}
+.correction-row-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
+.correction-current{font-weight:800;color:#ffdb77}
+.correction-fields{display:grid;grid-template-columns:minmax(80px,120px) 1fr auto;gap:8px;align-items:end}
+.correction-fields label{font-size:11px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px}
+.correction-history{margin-top:16px}
+.correction-history h3{margin:0 0 8px;font-size:15px;color:#ffdb77}
 .habit-parent-row{
   display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;
   padding:12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(224,184,74,.25);margin-bottom:10px;
@@ -1497,6 +1504,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <p><button class="action good" onclick="changeParentCode()">Set / Change Parent Code</button> <button class="action secondary" onclick="lockParentSession()">Lock Now</button></p>
 </div>
 <div class="card"><h2>Cloud Sync</h2><p id="syncStatus">Connecting to Firebase...</p><p class="small" id="appBuildLabel">App build: —</p><p class="small parent-lock-note"><b>Accidental overwrite?</b> If progress looks wrong (dragon suddenly defeated), try restoring from a local backup before changing numbers manually.</p><p><button class="action good" onclick="restoreFromLocalBackup()">Restore from Local Backup</button></p></div>
+<div class="card"><h2>✏️ Data Corrections</h2><p class="small">Fix incorrect saved counts here. Corrections update displayed progress only — they do <b>not</b> remove treasury rewards, claw back money, or delete ledger history. Parent Code and a reason are required for each correction.</p><div id="dataCorrectionsPanel"></div></div>
 <div class="card"><h2>📋 Quest Reports</h2><p class="small">Killian can submit quest reports from the Quest Board. Approve or dismiss them here.</p><div id="pendingReports"></div></div>
 <div class="card"><h2>Progress Ledger</h2><table><thead><tr><th>Quest</th><th>Count</th><th>Dragon Damage</th><th>Hero Points</th></tr></thead><tbody id="ledger"></tbody></table></div>
 <div class="card"><h2>📜 Main Quest Progress</h2><p class="small">Adjust each quest path: use <b>-1</b>, <b>+1</b>, or type a number and tap <b>Set</b>. Parent Code required. Summer <b>25 Pages Read</b> is on the Quest Board.</p><div id="parentMainQuests"></div><p style="margin-top:12px"><button class="action danger" onclick="resetAll()">Reset All Progress</button></p></div>
@@ -1536,7 +1544,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="reward-engine-v1";
+const APP_BUILD="data-corrections-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 ["hj_testing_mode","hj_testing_session_state","hj_testing_session_settings","hj_testing_live_snapshot"].forEach(function(k){
@@ -2055,8 +2063,11 @@ function normalizeUnlockedTitlesFromCloud(data){
 function normalizeEquippedTitleFromCloud(data){
   return (typeof data==="string"&&HABIT_LADDERS.some(h=>h.key===data&&h.title))?data:null;
 }
-let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:[]};
+let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:[],dataCorrections:[],lastModified:0};
 if(!Array.isArray(state.pendingReports)) state.pendingReports=[];
+if(!Array.isArray(state.dataCorrections)) state.dataCorrections=[];
+if(typeof state.lastModified!=="number") state.lastModified=0;
+ensureDataCorrections();
 ensureHabitLadders();
 ensureHabitCardTurnIns();
 ensureTitles();
@@ -2914,6 +2925,158 @@ function questChangeToasts(beforeHP,beforeLevel,beforeRemain){
   if(afterLevel!==beforeLevel) toast("⚔ LEVEL UP<br>"+afterLevel+" achieved!");
   if(remaining()<beforeRemain&&remaining()<=0) toast("🐉 DRAGON DEFEATED<br>The challenge is complete!");
 }
+const CORRECTION_SOURCE="ParentCorrection";
+const DATA_CORRECTION_FIELDS=[
+  {key:"books",label:"Completed Books (Path of Knowledge)"},
+  {key:"meals",label:"Meal Merit Points"},
+  {key:"language",label:"Language Merit Days"},
+  {key:"coop",label:"Cooperation Credits"},
+  {key:"readingPoints",label:"Reading Marks (Summer Reading)"},
+  {key:"totalPagesRead",label:"Lifetime Pages Read"},
+  {key:"screenTimeMinutes",label:"Screen Time Bank (minutes)"},
+  {key:"spent",label:"Hero Points Spent"}
+];
+function ensureDataCorrections(){
+  if(!Array.isArray(state.dataCorrections)) state.dataCorrections=[];
+  state.dataCorrections=state.dataCorrections.filter(function(c){return c&&typeof c==="object"&&c.field;}).slice(0,100);
+}
+function touchStateModified(){
+  state.lastModified=Date.now();
+}
+function correctionFieldId(fieldKey){
+  return String(fieldKey).replace(/[^a-zA-Z0-9_]/g,"_");
+}
+function correctionFieldLabel(fieldKey){
+  if(fieldKey.indexOf("habit:")===0){
+    const habit=HABIT_LADDERS.find(function(h){return h.key===fieldKey.slice(6);});
+    return habit?(habit.icon+" "+habit.name+" (Habit Ladder)"):"Habit: "+fieldKey.slice(6);
+  }
+  const def=DATA_CORRECTION_FIELDS.find(function(f){return f.key===fieldKey;});
+  return def?def.label:fieldKey;
+}
+function getCorrectionValue(fieldKey){
+  if(fieldKey.indexOf("habit:")===0){
+    ensureHabitLadders();
+    return Math.max(0,Math.floor(state.habitLadders[fieldKey.slice(6)]||0));
+  }
+  ensureScreenTimeState();
+  switch(fieldKey){
+    case "books": return Math.max(0,Math.floor(state.books||0));
+    case "meals": return Math.max(0,Math.floor(state.meals||0));
+    case "language": return Math.max(0,Math.floor(state.language||0));
+    case "coop": return Math.max(0,Math.floor(state.coop||0));
+    case "spent": return Math.max(0,Math.floor(state.spent||0));
+    case "readingPoints": return Math.max(0,Math.floor(state.readingPoints||0));
+    case "totalPagesRead": return Math.max(0,Math.floor(state.totalPagesRead||0));
+    case "screenTimeMinutes": return Math.max(0,Math.floor(state.screenTimeMinutes||0));
+    default: return 0;
+  }
+}
+function setCorrectionValue(fieldKey,value){
+  value=Math.max(0,Math.floor(Number(value)||0));
+  if(fieldKey.indexOf("habit:")===0){
+    ensureHabitLadders();
+    state.habitLadders[fieldKey.slice(6)]=value;
+    ensureTitles();
+    return;
+  }
+  switch(fieldKey){
+    case "books": state.books=value; break;
+    case "meals": state.meals=value; break;
+    case "language": state.language=value; break;
+    case "coop": state.coop=value; break;
+    case "spent": state.spent=value; break;
+    case "readingPoints": state.readingPoints=value; ensureScreenTimeState(); break;
+    case "totalPagesRead": state.totalPagesRead=value; ensureScreenTimeState(); break;
+    case "screenTimeMinutes": state.screenTimeMinutes=value; break;
+    default: return;
+  }
+}
+function dataCorrectionsForCloud(){
+  ensureDataCorrections();
+  return state.dataCorrections.map(function(c){
+    return {
+      id:c.id,date:c.date,field:c.field,fieldLabel:c.fieldLabel,
+      oldValue:c.oldValue,newValue:c.newValue,reason:c.reason,source:c.source||CORRECTION_SOURCE
+    };
+  }).slice(0,100);
+}
+function normalizeDataCorrectionsFromCloud(data){
+  if(!Array.isArray(data)) return [];
+  return data.filter(function(c){
+    return c&&typeof c==="object"&&c.field&&typeof c.oldValue!=="undefined"&&typeof c.newValue!=="undefined";
+  }).map(function(c){
+    return {
+      id:c.id||treasuryUuid(),
+      date:c.date||new Date().toISOString(),
+      field:String(c.field),
+      fieldLabel:String(c.fieldLabel||c.field),
+      oldValue:c.oldValue,
+      newValue:c.newValue,
+      reason:String(c.reason||""),
+      source:c.source||CORRECTION_SOURCE
+    };
+  }).slice(0,100);
+}
+function applyParentDataCorrection(fieldKey){
+  requireParent("Apply data correction",function(){
+    const fid=correctionFieldId(fieldKey);
+    const reasonEl=document.getElementById("corr_reason_"+fid);
+    const valueEl=document.getElementById("corr_value_"+fid);
+    const reason=String(reasonEl&&reasonEl.value||"").trim();
+    const newValue=Math.max(0,Math.floor(+(valueEl&&valueEl.value)||0));
+    const oldValue=getCorrectionValue(fieldKey);
+    const label=correctionFieldLabel(fieldKey);
+    if(!reason){alert("Enter a reason for this correction.");return;}
+    if(newValue===oldValue){alert("New value matches the current saved value.");return;}
+    if(!confirm("Correct "+label+" from "+oldValue+" to "+newValue+"?\n\nTreasury balance and past reward ledger entries will not change.")) return;
+    setCorrectionValue(fieldKey,newValue);
+    ensureDataCorrections();
+    state.dataCorrections.unshift({
+      id:treasuryUuid(),
+      date:new Date().toISOString(),
+      field:fieldKey,
+      fieldLabel:label,
+      oldValue:oldValue,
+      newValue:newValue,
+      reason:reason,
+      source:CORRECTION_SOURCE
+    });
+    log("Data correction: "+label+" "+oldValue+" → "+newValue+". Reason: "+reason);
+    renderSnapshot=null;
+    touchStateModified();
+    save();
+    if(valueEl) valueEl.value=String(newValue);
+    if(reasonEl) reasonEl.value="";
+    toast("✏️ DATA CORRECTED<br>"+label+" set to "+newValue);
+    renderDataCorrections();
+  });
+}
+function renderDataCorrectionRow(fieldKey){
+  const fid=correctionFieldId(fieldKey);
+  const current=getCorrectionValue(fieldKey);
+  const label=correctionFieldLabel(fieldKey);
+  return '<div class="correction-row"><div class="correction-row-head"><div><b>'+escapeTreasuryHtml(label)+'</b></div><div class="correction-current">Current: '+current+'</div></div><div class="correction-fields"><div><label for="corr_value_'+fid+'">New value</label><input id="corr_value_'+fid+'" type="number" min="0" value="'+current+'"></div><div><label for="corr_reason_'+fid+'">Reason</label><input id="corr_reason_'+fid+'" type="text" placeholder="Why this correction is needed"></div><div><button type="button" class="action good" onclick="applyParentDataCorrection(\''+fieldKey.replace(/'/g,"\\'")+'\')">Apply</button></div></div></div>';
+}
+function renderDataCorrections(){
+  const el=document.getElementById("dataCorrectionsPanel");
+  if(!el) return;
+  ensureDataCorrections();
+  ensureHabitLadders();
+  let html='<p class="small"><b>Quest paths &amp; summer reading</b></p>';
+  html+=DATA_CORRECTION_FIELDS.map(function(f){return renderDataCorrectionRow(f.key);}).join("");
+  html+='<p class="small" style="margin-top:14px"><b>Hero Habit Ladders</b></p>';
+  html+=HABIT_LADDERS.map(function(h){return renderDataCorrectionRow("habit:"+h.key);}).join("");
+  if(state.dataCorrections.length){
+    const rows=state.dataCorrections.map(function(c){
+      return "<tr><td>"+escapeTreasuryHtml(formatTreasuryDate(c.date))+"</td><td>"+escapeTreasuryHtml(c.fieldLabel||c.field)+"</td><td>"+escapeTreasuryHtml(String(c.oldValue))+" → "+escapeTreasuryHtml(String(c.newValue))+"</td><td>"+escapeTreasuryHtml(c.reason)+"</td><td>"+escapeTreasuryHtml(c.source||CORRECTION_SOURCE)+"</td></tr>";
+    }).join("");
+    html+='<div class="correction-history"><h3>Correction History</h3><table class="treasury-ledger-table"><thead><tr><th>Date</th><th>Field</th><th>Change</th><th>Reason</th><th>Source</th></tr></thead><tbody>'+rows+"</tbody></table></div>";
+  }else{
+    html+='<p class="small correction-history">No corrections recorded yet.</p>';
+  }
+  el.innerHTML=html;
+}
 const MAIN_QUEST_DEFS=[
   {key:"books",icon:"📚",name:"Path of Knowledge"},
   {key:"meals",icon:"🍽",name:"Path of Banqueting"},
@@ -3339,9 +3502,9 @@ function renderParentScreenTime(){
     '</div>'+
     '<p class="small" style="margin-top:8px">These buttons adjust the bank only. Check the Dashboard for available time.</p>';
 }
-function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=(Array.isArray(state.log)?state.log:[]).map(x=>'<li>'+x+'</li>').join("");renderParentQuests();renderParentScreenTime();renderParentHabits();renderParentHabitCards();renderHeroTreasury();updateParentCodeStatus();}
+function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=(Array.isArray(state.log)?state.log:[]).map(x=>'<li>'+x+'</li>').join("");renderDataCorrections();renderParentQuests();renderParentScreenTime();renderParentHabits();renderParentHabitCards();renderHeroTreasury();updateParentCodeStatus();}
 function saveSettings(){requireParent("Save system settings",function(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();});}
-function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:defaultHeroTreasuryLedger()};renderSnapshot=null;save();}});}
+function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:defaultHeroTreasuryLedger(),dataCorrections:[],lastModified:Date.now()};renderSnapshot=null;save();}});}
 render();
 checkAppBuild();
 </script>
@@ -3400,7 +3563,9 @@ checkAppBuild();
       screenTimeMinutes: Number(state.screenTimeMinutes || 0),
       readingPoints: Number(state.readingPoints || 0),
       totalPagesRead: Number(state.totalPagesRead || 0),
-      heroTreasuryLedger: heroTreasuryLedgerForCloud()
+      heroTreasuryLedger: heroTreasuryLedgerForCloud(),
+      dataCorrections: dataCorrectionsForCloud(),
+      lastModified: Number(state.lastModified || 0)
     };
   }
 
@@ -3424,8 +3589,17 @@ checkAppBuild();
       screenTimeMinutes: Math.max(0, Number(data.screenTimeMinutes || 0)),
       readingPoints: readingPoints,
       totalPagesRead: totalPagesRead,
-      heroTreasuryLedger: normalizeHeroTreasuryFromCloud(data.heroTreasuryLedger)
+      heroTreasuryLedger: normalizeHeroTreasuryFromCloud(data.heroTreasuryLedger),
+      dataCorrections: normalizeDataCorrectionsFromCloud(data.dataCorrections),
+      lastModified: Number(data.lastModified || 0)
     };
+  }
+
+  function mergeDataCorrections(cloudEntries, localEntries){
+    const map=new Map();
+    (Array.isArray(localEntries)?localEntries:[]).forEach(function(c){if(c&&c.id) map.set(c.id,c);});
+    (Array.isArray(cloudEntries)?cloudEntries:[]).forEach(function(c){if(c&&c.id) map.set(c.id,c);});
+    return [...map.values()].sort(function(a,b){return String(b.date).localeCompare(String(a.date));}).slice(0,100);
   }
 
   function mergeTreasuryLedgers(cloudEntries, localEntries){
@@ -3454,18 +3628,29 @@ checkAppBuild();
   function mergeProgressStateFromCloud(data, localState){
     const local=localState||{};
     const out=normalizeCloudState(data,local.habitLadders);
-    ["books","meals","language","coop","spent","readingPoints","totalPagesRead","screenTimeMinutes"].forEach(function(k){
-      out[k]=Math.max(Number(out[k]||0),Number(local[k]||0));
+    const localTs=Number(local.lastModified||0);
+    const cloudTs=Number(data.lastModified||0);
+    const preferLocal=localTs>=cloudTs;
+    const progressKeys=["books","meals","language","coop","spent","readingPoints","totalPagesRead","screenTimeMinutes"];
+    progressKeys.forEach(function(k){
+      if(preferLocal) out[k]=Math.max(0,Number(local[k]||0));
+      else out[k]=Math.max(Number(out[k]||0),Number(local[k]||0));
     });
+    if(preferLocal&&local.habitLadders){
+      out.habitLadders=normalizeHabitLaddersFromCloud(local.habitLadders,local.habitLadders);
+    }
     if(local.legend) out.legend=true;
     if(local.chronicleLegendRevealed) out.chronicleLegendRevealed=true;
     out.heroTreasuryLedger=mergeTreasuryLedgers(out.heroTreasuryLedger,local.heroTreasuryLedger);
+    out.dataCorrections=mergeDataCorrections(data.dataCorrections,local.dataCorrections);
+    out.lastModified=Math.max(localTs,cloudTs);
     if(Array.isArray(local.log)&&local.log.length>(out.log||[]).length) out.log=local.log.slice(0,60);
     if(Array.isArray(local.pendingReports)&&local.pendingReports.length>(out.pendingReports||[]).length) out.pendingReports=local.pendingReports.slice(0,20);
     return out;
   }
 
   window.save = function(){
+    if(typeof touchStateModified==="function") touchStateModified();
     localSavePending = true;
     suppressCloudUntil = Date.now() + 2500;
     try{
