@@ -1596,7 +1596,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="habit-card-common-label-v1";
+const APP_BUILD="habit-set-ready-award-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 ["hj_testing_mode","hj_testing_session_state","hj_testing_session_settings","hj_testing_live_snapshot"].forEach(function(k){
@@ -1691,7 +1691,7 @@ function logTreasuryAward(item){
   }
   log("Treasury awarded: "+item.reason);
 }
-function habitCardChecklistItem(habit,tier,count){
+function habitCardChecklistItem(habit,tier){
   const peak=habitPeakCount(habit.key);
   const earned=peak>=tier.min;
   const rewardKey=habitCardTreasuryRewardKey(habit.key,tier.id);
@@ -1751,6 +1751,21 @@ function ensurePeakHabitLadders(){
 function habitPeakCount(key){
   ensurePeakHabitLadders();
   return Math.max(0,Math.floor(state.peakHabitLadders[key]||0));
+}
+function syncHabitPeaksFromCurrent(){
+  ensurePeakHabitLadders();
+  ensureHabitLadders();
+  ensureHabitCardTurnIns();
+  HABIT_LADDERS.forEach(function(h){
+    const cur=Math.max(0,Math.floor(state.habitLadders[h.key]||0));
+    let peak=habitPeakCount(h.key);
+    if(Array.isArray(state.unlockedTitles)&&state.unlockedTitles.includes(h.key)) peak=Math.max(peak,LEGENDARY_TITLE_MIN);
+    HABIT_CARD_TIERS.forEach(function(t){
+      if(habitCardTurnedIn(h.key,t.id)) peak=Math.max(peak,t.min);
+      if(treasuryRewardKeyExists(habitCardTreasuryRewardKey(h.key,t.id))) peak=Math.max(peak,t.min);
+    });
+    state.peakHabitLadders[h.key]=Math.max(peak,cur);
+  });
 }
 function peakHabitLaddersForCloud(){
   ensurePeakHabitLadders();
@@ -1845,6 +1860,7 @@ function adjustHabit(key,delta){
       checkHabitTierToasts(key,oldCount,newCount);
       ensureTitles();
     }
+    syncHabitPeaksFromCurrent();
     progressSave();
   });
 }
@@ -1863,6 +1879,7 @@ function setHabitManual(key){
       checkHabitTierToasts(key,oldCount,newCount);
       ensureTitles();
     }else if(newCount!==oldCount) ensureTitles();
+    syncHabitPeaksFromCurrent();
     progressSave();
   });
 }
@@ -2441,7 +2458,7 @@ function listEarnedHeroLevelRewards(){
   }).filter(function(r){return r.amount>0;});
 }
 function listEarnedHabitCardRewards(){
-  ensurePeakHabitLadders();
+  syncHabitPeaksFromCurrent();
   const out=[];
   HABIT_LADDERS.forEach(function(habit){
     const count=habitPeakCount(habit.key);
@@ -2538,6 +2555,7 @@ function achievementChecklistProgress(a){
   return a.done?"Complete":"In progress";
 }
 function buildAwardChecklistItems(){
+  syncHabitPeaksFromCurrent();
   const items=[];
   settings.levels.forEach(function(row){
     const levelName=row[0],hpReq=row[1],amount=parseDollarAmount(row[2]);
@@ -2563,9 +2581,8 @@ function buildAwardChecklistItems(){
   });
   ensurePeakHabitLadders();
   HABIT_LADDERS.forEach(function(habit){
-    const count=habitPeakCount(habit.key);
     HABIT_CARD_TIERS.forEach(function(tier){
-      items.push(habitCardChecklistItem(habit,tier,count));
+      items.push(habitCardChecklistItem(habit,tier));
     });
   });
   listEarnedRulebookRewards().forEach(function(r){
@@ -3157,19 +3174,7 @@ function deedBonusHPForCount(count){
 }
 function syncPermanentProgress(){
   ensurePermanentProgress();
-  ensurePeakHabitLadders();
-  ensureHabitLadders();
-  ensureHabitCardTurnIns();
-  HABIT_LADDERS.forEach(h=>{
-    const cur=Math.max(0,Math.floor(state.habitLadders[h.key]||0));
-    let peak=habitPeakCount(h.key);
-    if(Array.isArray(state.unlockedTitles)&&state.unlockedTitles.includes(h.key)) peak=Math.max(peak,LEGENDARY_TITLE_MIN);
-    HABIT_CARD_TIERS.forEach(t=>{
-      if(habitCardTurnedIn(h.key,t.id)) peak=Math.max(peak,t.min);
-      if(treasuryRewardKeyExists(habitCardTreasuryRewardKey(h.key,t.id))) peak=Math.max(peak,t.min);
-    });
-    state.peakHabitLadders[h.key]=Math.max(peak,cur);
-  });
+  syncHabitPeaksFromCurrent();
   liveCountableAchievementDefs().forEach(a=>{
     if(a.done&&!permanentDeedEarned(a.id)) state.earnedDeeds.push(a.id);
   });
@@ -3790,7 +3795,7 @@ function render(){
     strikeBtn.disabled=!ready;
     strikeBtn.textContent=state.legend?"Legendary Strike Applied":(ready?"Apply Legendary Strike":"Reach 50 Quest HP to Unlock");
   }
-  renderBounty();renderQuests();renderLevels();renderAch();renderTitleVault();renderHeroTitle();renderHabitLadders();renderHabitCardBinder();renderKingdomSanctum();renderScreenTimeWallet();renderHeroTreasury();renderLedger();renderPendingReports();renderParent();
+  renderBounty();renderQuests();renderLevels();renderAch();renderTitleVault();renderHeroTitle();renderHabitLadders();renderHabitCardBinder();renderKingdomSanctum();renderScreenTimeWallet();renderHeroTreasury();renderLedger();renderPendingReports();renderParent();renderAwardChecklist();
   if(!window.__HJ_SUPPRESS_CELEBRATIONS){
     detectProgressChanges();
     checkNewAchievements();
