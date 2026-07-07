@@ -1083,7 +1083,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </div>
 </section>
 <section id="hall" class="screen"><div class="card kingdom-teaser" style="margin-top:0"><p class="kingdom-teaser-whisper" id="hallKingdomWhisper">The walls begin to remember.</p><div class="kingdom-teaser-bar"><div class="fill" id="hallKingdomBar" style="width:0%"></div></div><button type="button" class="kingdom-enter-btn" onclick="showScreen('kingdom')">🏰 View the Restored Kingdom</button></div><div class="card"><h2>Hero Level Road</h2><div class="level-road" id="levelRoad"></div></div><div class="card"><h2>👑 Title Vault</h2><p class="small">Legendary habit titles unlock at <b>150</b> completions on each habit ladder — the same moment as the Legendary card. Each card shows the <b>title</b>, what earns +1, and the <b>Legendary prize</b>. Tap a card for full details; equip unlocked titles under your name.</p><div id="titleVault"></div></div><div class="card hall-card"><h2 id="hallTitle">Hero Hall</h2><div class="hall-overall"><div class="hall-overall-label"><span>Overall Progress</span><span id="hallPctLabel">0%</span></div><div class="hall-overall-bar"><div class="fill" id="hallOverallBar" style="width:0%"></div></div></div><p class="ach-summary" id="achSummary"></p><div class="collectible-showcase" id="collectibleShowcase"></div><div id="raritySections"></div><h3 class="hall-meta-title">Journey Honors</h3><div class="achievements" id="metaAchievements"></div></div></section>
-<section id="cards" class="screen"><div class="card"><h2>🃏 Habit Card Collection</h2><p class="small">Cards unlock at Rare (10), Epic (50), and Legendary (150) on each habit ladder. Earn them here, craft or print the real card at home, then parents mark it turned in when the reward is given.</p><div class="habit-card-binder" id="habitCardBinder"></div></div></section>
+<section id="cards" class="screen"><div class="card"><h2>🃏 Habit Card Collection</h2><p class="small">Cards unlock at Common (10), Epic (50), and Legendary (150) on each habit ladder. Earn them here, craft or print the real card at home, then parents mark it turned in when the reward is given.</p><div class="habit-card-binder" id="habitCardBinder"></div></div></section>
 <section id="awards" class="screen">
 <div class="card">
 <h2>✅ Award Checklist</h2>
@@ -1417,7 +1417,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <h3>Tier Progression</h3>
 <p>Each habit ladder uses the same milestone path:</p>
 <table class="rule-table"><tr><th>Total completions</th><th>Tier reached</th></tr>
-<tr><td>10</td><td><b>Rare</b> — first Habit Card unlocked</td></tr>
+<tr><td>10</td><td><b>Common</b> — first Habit Card unlocked</td></tr>
 <tr><td>50</td><td><b>Epic</b> — second Habit Card unlocked</td></tr>
 <tr><td>150</td><td><b>Platinum / Legendary</b> — third Habit Card, Legendary title, and Legendary prize</td></tr>
 </table>
@@ -1436,7 +1436,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 <h3>Card Tiers (Bronze, Silver, Gold)</h3>
 <p>Each habit ladder can earn up to three cards:</p>
 <table class="rule-table"><tr><th>App tier</th><th>Completions needed</th><th>Token</th><th>Typical reward bundle</th></tr>
-<tr><td>Rare</td><td>10</td><td>Bronze Token</td><td>Planned stipend (see card in app) + 1 Bronze Token</td></tr>
+<tr><td>Common</td><td>10</td><td>Bronze Token</td><td>Planned stipend (see card in app) + 1 Bronze Token</td></tr>
 <tr><td>Epic</td><td>50</td><td>Silver Token</td><td>Planned stipend (see card in app) + 1 Silver Token</td></tr>
 <tr><td>Legendary</td><td>150</td><td>Gold Token</td><td>Planned stipend + 1 Gold Token + Legendary title &amp; prize for that habit</td></tr>
 </table>
@@ -1596,7 +1596,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="permanent-progress-v1";
+const APP_BUILD="habit-card-common-label-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 ["hj_testing_mode","hj_testing_session_state","hj_testing_session_settings","hj_testing_live_snapshot"].forEach(function(k){
@@ -1628,7 +1628,7 @@ function checkAppBuild(){
 let settings=JSON.parse(localStorage.getItem("hj_rpg_settings")||"null")||defaults;
 ensureSettings();
 const HABIT_CARD_TIERS=[
-  {id:"rare",min:10,label:"Rare",stipend:2,token:"Bronze",borderClass:"tier-rare"},
+  {id:"rare",min:10,label:"Common",stipend:2,token:"Bronze",borderClass:"tier-rare"},
   {id:"epic",min:50,label:"Epic",stipend:5,token:"Silver",borderClass:"tier-epic"},
   {id:"legendary",min:150,label:"Legendary",stipend:10,token:"Gold",borderClass:"tier-legendary"}
 ];
@@ -1640,7 +1640,56 @@ function habitCardAwardLabel(tier){
   return tier?tier.label:"";
 }
 function habitCardStipendReason(habit,tier){
-  return "Habit Card stipend: "+habit.name+" "+habitCardAwardLabel(tier)+" ("+formatTreasuryMoney(tier.stipend)+")";
+  return "Habit Card stipend: "+habit.name+" — "+habitCardAwardLabel(tier)+" ("+formatTreasuryMoney(tier.stipend)+")";
+}
+function isFirstTierHabitCardRewardKey(rewardKey){
+  return typeof rewardKey==="string"&&rewardKey.endsWith(":rare");
+}
+function migrateHabitCardLedgerReason(entry){
+  if(!entry||typeof entry!=="object") return entry;
+  const rewardKey=entry.rewardKey||entry.awardKey||"";
+  const isHabitCard=entry.source===TREASURY_SOURCE.HABIT_CARD||rewardKey.indexOf("habitCard:")===0;
+  if(!isHabitCard) return entry;
+  const isFirstTier=isFirstTierHabitCardRewardKey(rewardKey)||(entry.meta&&entry.meta.tierId==="rare");
+  if(!isFirstTier&&!/\bRare\b/.test(String(entry.reason||""))) return entry;
+  let reason=String(entry.reason||"");
+  let next=reason
+    .replace(/ — Rare \(/g," — Common (")
+    .replace(/Habit Card stipend: ([^(\n]+) Rare \(/g,"Habit Card stipend: $1 — Common (")
+    .replace(/Habit Card stipend: ([^(\n]+) — Rare \(/g,"Habit Card stipend: $1 — Common (")
+    .replace(/\sRare \(/g," — Common (");
+  let meta=entry.meta&&typeof entry.meta==="object"?{...entry.meta}:null;
+  if(meta&&meta.tierLabel==="Rare") meta.tierLabel="Common";
+  if(next===reason&&!meta) return entry;
+  if(meta&&entry.meta&&meta.tierLabel===entry.meta.tierLabel&&next===reason) return entry;
+  return {...entry,reason:next,meta:meta||entry.meta||null};
+}
+function migrateHabitCardLedgerReasons(){
+  if(!Array.isArray(state.heroTreasuryLedger)) return false;
+  let changed=false;
+  state.heroTreasuryLedger=state.heroTreasuryLedger.map(function(entry){
+    const migrated=migrateHabitCardLedgerReason(entry);
+    if(migrated!==entry) changed=true;
+    return migrated;
+  });
+  return changed;
+}
+function logTreasuryAward(item){
+  if(!item) return;
+  if(item.source===TREASURY_SOURCE.HABIT_CARD){
+    const habit=HABIT_LADDERS.find(function(h){return h.key===(item.meta&&item.meta.habitKey);});
+    const tier=HABIT_CARD_TIERS.find(function(t){return t.id===(item.meta&&item.meta.tierId);});
+    const name=habit?habit.name:String(item.name||"Habit Card").replace(/^[^\s]+\s/,"");
+    const label=(item.meta&&item.meta.tierLabel)||habitCardAwardLabel(tier);
+    log("Treasury awarded: "+name+" "+label+" +"+formatTreasuryMoney(item.amount));
+    return;
+  }
+  if(item.source===TREASURY_SOURCE.HERO_LEVEL){
+    const level=(item.meta&&item.meta.level)||String(item.name||"").replace(/ Hero Level$/,"");
+    log("Treasury awarded: "+level+" Hero Level +"+formatTreasuryMoney(item.amount));
+    return;
+  }
+  log("Treasury awarded: "+item.reason);
 }
 function habitCardChecklistItem(habit,tier,count){
   const peak=habitPeakCount(habit.key);
@@ -1740,9 +1789,9 @@ function getHabitProgress(count){
     progressText="Epic unlocked — "+p+" / 3 toward Platinum";
     barPct=(p/3)*100;
   }else if(count>=10){
-    tierLabel="Rare";
+    tierLabel="Common";
     const p=Math.min(5,Math.floor(count/10));
-    progressText="Rare unlocked — "+p+" / 5 toward Epic";
+    progressText="Common unlocked — "+p+" / 5 toward Epic";
     barPct=(p/5)*100;
   }else{
     tierLabel="Common";
@@ -1774,7 +1823,7 @@ function checkHabitTierToasts(key,oldCount,newCount){
   if(!habit) return;
   const name=habit.name;
   const msgs=[];
-  if(oldCount<10&&newCount>=10) msgs.push("Rare unlocked: "+name+"!<br>🃏 Rare card earned!");
+  if(oldCount<10&&newCount>=10) msgs.push("Common unlocked: "+name+"!<br>🃏 Common card earned!");
   if(oldCount<50&&newCount>=50) msgs.push("Epic unlocked: "+name+"!<br>🃏 Epic card earned!");
   if(oldCount<150&&newCount>=150){
     const titleLine=habit.title?"<br>👑 Title unlocked: "+habit.title+"!":"";
@@ -1790,8 +1839,8 @@ function adjustHabit(key,delta){
     state.habitLadders[key]=newCount;
     const habit=HABIT_LADDERS.find(h=>h.key===key);
     const name=habit?habit.name:key;
-    if(delta>0) log("Hero Habit awarded: "+name+" +"+delta+".");
-    else if(delta<0) log("Hero Habit adjusted: "+name+" "+delta+".");
+    if(delta>0) log("Habit progress updated: "+name+" +"+delta+".");
+    else if(delta<0) log("Habit progress updated: "+name+" "+delta+".");
     if(newCount!==oldCount){
       checkHabitTierToasts(key,oldCount,newCount);
       ensureTitles();
@@ -1809,7 +1858,7 @@ function setHabitManual(key){
     state.habitLadders[key]=newCount;
     const habit=HABIT_LADDERS.find(h=>h.key===key);
     const name=habit?habit.name:key;
-    log("Hero Habit count set: "+name+" = "+newCount+".");
+    log("Habit progress set: "+name+" = "+newCount+".");
     if(newCount>oldCount){
       checkHabitTierToasts(key,oldCount,newCount);
       ensureTitles();
@@ -1908,7 +1957,7 @@ function showHabitCardInfo(i){
   const count=state.habitLadders[card.habit.key]||0;
   const status=habitCardStatus(card.habit.key,card.tier.id);
   document.getElementById("habitCardPopIcon").textContent=card.habit.icon;
-  document.getElementById("habitCardPopTitle").textContent=card.habit.name+" — "+card.tier.label+" Card";
+  document.getElementById("habitCardPopTitle").textContent=card.habit.name+" — "+habitCardAwardLabel(card.tier)+" Card";
   const statusEl=document.getElementById("habitCardPopStatus");
   const body=document.getElementById("habitCardPopBody");
   const turnedAt=state.habitCardTurnIns[card.habit.key]&&state.habitCardTurnIns[card.habit.key][card.tier.id];
@@ -1953,7 +2002,7 @@ function renderHabitCardBinder(){
     const status=habitCardStatus(card.habit.key,card.tier.id);
     const cls=status==="turned-in"?"turned-in":(status==="earned"?"earned":"locked");
     const statusHtml=status==="turned-in"?'<div class="habit-mini-check" aria-hidden="true">✓</div><div class="habit-mini-status redeemed">Turned In</div>':(status==="earned"?'<div class="habit-mini-status ready">Ready!</div>':"");
-    return '<div class="habit-mini-card '+cls+' '+card.tier.borderClass+'" role="button" tabindex="0" onclick="showHabitCardInfo('+i+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();showHabitCardInfo('+i+')}"><div class="habit-mini-icon">'+card.habit.icon+'</div><div class="habit-mini-name">'+card.habit.name+'</div><div class="habit-mini-tier">'+card.tier.label+'</div>'+statusHtml+'</div>';
+    return '<div class="habit-mini-card '+cls+' '+card.tier.borderClass+'" role="button" tabindex="0" onclick="showHabitCardInfo('+i+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();showHabitCardInfo('+i+')}"><div class="habit-mini-icon">'+card.habit.icon+'</div><div class="habit-mini-name">'+card.habit.name+'</div><div class="habit-mini-tier">'+habitCardAwardLabel(card.tier)+'</div>'+statusHtml+'</div>';
   }).join("")+'</div>';
 }
 function turnInHabitCard(key,tierId){
@@ -1964,9 +2013,9 @@ function turnInHabitCard(key,tierId){
     const habit=HABIT_LADDERS.find(h=>h.key===key);
     const tier=HABIT_CARD_TIERS.find(t=>t.id===tierId);
     state.habitCardTurnIns[key][tierId]=new Date().toISOString();
-    log("Habit card turned in: "+(habit?habit.name:key)+" "+(tier?tier.label:tierId)+".");
+    log("Habit card turned in: "+(habit?habit.name:key)+" "+(tier?habitCardAwardLabel(tier):tierId)+".");
     save();
-    toast("✅ Card turned in<br>"+(habit?habit.name:"")+" "+(tier?tier.label:""));
+    toast("✅ Card turned in<br>"+(habit?habit.name:"")+" "+(tier?habitCardAwardLabel(tier):""));
   });
 }
 function undoHabitCardTurnIn(key,tierId){
@@ -1976,7 +2025,7 @@ function undoHabitCardTurnIn(key,tierId){
     const habit=HABIT_LADDERS.find(h=>h.key===key);
     const tier=HABIT_CARD_TIERS.find(t=>t.id===tierId);
     state.habitCardTurnIns[key][tierId]=null;
-    log("Habit card turn-in reversed: "+(habit?habit.name:key)+" "+(tier?tier.label:tierId)+".");
+    log("Habit card turn-in reversed: "+(habit?habit.name:key)+" "+(tier?habitCardAwardLabel(tier):tierId)+".");
     save();
   });
 }
@@ -1995,10 +2044,10 @@ function renderParentHabitCards(){
       const btn=status==="turned-in"
         ?'<button class="action secondary" onclick="undoHabitCardTurnIn(\''+h.key+'\',\''+t.id+'\')">Undo Turn-In</button>'
         :'<button class="action good" onclick="turnInHabitCard(\''+h.key+'\',\''+t.id+'\')">Mark Turned In</button>';
-      rows.push('<div class="habit-card-parent-row"><div><div class="habit-parent-name">'+h.icon+" "+h.name+' — '+t.label+' Card</div><div class="habit-card-parent-meta">'+habitCardRewardText(h,t).replace(/<br>/g," • ")+'</div><div class="habit-card-parent-meta">'+(status==="turned-in"?"Turned in: "+formatTurnInDate(turnedAt):"Waiting for turn-in")+'</div></div><div class="habit-card-turnin-actions">'+btn+'</div></div>');
+      rows.push('<div class="habit-card-parent-row"><div><div class="habit-parent-name">'+h.icon+" "+h.name+' — '+habitCardAwardLabel(t)+' Card</div><div class="habit-card-parent-meta">'+habitCardRewardText(h,t).replace(/<br>/g," • ")+'</div><div class="habit-card-parent-meta">'+(status==="turned-in"?"Turned in: "+formatTurnInDate(turnedAt):"Waiting for turn-in")+'</div></div><div class="habit-card-turnin-actions">'+btn+'</div></div>');
     });
   });
-  el.innerHTML=rows.length?rows.join(""):'<p class="small">No habit cards earned yet. Cards appear here when a habit reaches Rare (10), Epic (50), or Legendary (150).</p>';
+  el.innerHTML=rows.length?rows.join(""):'<p class="small">No habit cards earned yet. Cards appear here when a habit reaches Common (10), Epic (50), or Legendary (150).</p>';
 }
 function habitCardTurnInsForCloud(){
   ensureHabitCardTurnIns();
@@ -2286,6 +2335,7 @@ function ensureHeroTreasury(){
   if(!Array.isArray(state.heroTreasuryLedger)) state.heroTreasuryLedger=defaultHeroTreasuryLedger();
   state.heroTreasuryLedger=state.heroTreasuryLedger.map(normalizeHeroTreasuryEntry).filter(Boolean);
   dedupeTreasuryByRewardKey();
+  migrateHabitCardLedgerReasons();
 }
 ensureHeroTreasury();
 function heroTreasuryLedgerForCloud(){
@@ -2675,7 +2725,7 @@ function awardCheckedChecklistItems(){
       if(result.ok){
         summary.treasuryAdded.push(item);
         summary.total=Math.round((summary.total+amount)*100)/100;
-        log("Award checklist: "+item.reason);
+        logTreasuryAward(item);
       }else if(result.reason==="duplicate"){
         summary.skipped.push(item);
       }else{
