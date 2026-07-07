@@ -1596,7 +1596,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="treasury-habit-card-award-fix-v1";
+const APP_BUILD="permanent-progress-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 ["hj_testing_mode","hj_testing_session_state","hj_testing_session_settings","hj_testing_live_snapshot"].forEach(function(k){
@@ -1643,7 +1643,8 @@ function habitCardStipendReason(habit,tier){
   return "Habit Card stipend: "+habit.name+" "+habitCardAwardLabel(tier)+" ("+formatTreasuryMoney(tier.stipend)+")";
 }
 function habitCardChecklistItem(habit,tier,count){
-  const earned=count>=tier.min;
+  const peak=habitPeakCount(habit.key);
+  const earned=peak>=tier.min;
   const rewardKey=habitCardTreasuryRewardKey(habit.key,tier.id);
   const paid=treasuryRewardKeyExists(rewardKey);
   const amount=Number(tier.stipend)||0;
@@ -1653,7 +1654,7 @@ function habitCardChecklistItem(habit,tier,count){
     name:habit.icon+" "+habit.name+" — "+awardLabel+" Card",
     category:"Habit Card",
     requirement:tier.min+" habit completions",
-    progress:count+" / "+tier.min,
+    progress:peak+" / "+tier.min,
     reward:formatTreasuryMoney(amount)+" + 1 "+tier.token+" Token",
     status:paid?"awarded":(earned?"ready":"not_earned"),
     treasuryItem:true,
@@ -1692,6 +1693,30 @@ function ensureHabitLadders(){
   const defaults=defaultHabitLadders();
   if(!state.habitLadders||typeof state.habitLadders!=="object") state.habitLadders={...defaults};
   else HABIT_LADDERS.forEach(h=>{if(typeof state.habitLadders[h.key]!=="number"||isNaN(state.habitLadders[h.key]))state.habitLadders[h.key]=0;});
+}
+function ensurePeakHabitLadders(){
+  const defaults=defaultHabitLadders();
+  if(!state.peakHabitLadders||typeof state.peakHabitLadders!=="object") state.peakHabitLadders={...defaults};
+  else HABIT_LADDERS.forEach(h=>{if(typeof state.peakHabitLadders[h.key]!=="number"||isNaN(state.peakHabitLadders[h.key]))state.peakHabitLadders[h.key]=0;});
+}
+function habitPeakCount(key){
+  ensurePeakHabitLadders();
+  return Math.max(0,Math.floor(state.peakHabitLadders[key]||0));
+}
+function peakHabitLaddersForCloud(){
+  ensurePeakHabitLadders();
+  const out={};
+  HABIT_LADDERS.forEach(h=>{out[h.key]=Number(state.peakHabitLadders[h.key]||0);});
+  return out;
+}
+function mergePeakHabitLadders(cloudData,localData){
+  const out=defaultHabitLadders();
+  HABIT_LADDERS.forEach(h=>{
+    const cloud=Math.max(0,Number(cloudData&&cloudData[h.key])||0);
+    const local=Math.max(0,Number(localData&&localData[h.key])||0);
+    out[h.key]=Math.max(cloud,local);
+  });
+  return out;
 }
 function getHabitTier(count){
   count=Math.max(0,Math.floor(count));
@@ -1842,19 +1867,18 @@ function ensureHabitCardTurnIns(){
     });
   });
 }
-function habitCardEarned(key,tierId,count){
+function habitCardEarned(key,tierId){
   const tier=HABIT_CARD_TIERS.find(t=>t.id===tierId);
   if(!tier) return false;
-  const c=typeof count==="number"?count:(state.habitLadders&&state.habitLadders[key])||0;
-  return Math.max(0,Math.floor(c))>=tier.min;
+  return habitPeakCount(key)>=tier.min;
 }
 function habitCardTurnedIn(key,tierId){
   ensureHabitCardTurnIns();
   const v=state.habitCardTurnIns[key]&&state.habitCardTurnIns[key][tierId];
   return Boolean(v);
 }
-function habitCardStatus(key,tierId,count){
-  if(!habitCardEarned(key,tierId,count)) return "locked";
+function habitCardStatus(key,tierId){
+  if(!habitCardEarned(key,tierId)) return "locked";
   if(habitCardTurnedIn(key,tierId)) return "turned-in";
   return "earned";
 }
@@ -1882,7 +1906,7 @@ function showHabitCardInfo(i){
   const card=habitCardList[i];
   if(!card) return;
   const count=state.habitLadders[card.habit.key]||0;
-  const status=habitCardStatus(card.habit.key,card.tier.id,count);
+  const status=habitCardStatus(card.habit.key,card.tier.id);
   document.getElementById("habitCardPopIcon").textContent=card.habit.icon;
   document.getElementById("habitCardPopTitle").textContent=card.habit.name+" — "+card.tier.label+" Card";
   const statusEl=document.getElementById("habitCardPopStatus");
@@ -1910,7 +1934,7 @@ function habitCardStats(){
   HABIT_LADDERS.forEach(h=>{
     const c=state.habitLadders[h.key]||0;
     HABIT_CARD_TIERS.forEach(t=>{
-      const st=habitCardStatus(h.key,t.id,c);
+      const st=habitCardStatus(h.key,t.id);
       if(st!=="locked") earned++;
       if(st==="turned-in") turned++;
     });
@@ -1926,7 +1950,7 @@ function renderHabitCardBinder(){
   buildHabitCardList();
   el.innerHTML='<div class="habit-card-stats"><span>Collected: '+stats.earned+' / '+stats.total+'</span><span>Ready: '+stats.ready+'</span><span>Turned in: '+stats.turned+'</span></div><p class="collectible-hint">Tap any card to see rewards and turn-in status.</p><div class="habit-card-grid">'+habitCardList.map((card,i)=>{
     const count=state.habitLadders[card.habit.key]||0;
-    const status=habitCardStatus(card.habit.key,card.tier.id,count);
+    const status=habitCardStatus(card.habit.key,card.tier.id);
     const cls=status==="turned-in"?"turned-in":(status==="earned"?"earned":"locked");
     const statusHtml=status==="turned-in"?'<div class="habit-mini-check" aria-hidden="true">✓</div><div class="habit-mini-status redeemed">Turned In</div>':(status==="earned"?'<div class="habit-mini-status ready">Ready!</div>':"");
     return '<div class="habit-mini-card '+cls+' '+card.tier.borderClass+'" role="button" tabindex="0" onclick="showHabitCardInfo('+i+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();showHabitCardInfo('+i+')}"><div class="habit-mini-icon">'+card.habit.icon+'</div><div class="habit-mini-name">'+card.habit.name+'</div><div class="habit-mini-tier">'+card.tier.label+'</div>'+statusHtml+'</div>';
@@ -1965,7 +1989,7 @@ function renderParentHabitCards(){
   HABIT_LADDERS.forEach(h=>{
     const count=state.habitLadders[h.key]||0;
     HABIT_CARD_TIERS.forEach(t=>{
-      const status=habitCardStatus(h.key,t.id,count);
+      const status=habitCardStatus(h.key,t.id);
       if(status==="locked") return;
       const turnedAt=state.habitCardTurnIns[h.key][t.id];
       const btn=status==="turned-in"
@@ -2000,9 +2024,10 @@ function defaultUnlockedTitles(){return [];}
 function ensureTitles(){
   if(!Array.isArray(state.unlockedTitles)) state.unlockedTitles=[];
   ensureHabitLadders();
+  ensurePeakHabitLadders();
   HABIT_LADDERS.forEach(h=>{
     if(!h.title) return;
-    const count=Math.max(0,Math.floor(state.habitLadders[h.key]||0));
+    const count=habitPeakCount(h.key);
     if(count>=LEGENDARY_TITLE_MIN&&!state.unlockedTitles.includes(h.key)) state.unlockedTitles.push(h.key);
   });
   state.unlockedTitles=state.unlockedTitles.filter(k=>HABIT_LADDERS.some(h=>h.key===k&&h.title));
@@ -2139,15 +2164,36 @@ function unlockedTitlesForCloud(){
   ensureTitles();
   return state.unlockedTitles.slice();
 }
-function normalizeUnlockedTitlesFromCloud(data){
+function mergeUnlockedTitles(cloudTitles,localTitles){
   const out=[];
-  if(Array.isArray(data)) data.forEach(k=>{if(typeof k==="string"&&HABIT_LADDERS.some(h=>h.key===k&&h.title)&&!out.includes(k)) out.push(k);});
+  [].concat(Array.isArray(cloudTitles)?cloudTitles:[],Array.isArray(localTitles)?localTitles:[]).forEach(k=>{
+    if(typeof k==="string"&&HABIT_LADDERS.some(h=>h.key===k&&h.title)&&!out.includes(k)) out.push(k);
+  });
+  return out;
+}
+function normalizeUnlockedTitlesFromCloud(data){
+  return mergeUnlockedTitles(data,[]);
+}
+function earnedDeedsForCloud(){
+  ensurePermanentProgress();
+  return state.earnedDeeds.slice();
+}
+function normalizeEarnedDeedsFromCloud(data){
+  const out=[];
+  if(Array.isArray(data)) data.forEach(id=>{if(typeof id==="string"&&id&&!out.includes(id)) out.push(id);});
+  return out;
+}
+function mergeEarnedDeeds(cloudDeeds,localDeeds){
+  const out=[];
+  [].concat(normalizeEarnedDeedsFromCloud(cloudDeeds),normalizeEarnedDeedsFromCloud(localDeeds)).forEach(id=>{
+    if(!out.includes(id)) out.push(id);
+  });
   return out;
 }
 function normalizeEquippedTitleFromCloud(data){
   return (typeof data==="string"&&HABIT_LADDERS.some(h=>h.key===data&&h.title))?data:null;
 }
-let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:[],dataCorrections:[],lastModified:0};
+let state=JSON.parse(localStorage.getItem("hj_rpg_state")||"null")||{books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),peakHabitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:[],earnedDeeds:[],peakLifetimeHP:0,dataCorrections:[],lastModified:0};
 if(!Array.isArray(state.pendingReports)) state.pendingReports=[];
 if(!Array.isArray(state.dataCorrections)) state.dataCorrections=[];
 if(typeof state.lastModified!=="number") state.lastModified=0;
@@ -2329,8 +2375,8 @@ function appendHeroTreasuryEntry(type,amount,reason,opts){
   return entry;
 }
 function listEarnedHeroLevelRewards(){
-  const currentHp=hp();
-  return settings.levels.filter(function(row){return currentHp>=row[1];}).map(function(row){
+  const peakHp=displayLifetimeHP();
+  return settings.levels.filter(function(row){return peakHp>=row[1];}).map(function(row){
     const levelName=row[0];
     const amount=parseDollarAmount(row[2]);
     return {
@@ -2345,10 +2391,10 @@ function listEarnedHeroLevelRewards(){
   }).filter(function(r){return r.amount>0;});
 }
 function listEarnedHabitCardRewards(){
-  ensureHabitLadders();
+  ensurePeakHabitLadders();
   const out=[];
   HABIT_LADDERS.forEach(function(habit){
-    const count=Math.max(0,Math.floor(state.habitLadders[habit.key]||0));
+    const count=habitPeakCount(habit.key);
     HABIT_CARD_TIERS.forEach(function(tier){
       if(count>=tier.min){
         const amount=Number(tier.stipend)||0;
@@ -2445,7 +2491,8 @@ function buildAwardChecklistItems(){
   const items=[];
   settings.levels.forEach(function(row){
     const levelName=row[0],hpReq=row[1],amount=parseDollarAmount(row[2]);
-    const earned=hp()>=hpReq;
+    const peakHp=displayLifetimeHP();
+    const earned=peakHp>=hpReq;
     const rewardKey="heroLevel:"+HERO_ID+":"+levelName;
     const paid=treasuryRewardKeyExists(rewardKey);
     items.push({
@@ -2453,7 +2500,7 @@ function buildAwardChecklistItems(){
       name:levelName+" Hero Level",
       category:"Hero Level",
       requirement:hpReq+" Lifetime Hero Points",
-      progress:hp()+" / "+hpReq+" HP",
+      progress:peakHp+" / "+hpReq+" HP",
       reward:amount>0?formatTreasuryMoney(amount):"—",
       status:paid?"awarded":(earned?"ready":"not_earned"),
       treasuryItem:true,
@@ -2464,9 +2511,9 @@ function buildAwardChecklistItems(){
       meta:{level:levelName}
     });
   });
-  ensureHabitLadders();
+  ensurePeakHabitLadders();
   HABIT_LADDERS.forEach(function(habit){
-    const count=Math.max(0,Math.floor(state.habitLadders[habit.key]||0));
+    const count=habitPeakCount(habit.key);
     HABIT_CARD_TIERS.forEach(function(tier){
       items.push(habitCardChecklistItem(habit,tier,count));
     });
@@ -2925,7 +2972,7 @@ const dragonTaunts={
   last:["Final stand! Give me your best shot!","You will not defeat me easily!","The endgame begins now!"],
   defeated:["You win, legend. Well fought.","The dragon falls. The hero rises.","Journey complete. I bow to you."]
 };
-function save(){localStorage.setItem("hj_rpg_state",JSON.stringify(state));localStorage.setItem("hj_rpg_settings",JSON.stringify(settings));render();}
+function save(){syncPermanentProgress();localStorage.setItem("hj_rpg_state",JSON.stringify(state));localStorage.setItem("hj_rpg_settings",JSON.stringify(settings));render();}
 function log(msg){state.log.unshift(new Date().toLocaleString()+" — "+msg);state.log=state.log.slice(0,60);}
 function toast(msg){const t=document.getElementById("toast");t.innerHTML=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600);}
 let parentCodeHash="";
@@ -3045,7 +3092,50 @@ function coopHP(){return countMs(state.coop,settings.coopMs,10)}
 function questHP(){return readingHP()+mealHP()+langHP()+coopHP()}
 function journeyPctNum(){return Math.round(damage()/settings.duration*100)}
 function approvedReportCount(){return (state.pendingReports||[]).filter(r=>r.status==="approved").length}
-function countableAchievementDefs(){
+function ensurePermanentProgress(){
+  if(!Array.isArray(state.earnedDeeds)) state.earnedDeeds=[];
+  if(typeof state.peakLifetimeHP!=="number"||isNaN(state.peakLifetimeHP)) state.peakLifetimeHP=0;
+}
+function permanentDeedEarned(id){
+  ensurePermanentProgress();
+  return state.earnedDeeds.includes(id);
+}
+function deedBonusHPForCount(count){
+  let total=0;
+  DEED_MILESTONES.forEach(m=>{if(count>=m.deeds)total=m.total});
+  return total;
+}
+function syncPermanentProgress(){
+  ensurePermanentProgress();
+  ensurePeakHabitLadders();
+  ensureHabitLadders();
+  ensureHabitCardTurnIns();
+  HABIT_LADDERS.forEach(h=>{
+    const cur=Math.max(0,Math.floor(state.habitLadders[h.key]||0));
+    let peak=habitPeakCount(h.key);
+    if(Array.isArray(state.unlockedTitles)&&state.unlockedTitles.includes(h.key)) peak=Math.max(peak,LEGENDARY_TITLE_MIN);
+    HABIT_CARD_TIERS.forEach(t=>{
+      if(habitCardTurnedIn(h.key,t.id)) peak=Math.max(peak,t.min);
+      if(treasuryRewardKeyExists(habitCardTreasuryRewardKey(h.key,t.id))) peak=Math.max(peak,t.min);
+    });
+    state.peakHabitLadders[h.key]=Math.max(peak,cur);
+  });
+  liveCountableAchievementDefs().forEach(a=>{
+    if(a.done&&!permanentDeedEarned(a.id)) state.earnedDeeds.push(a.id);
+  });
+  let totalHp=questHP()+deedBonusHPForCount(state.earnedDeeds.length);
+  settings.levels.forEach(row=>{
+    const rewardKey="heroLevel:"+HERO_ID+":"+row[0];
+    if(treasuryRewardKeyExists(rewardKey)) totalHp=Math.max(totalHp,Number(row[1])||0);
+  });
+  if(totalHp>state.peakLifetimeHP) state.peakLifetimeHP=totalHp;
+  ensureTitles();
+}
+function displayLifetimeHP(){
+  ensurePermanentProgress();
+  return Math.max(hp(),Number(state.peakLifetimeHP)||0);
+}
+function liveCountableAchievementDefs(){
   return [
     {id:"book1",done:state.books>=1,icon:"📖",title:"First Chapter",sub:"Complete 1 book",rarity:"bronze"},
     {id:"book3",done:state.books>=3,icon:"📕",title:"Story Starter",sub:"Complete 3 books",rarity:"bronze"},
@@ -3099,12 +3189,13 @@ function countableAchievementDefs(){
     {id:"strike",done:state.legend,icon:"⚡",title:"Legendary Strike",sub:"Apply the Legendary Strike",rarity:"legendary",unlock:{icon:"⚡",name:"Lightning Sigil"}}
   ];
 }
+function countableAchievementDefs(){
+  return liveCountableAchievementDefs().map(a=>({...a,done:permanentDeedEarned(a.id)||a.done}));
+}
 function countableUnlocked(){return countableAchievementDefs().filter(a=>a.done).length}
 function achievementHP(){
-  const count=countableUnlocked();
-  let total=0;
-  DEED_MILESTONES.forEach(m=>{if(count>=m.deeds)total=m.total});
-  return total;
+  ensurePermanentProgress();
+  return deedBonusHPForCount(state.earnedDeeds.length);
 }
 function hp(){return questHP()+achievementHP()}
 function nextDeedMilestone(){
@@ -3113,7 +3204,7 @@ function nextDeedMilestone(){
   return null;
 }
 function getMetaAchievementDefs(){
-  const totalHP=hp();
+  const totalHP=displayLifetimeHP();
   const unlocked=countableUnlocked();
   return [
     {id:"hp1",done:totalHP>=1,icon:"⭐",title:"First Hero Point",sub:"Earn 1 Hero Point",rarity:"bronze"},
@@ -3141,8 +3232,8 @@ function coopDays(){return state.coop*3}
 function damage(){return Math.min(settings.duration,readingDays()+mealDays()+langDays()+coopDays()+(state.legend?settings.legendBonus:0))}
 function remaining(){return Math.max(0,settings.duration-damage())}
 function addDate(days){const d=new Date(settings.start+"T12:00:00");d.setDate(d.getDate()+days);return d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"})}
-function level(){let l="Unranked";settings.levels.forEach(x=>{if(hp()>=x[1])l=x[0]});return l}
-function nextLevel(){return settings.levels.find(x=>hp()<x[1])}
+function level(){let l="Unranked";const peak=displayLifetimeHP();settings.levels.forEach(x=>{if(peak>=x[1])l=x[0]});return l}
+function nextLevel(){const peak=displayLifetimeHP();return settings.levels.find(x=>peak<x[1])}
 function dragonStage(){const r=remaining();if(r<=0)return ["Dragon Defeated","The journey is complete."];if(r<=150)return ["Last Stand Dragon","The final battle has begun."];if(r<=350)return ["Cornered Dragon","The dragon is losing ground."];if(r<=550)return ["Wounded Dragon","Your strikes are taking effect."];return ["Ancient Dragon","The great challenge still stands."];}
 function nextMs(n,arr){return arr.find(x=>x>n)||null}
 function formatScreenTime(mins){
@@ -3642,7 +3733,7 @@ function render(){
   const hpBreakdown=document.getElementById("hpBreakdown");
   if(hpBreakdown) hpBreakdown.textContent=qhp+" quest + "+ahp+" deeds";
   let nl=nextLevel();
-  document.getElementById("nextLevel").textContent=nl?(nl[1]-hp())+" HP":"Legend";
+  document.getElementById("nextLevel").textContent=nl?(Math.max(0,nl[1]-displayLifetimeHP()))+" HP":"Legend";
   const strikeBtn=document.querySelector(".strike-button");
   if(strikeBtn){
     const ready=questHP()>=50&&!state.legend;
@@ -3701,7 +3792,7 @@ function renderQuests(){
   ].join("");
 }
 const levelIcons={Apprentice:"🌱",Adventurer:"🧭",Scholar:"📜",Champion:"🏅",Legend:"👑"};
-function renderLevels(){document.getElementById("levelRoad").innerHTML=settings.levels.map(x=>{const cls=hp()>=x[1]?"done":(nextLevel()&&nextLevel()[0]===x[0]?"current":"");const icon=levelIcons[x[0]]||"⚔";return '<div class="level '+cls+'"><div class="level-icon">'+icon+'</div><div class="name">'+x[0]+'</div><div>'+(hp()>=x[1]?"✓ ACHIEVED":hp()+" / "+x[1]+" HP")+'</div><div class="small">'+x[2]+' reward</div></div>'}).join("");}
+function renderLevels(){const peak=displayLifetimeHP();document.getElementById("levelRoad").innerHTML=settings.levels.map(x=>{const cls=peak>=x[1]?"done":(nextLevel()&&nextLevel()[0]===x[0]?"current":"");const icon=levelIcons[x[0]]||"⚔";return '<div class="level '+cls+'"><div class="level-icon">'+icon+'</div><div class="name">'+x[0]+'</div><div>'+(peak>=x[1]?"✓ ACHIEVED":hp()+" / "+x[1]+" HP")+'</div><div class="small">'+x[2]+' reward</div></div>'}).join("");}
 function badge(done,icon,title,sub,rarity,unlock){
   const r=rarity||"bronze";
   const unlockHtml=unlock?'<div class="unlock-tag">'+unlock.icon+" "+unlock.name+'</div>':"";
@@ -3805,7 +3896,8 @@ function renderParentScreenTime(){
 }
 function renderParent(){document.getElementById("startInput").value=settings.start;document.getElementById("durationInput").value=settings.duration;document.getElementById("legendInput").value=settings.legendBonus;document.getElementById("log").innerHTML=(Array.isArray(state.log)?state.log:[]).map(x=>'<li>'+x+'</li>').join("");renderDataCorrections();renderParentQuests();renderParentScreenTime();renderParentHabits();renderParentHabitCards();renderHeroTreasury();updateParentCodeStatus();}
 function saveSettings(){requireParent("Save system settings",function(){settings.start=startInput.value;settings.duration=+durationInput.value||730;settings.legendBonus=+legendInput.value||80;log("Settings updated.");save();});}
-function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:defaultHeroTreasuryLedger(),dataCorrections:[],lastModified:Date.now()};renderSnapshot=null;save();}});}
+function resetAll(){requireParent("Reset all progress",function(){if(confirm("Reset all progress?")){state={books:0,meals:0,language:0,coop:0,spent:0,legend:false,log:[],pendingReports:[],habitLadders:defaultHabitLadders(),peakHabitLadders:defaultHabitLadders(),habitCardTurnIns:defaultHabitCardTurnIns(),unlockedTitles:defaultUnlockedTitles(),equippedTitleId:null,chronicleLegendRevealed:false,screenTimeMinutes:0,readingPoints:0,totalPagesRead:0,heroTreasuryLedger:defaultHeroTreasuryLedger(),earnedDeeds:[],peakLifetimeHP:0,dataCorrections:[],lastModified:Date.now()};renderSnapshot=null;save();}});}
+syncPermanentProgress();
 render();
 checkAppBuild();
 </script>
@@ -3857,9 +3949,12 @@ checkAppBuild();
       log: Array.isArray(state.log) ? state.log.slice(0,60) : [],
       pendingReports: Array.isArray(state.pendingReports) ? state.pendingReports.slice(0,20) : [],
       habitLadders: habitLaddersForCloud(),
+      peakHabitLadders: peakHabitLaddersForCloud(),
       habitCardTurnIns: habitCardTurnInsForCloud(),
       unlockedTitles: unlockedTitlesForCloud(),
       equippedTitleId: state.equippedTitleId || null,
+      earnedDeeds: earnedDeedsForCloud(),
+      peakLifetimeHP: Number(state.peakLifetimeHP || 0),
       chronicleLegendRevealed: Boolean(state.chronicleLegendRevealed || false),
       screenTimeMinutes: Number(state.screenTimeMinutes || 0),
       readingPoints: Number(state.readingPoints || 0),
@@ -3883,9 +3978,12 @@ checkAppBuild();
       log: Array.isArray(data.log) ? data.log.slice(0,60) : [],
       pendingReports: Array.isArray(data.pendingReports) ? data.pendingReports.slice(0,20) : [],
       habitLadders: normalizeHabitLaddersFromCloud(data.habitLadders,localHabitLadders),
+      peakHabitLadders: mergePeakHabitLadders(data.peakHabitLadders,data.habitLadders),
       habitCardTurnIns: normalizeHabitCardTurnInsFromCloud(data.habitCardTurnIns),
       unlockedTitles: normalizeUnlockedTitlesFromCloud(data.unlockedTitles),
       equippedTitleId: normalizeEquippedTitleFromCloud(data.equippedTitleId),
+      earnedDeeds: normalizeEarnedDeedsFromCloud(data.earnedDeeds),
+      peakLifetimeHP: Math.max(0, Number(data.peakLifetimeHP || 0)),
       chronicleLegendRevealed: Boolean(data.chronicleLegendRevealed || false),
       screenTimeMinutes: Math.max(0, Number(data.screenTimeMinutes || 0)),
       readingPoints: readingPoints,
@@ -3942,6 +4040,10 @@ checkAppBuild();
     if(preferLocal&&local.habitLadders){
       out.habitLadders=normalizeHabitLaddersFromCloud(local.habitLadders,local.habitLadders);
     }
+    out.peakHabitLadders=mergePeakHabitLadders(out.peakHabitLadders,local.peakHabitLadders);
+    out.earnedDeeds=mergeEarnedDeeds(out.earnedDeeds,local.earnedDeeds);
+    out.peakLifetimeHP=Math.max(Number(out.peakLifetimeHP)||0,Number(local.peakLifetimeHP)||0);
+    out.unlockedTitles=mergeUnlockedTitles(out.unlockedTitles,local.unlockedTitles);
     if(local.legend) out.legend=true;
     if(local.chronicleLegendRevealed) out.chronicleLegendRevealed=true;
     out.heroTreasuryLedger=mergeTreasuryLedgers(out.heroTreasuryLedger,local.heroTreasuryLedger);
@@ -3954,6 +4056,7 @@ checkAppBuild();
 
   window.save = function(){
     if(typeof touchStateModified==="function") touchStateModified();
+    syncPermanentProgress();
     localSavePending = true;
     suppressCloudUntil = Date.now() + 2500;
     try{
@@ -4046,7 +4149,7 @@ checkAppBuild();
           if(localNewer&&!isCloudSaveBlocked()){
             progressRef.set(cleanStateForCloud(),{merge:true}).catch(function(err){console.error(err);});
           }
-          ensureTitles();
+          syncPermanentProgress();
           ensureChronicleState();
           ensureScreenTimeState();
           ensureHeroTreasury();
@@ -4098,7 +4201,7 @@ checkAppBuild();
       if(!confirm("Restore this backup to cloud?\n\n" + summary + "\n\nOnly continue if these numbers look correct.")) return;
       applyingCloudUpdate = true;
       state = normalizeCloudState(data);
-      ensureTitles();
+      syncPermanentProgress();
       ensureChronicleState();
       ensureScreenTimeState();
       ensureHeroTreasury();
