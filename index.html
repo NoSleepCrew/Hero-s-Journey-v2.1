@@ -1596,7 +1596,7 @@ details summary{font-size:22px;color:var(--gold);cursor:pointer;font-weight:900}
 </main>
 <script>
 const defaults={start:"2026-06-13",duration:730,legendBonus:80,levels:[["Apprentice",10,"$10"],["Adventurer",20,"$20"],["Scholar",30,"$40"],["Champion",40,"$80"],["Legend",50,"$100"]],readingMs:[1,3,5,7,9,11,13,15,17,19,21,23,25,27,29],mealMs:[1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150],coopMs:[1,5,10,15,20,25,30,35,40,45,50]};
-const APP_BUILD="habit-set-ready-award-v1";
+const APP_BUILD="parent-cloud-fallback-v1";
 const PAGES_PER_READING_POINT=25;
 const SCREEN_MINUTES_PER_READING_POINT=30;
 ["hj_testing_mode","hj_testing_session_state","hj_testing_session_settings","hj_testing_live_snapshot"].forEach(function(k){
@@ -3044,6 +3044,15 @@ function log(msg){state.log.unshift(new Date().toLocaleString()+" — "+msg);sta
 function toast(msg){const t=document.getElementById("toast");t.innerHTML=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600);}
 let parentCodeHash="";
 let cloudConfigReady=false;
+const PARENT_CODE_HASH_KEY="hj_parent_code_hash";
+function readCachedParentCodeHash(){
+  try{return localStorage.getItem(PARENT_CODE_HASH_KEY)||"";}catch(e){return "";}
+}
+function writeCachedParentCodeHash(hash){
+  try{
+    if(hash) localStorage.setItem(PARENT_CODE_HASH_KEY,hash);
+  }catch(e){}
+}
 async function hashParentCode(code){
   const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(code));
   return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
@@ -3054,19 +3063,36 @@ function updateParentCodeStatus(){
   const el=document.getElementById("parentCodeStatus");
   if(!el) return;
   if(!cloudConfigReady) el.textContent="Parent code: connecting to cloud...";
-  else if(hasParentCode()) el.textContent="Parent code: set in cloud (shared by all parents).";
+  else if(hasParentCode()) el.textContent="Parent code: set (verified locally; syncs to cloud when available).";
   else el.textContent="Parent code: not set yet — a parent should create one.";
 }
 window.applyParentCodeHash=function(hash){
   parentCodeHash=hash||"";
   cloudConfigReady=true;
+  writeCachedParentCodeHash(parentCodeHash);
   updateParentCodeStatus();
 };
+function enableLocalParentConfigFallback(){
+  if(cloudConfigReady) return;
+  window.applyParentCodeHash(readCachedParentCodeHash());
+}
 async function saveParentCodeToCloud(code){
-  if(!window.persistParentCodeHash){alert("Cloud not ready yet. Try again in a moment.");return false;}
   parentCodeHash=await hashParentCode(code);
-  await window.persistParentCodeHash(parentCodeHash);
+  writeCachedParentCodeHash(parentCodeHash);
+  cloudConfigReady=true;
+  updateParentCodeStatus();
   localStorage.removeItem("hj_parent_code");
+  if(typeof window.persistParentCodeHash==="function"){
+    try{
+      await Promise.race([
+        window.persistParentCodeHash(parentCodeHash),
+        new Promise(function(_,reject){setTimeout(function(){reject(new Error("Parent code cloud save timed out"));},5000);})
+      ]);
+    }catch(e){
+      console.error(e);
+      // Local hash is saved; cloud can sync when connection recovers.
+    }
+  }
   return true;
 }
 async function verifyEnteredParentCode(entered){
@@ -3085,7 +3111,10 @@ function lockParentSession(){
   toast("🔒 Parent controls locked");
 }
 async function requestParentCode(reason){
-  if(!cloudConfigReady){alert("Still connecting to cloud. Try again in a moment.");return false;}
+  if(!cloudConfigReady){
+    if(readCachedParentCodeHash()) enableLocalParentConfigFallback();
+    else {alert("Still connecting to cloud. Try again in a moment.");return false;}
+  }
   if(!hasParentCode()){
     const created=prompt("Create the shared Parent Code (saved to cloud for all parents).");
     if(!created) return false;
@@ -3111,7 +3140,10 @@ async function requireParentAlways(reason,action){
   if(await requestParentCode(reason)) action();
 }
 async function changeParentCode(){
-  if(!cloudConfigReady){alert("Still connecting to cloud. Try again in a moment.");return;}
+  if(!cloudConfigReady){
+    if(readCachedParentCodeHash()) enableLocalParentConfigFallback();
+    else {alert("Still connecting to cloud. Try again in a moment.");return;}
+  }
   if(hasParentCode()){
     const entered=prompt("Enter current Parent Code.");
     if(!(await verifyEnteredParentCode(entered))){alert("Incorrect Parent Code.");return;}
@@ -3968,16 +4000,50 @@ checkAppBuild();
     appId: "1:623278589011:web:d43eb62d7b2f5c5ddb72a6"
   };
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  const progressRef = db.collection("heroJourney").doc("main");
-  const configRef = db.collection("heroJourney").doc("config");
+  let auth, db, progressRef, configRef;
+  try{
+    if(typeof firebase==="undefined") throw new Error("Firebase SDK not loaded");
+    firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    db = firebase.firestore();
+    progressRef = db.collection("heroJourney").doc("main");
+    configRef = db.collection("heroJourney").doc("config");
+  }catch(initError){
+    console.error(initError);
+    window.persistParentCodeHash=function(){return Promise.reject(new Error("Cloud unavailable"));};
+    if(typeof window.applyParentCodeHash==="function"){
+      let cached="";
+      try{cached=localStorage.getItem("hj_parent_code_hash")||"";}catch(e){}
+      window.applyParentCodeHash(cached);
+    }
+    const el=document.getElementById("syncStatus");
+    if(el) el.textContent="Cloud unavailable. Using local data. Parent access available.";
+    return;
+  }
 
   let cloudReady = false;
   let applyingCloudUpdate = false;
   let localSavePending = false;
   let suppressCloudUntil = 0;
+  const CLOUD_INIT_TIMEOUT_MS = 8000;
+
+  function withTimeout(promise, ms, label){
+    return Promise.race([
+      promise,
+      new Promise(function(_, reject){
+        setTimeout(function(){reject(new Error((label||"Operation")+" timed out"));}, ms);
+      })
+    ]);
+  }
+
+  function activateLocalParentFallback(statusMessage){
+    if(typeof window.applyParentCodeHash==="function"){
+      let cached="";
+      try{cached=localStorage.getItem("hj_parent_code_hash")||"";}catch(e){}
+      window.applyParentCodeHash(cached);
+    }
+    if(statusMessage) setSyncStatus(statusMessage);
+  }
 
   function isCloudSaveBlocked(){
     if(window.__HJ_BLOCK_CLOUD_SAVE) return true;
@@ -4144,33 +4210,58 @@ checkAppBuild();
   };
 
   async function loadParentCodeConfig(){
-    const doc = await configRef.get();
-    const data = doc.exists ? doc.data() : {};
-    if(data.parentCodeHash){
-      window.applyParentCodeHash(data.parentCodeHash);
-      return;
+    try{
+      const doc = await withTimeout(configRef.get(), CLOUD_INIT_TIMEOUT_MS, "Parent code config load");
+      const data = doc.exists ? doc.data() : {};
+      if(data.parentCodeHash){
+        window.applyParentCodeHash(data.parentCodeHash);
+        return;
+      }
+      const legacy = localStorage.getItem("hj_parent_code");
+      if(legacy && window.hashParentCode){
+        const hash = await window.hashParentCode(legacy);
+        try{
+          await withTimeout(configRef.set({ parentCodeHash: hash }, { merge: true }), CLOUD_INIT_TIMEOUT_MS, "Parent code migrate");
+        }catch(e){console.error(e);}
+        localStorage.removeItem("hj_parent_code");
+        window.applyParentCodeHash(hash);
+        return;
+      }
+      const cached = localStorage.getItem("hj_parent_code_hash") || "";
+      window.applyParentCodeHash(cached);
+    }catch(error){
+      console.error(error);
+      activateLocalParentFallback("Cloud config unavailable. Using local Parent Code.");
     }
-    const legacy = localStorage.getItem("hj_parent_code");
-    if(legacy && window.hashParentCode){
-      const hash = await window.hashParentCode(legacy);
-      await configRef.set({ parentCodeHash: hash }, { merge: true });
-      localStorage.removeItem("hj_parent_code");
-      window.applyParentCodeHash(hash);
-      return;
-    }
-    window.applyParentCodeHash("");
   }
 
   async function startCloudSync(){
+    const unlockTimer = setTimeout(function(){
+      if(!cloudConfigReady){
+        activateLocalParentFallback("Cloud connection still pending. Parent access available with local data.");
+      }
+    }, CLOUD_INIT_TIMEOUT_MS);
     try{
       setSyncStatus("Signing in anonymously...");
       await auth.signInAnonymously();
       setSyncStatus("Connected. Loading cloud progress...");
       cloudReady = true;
       await loadParentCodeConfig();
+      clearTimeout(unlockTimer);
+      if(!cloudConfigReady) activateLocalParentFallback("Cloud connected. Parent access ready.");
       configRef.onSnapshot((doc) => {
         const data = doc.exists ? doc.data() : {};
-        window.applyParentCodeHash(data.parentCodeHash || "");
+        if(data.parentCodeHash){
+          window.applyParentCodeHash(data.parentCodeHash);
+        }else{
+          const cached = localStorage.getItem("hj_parent_code_hash") || "";
+          if(cached){
+            window.applyParentCodeHash(cached);
+            configRef.set({ parentCodeHash: cached }, { merge: true }).catch(function(err){console.error(err);});
+          }else{
+            window.applyParentCodeHash("");
+          }
+        }
       }, (error) => console.error(error));
 
       progressRef.onSnapshot(async (doc) => {
@@ -4225,9 +4316,11 @@ checkAppBuild();
       }, (error) => {
         setSyncStatus("Cloud sync error: " + error.message);
         console.error(error);
+        if(!cloudConfigReady) activateLocalParentFallback("Cloud sync error. Using local data.");
       });
     } catch(error){
-      setSyncStatus("Firebase connection failed: " + error.message);
+      clearTimeout(unlockTimer);
+      activateLocalParentFallback("Firebase connection failed: " + error.message + " Local mode active.");
       console.error(error);
     }
   }
